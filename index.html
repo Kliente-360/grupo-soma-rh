@@ -1,0 +1,1385 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f6f0e7" />
+  <title>Zi · Assistente de RH NV</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --nv-cream: #f6f0e7;
+      --nv-cream-deep: #ebe1d2;
+      --nv-coffee: #2b211a;
+      --nv-coffee-soft: #6b5b4f;
+      --nv-clay: #c97b5a;
+      --nv-clay-dark: #a35a3b;
+      --nv-clay-light: #f0e0d4;
+      --nv-line: #d9cdb9;
+      --nv-paper: #fbf7f0;
+
+      --radius-bubble: 16px;
+      --radius-card: 14px;
+      --max-w: 880px;
+
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--nv-cream);
+      color: var(--nv-coffee);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ---------- Header ---------- */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--nv-cream);
+      border-bottom: 1px solid var(--nv-line);
+      padding: 14px 20px;
+    }
+    .header-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .header-id {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1 1 240px;
+    }
+    .header-text { min-width: 0; }
+    .header-text h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 26px;
+      line-height: 1.1;
+      color: var(--nv-coffee);
+      letter-spacing: 0.2px;
+    }
+    .header-text p {
+      margin: 2px 0 0 0;
+      font-size: 13px;
+      color: var(--nv-coffee-soft);
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: 999px;
+      padding: 4px;
+    }
+    .tab-btn {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--nv-coffee-soft);
+      background: transparent;
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+    .tab-btn:hover { color: var(--nv-coffee); }
+    .tab-btn.active {
+      background: var(--nv-coffee);
+      color: var(--nv-cream);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    }
+    .badge {
+      display: inline-block;
+      min-width: 18px;
+      padding: 0 6px;
+      height: 18px;
+      line-height: 18px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 999px;
+      background: var(--nv-clay);
+      color: white;
+    }
+    .tab-btn.active .badge { background: var(--nv-clay-light); color: var(--nv-coffee); }
+
+    /* ---------- Views ---------- */
+    .view { display: none; }
+    .view.active { display: block; }
+    .view-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 24px 20px 32px 20px;
+    }
+
+    /* ---------- Chat ---------- */
+    .messages {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-bottom: 8px;
+    }
+    .msg-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      max-width: 100%;
+    }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.assistant { justify-content: flex-start; }
+
+    .bubble {
+      max-width: min(78%, 620px);
+      padding: 12px 15px;
+      font-size: 15px;
+      line-height: 1.5;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      box-shadow: 0 1px 2px rgba(43,33,26,0.04);
+    }
+    .bubble strong { font-weight: 600; }
+    .bubble a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .msg-row.user .bubble {
+      background: var(--nv-coffee);
+      color: var(--nv-cream);
+      border-radius: var(--radius-bubble) var(--radius-bubble) 4px var(--radius-bubble);
+    }
+    .msg-row.assistant .bubble {
+      background: var(--nv-cream-deep);
+      color: var(--nv-coffee);
+      border-radius: 4px var(--radius-bubble) var(--radius-bubble) var(--radius-bubble);
+    }
+
+    .msg-row .avatar-slot {
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    /* typing */
+    .typing { display: inline-flex; gap: 5px; padding: 6px 2px; }
+    .dot {
+      width: 7px; height: 7px;
+      background: var(--nv-coffee-soft);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.15s; }
+    .dot:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: translateY(0); }
+      50%      { opacity: 1;   transform: translateY(-3px); }
+    }
+
+    /* escalation */
+    .escalation-actions {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      padding: 9px 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1.2;
+    }
+    .btn-primary {
+      background: var(--nv-clay);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--nv-clay-dark); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--nv-coffee-soft);
+      border-color: var(--nv-line);
+    }
+    .btn-secondary:hover { background: rgba(43,33,26,0.04); color: var(--nv-coffee); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--nv-coffee-soft);
+      border-color: transparent;
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+    .btn-ghost:hover { color: var(--nv-clay-dark); }
+
+    .escalation-form {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .escalation-form label {
+      display: block;
+      font-size: 12px;
+      color: var(--nv-coffee-soft);
+      margin-bottom: 4px;
+    }
+    .escalation-form input {
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 9px 12px;
+      border: 1px solid var(--nv-line);
+      border-radius: 10px;
+      background: white;
+      color: var(--nv-coffee);
+    }
+    .escalation-form input:focus {
+      outline: none;
+      border-color: var(--nv-clay);
+      box-shadow: 0 0 0 3px rgba(201,123,90,0.12);
+    }
+    .escalation-form .row { display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* suggestions */
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+      padding-bottom: 4px;
+    }
+    .suggestions-label {
+      width: 100%;
+      font-size: 12px;
+      color: var(--nv-coffee-soft);
+      margin-bottom: 2px;
+      letter-spacing: 0.2px;
+    }
+    .chip {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--nv-coffee);
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chip:hover {
+      background: var(--nv-clay-light);
+      border-color: var(--nv-clay);
+    }
+
+    /* input bar */
+    .input-bar-wrap {
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(to bottom, rgba(246,240,231,0) 0%, var(--nv-cream) 22%);
+      padding: 18px 20px 16px 20px;
+      z-index: 10;
+    }
+    .input-bar {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(43,33,26,0.05);
+    }
+    .input-bar:focus-within {
+      border-color: var(--nv-clay);
+      box-shadow: 0 0 0 3px rgba(201,123,90,0.12);
+    }
+    #chat-input {
+      flex: 1;
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.45;
+      color: var(--nv-coffee);
+      background: transparent;
+      border: 0;
+      outline: none;
+      resize: none;
+      max-height: 140px;
+      padding: 6px 4px;
+    }
+    #chat-input::placeholder { color: var(--nv-coffee-soft); opacity: 0.7; }
+    #send-btn {
+      flex-shrink: 0;
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: var(--nv-coffee);
+      color: var(--nv-cream);
+      border: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+    }
+    #send-btn:hover:not(:disabled) { background: #1a130e; }
+    #send-btn:disabled { background: var(--nv-coffee-soft); cursor: not-allowed; opacity: 0.6; }
+
+    /* ---------- Admin ---------- */
+    .admin-section { margin-bottom: 36px; }
+    .admin-section h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 24px;
+      color: var(--nv-coffee);
+      margin: 0 0 4px 0;
+    }
+    .admin-section .section-hint {
+      font-size: 13px;
+      color: var(--nv-coffee-soft);
+      margin: 0 0 16px 0;
+    }
+    .empty-state {
+      padding: 24px;
+      background: var(--nv-paper);
+      border: 1px dashed var(--nv-line);
+      border-radius: var(--radius-card);
+      text-align: center;
+      color: var(--nv-coffee-soft);
+      font-size: 14px;
+    }
+    .card {
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-card);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    .card-trained { border-left: 4px solid var(--nv-clay); }
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      font-size: 12px;
+      color: var(--nv-coffee-soft);
+      margin-bottom: 8px;
+    }
+    .card-meta .meta-name { font-weight: 600; color: var(--nv-coffee); }
+    .card-question {
+      font-style: italic;
+      color: var(--nv-coffee);
+      margin: 0 0 14px 0;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+    .card-answer {
+      color: var(--nv-coffee);
+      font-size: 15px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .card textarea {
+      width: 100%;
+      min-height: 100px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 11px 13px;
+      border: 1px solid var(--nv-line);
+      border-radius: 10px;
+      background: white;
+      color: var(--nv-coffee);
+      resize: vertical;
+    }
+    .card textarea:focus {
+      outline: none;
+      border-color: var(--nv-clay);
+      box-shadow: 0 0 0 3px rgba(201,123,90,0.12);
+    }
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    /* ---------- Footer ---------- */
+    .app-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--nv-coffee-soft);
+      padding: 14px 20px 22px 20px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ---------- API-key warning ---------- */
+    .api-warning {
+      max-width: var(--max-w);
+      margin: 12px auto 0;
+      padding: 12px 16px;
+      background: #fff4e6;
+      border: 1px solid #e8c98a;
+      border-radius: 12px;
+      color: #6b4a1a;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .api-warning code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(0,0,0,0.05);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* ---------- Toast ---------- */
+    .toast {
+      position: fixed;
+      bottom: 92px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--nv-coffee);
+      color: var(--nv-cream);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ---------- Mobile ---------- */
+    @media (max-width: 560px) {
+      .app-header { padding: 12px 14px; }
+      .view-inner { padding: 18px 14px 28px 14px; }
+      .header-text h1 { font-size: 22px; }
+      .header-text p { font-size: 12px; }
+      .tabs { width: 100%; justify-content: space-between; }
+      .tab-btn { flex: 1; justify-content: center; }
+      .bubble { max-width: 86%; font-size: 14px; }
+      .input-bar-wrap { padding: 12px 14px 12px 14px; }
+      #chat-input { font-size: 16px; } /* avoid iOS zoom */
+      .input-bar { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-id">
+        <span id="header-avatar"></span>
+        <div class="header-text">
+          <h1>Zi · Assistente de RH</h1>
+          <p>Suas dúvidas sobre o RH da NV, na hora.</p>
+        </div>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-view="chat" role="tab" aria-selected="true">Conversar</button>
+        <button class="tab-btn" data-view="admin" role="tab" aria-selected="false">
+          Admin RH <span id="admin-badge" class="badge" style="display:none">0</span>
+        </button>
+      </div>
+    </div>
+    <div id="api-warning" class="api-warning" style="display:none">
+      ⚠️ <strong>API key não configurada.</strong> Edite a constante <code>GEMINI_API_KEY</code> no <code>index.html</code>.
+      Pegue uma gratuita em <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a>.
+    </div>
+  </header>
+
+  <!-- Chat view -->
+  <main id="view-chat" class="view active">
+    <div class="view-inner">
+      <div id="chat-messages" class="messages" aria-live="polite"></div>
+      <div id="suggestions" class="suggestions"></div>
+    </div>
+    <div class="input-bar-wrap">
+      <div class="input-bar">
+        <textarea id="chat-input" rows="1" placeholder="Pergunte qualquer coisa pra Zi…" autocomplete="off"></textarea>
+        <button id="send-btn" aria-label="Enviar mensagem">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Admin view -->
+  <main id="view-admin" class="view">
+    <div class="view-inner">
+      <section class="admin-section">
+        <h2>Perguntas pendentes</h2>
+        <p class="section-hint">Perguntas que a Zi não soube responder e foram escaladas pelos colaboradores. Responda aqui pra alimentar a base.</p>
+        <div id="pending-list"></div>
+      </section>
+
+      <section class="admin-section">
+        <h2>Respostas treinadas</h2>
+        <p class="section-hint">Respostas validadas pelo RH. A Zi usa essas como referência nas próximas conversas.</p>
+        <div id="trained-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="app-footer">NV · Assistente interna de RH</footer>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script>
+  /* =====================================================
+   * Zi · Chatbot RH NV — Protótipo (single-file)
+   * ===================================================== */
+
+  // ⚠️ Substitua pelo seu Gemini API key (https://aistudio.google.com/app/apikey)
+  const GEMINI_API_KEY = "COLOQUE_SUA_KEY_AQUI";
+  const GEMINI_MODEL = "gemini-2.0-flash";
+  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+  const STORAGE = {
+    pending: "zi_pending_questions",
+    trained: "zi_trained_answers",
+  };
+
+  const SUGGESTIONS = [
+    "Como funciona o vale-refeição?",
+    "Quantos dias de licença paternidade eu tenho?",
+    "Posso continuar com o plano de saúde depois que sair?",
+    "Como solicito férias?",
+    "Como incluir minha esposa no plano?",
+  ];
+
+  const WELCOME_TEXT =
+    "Oi! Eu sou a **Zi**, sua assistente do RH da NV ✨\n\n" +
+    "Pode mandar sua dúvida — admissão, benefícios, férias, plano de saúde, segurança da informação… o que rolar. " +
+    "Respondo na hora com base nas nossas políticas.";
+
+  /* ---------------- Base de Conhecimento ---------------- */
+  const KNOWLEDGE_BASE = `# ADMISSÃO
+
+## Documentos da admissão
+No momento da admissão, o colaborador recebe e assina os termos admissionais que incluem:
+- Compensação de Jornada/Banco de Horas
+- Política de Utilização de Vale Transporte
+- Termo de Adesão e Regulamento do Programa de Vendas Virtuais
+- Política de Segurança da Informação
+- Ordem de Serviço (Riscos Ocupacionais/Ambientais, Regras de Segurança, Comunicação em caso de acidentes)
+
+## Vale Transporte na admissão
+- Concessão é direito do empregado, independente da distância casa-trabalho
+- Funcionário arca com 6% do salário (regra legal); não se aplica a estagiários
+- Créditos pertencem à empresa; sobras devolvidas na rescisão
+- No momento da admissão, apresentar declaração da operadora indicando inexistência de outro cartão vinculado ao CPF
+- Em caso de perda/roubo, o empregado custeia a 2ª via
+- Uso indevido ou declaração falsa = falta grave (dispensa por justa causa)
+
+# DESLIGAMENTO / DEMISSÃO
+
+## Tipos de desligamento — Iniciativa da empresa
+A empresa concede aviso prévio ao empregado, que pode ser:
+- **Trabalhado**: 30 dias com opção de redução de 2h diárias OU dispensa de 7 dias no cumprimento
+- **Indenizado**: empregador libera o funcionário imediatamente e paga valor do aviso na rescisão
+Duração estendida conforme tempo de casa: 30 dias iniciais + 3 dias adicionais por ano trabalhado, limitado a 60 dias adicionais (máx. 90 dias). Base legal: Art. 487 e 488 da CLT.
+
+## Tipos de desligamento — Iniciativa do colaborador
+Pedido voluntário com aviso prévio que pode ser:
+- **Trabalhado**: 30 dias (ou parcial), mesma carga horária
+- **Não trabalhado**: demissão imediata com multa pelo não cumprimento (até 30 dias)
+
+## Pesquisa de desligamento
+- Pesquisa do gestor (TODOS os cenários): https://forms.office.com/r/Mk9tZaMm9K
+- Pesquisa do colaborador (voluntário): https://forms.office.com/r/W4JtapZZrk
+
+## Plano de saúde após desligamento (continuidade)
+- Direito apenas para ex-colaboradores contributários e desligados sem justa causa (RN 488/2022).
+- Prazo (demitidos sem justa causa): 1/3 do tempo de contribuição. Mínimo 6 meses, máximo 24 meses.
+- Aposentados: contribuição >10 anos = permanência indefinida; <10 anos = proporcional.
+- Ex-colaborador paga o valor integral; empresa não subsidia mais.
+- Como solicitar: manifestar interesse em até 10 dias após o desligamento (DP 2503-6890). Enviar formulário + comprovante de residência.
+
+# BENEFÍCIOS
+
+## Assistência Médica — Corporativo e Operações
+- Compulsório para o titular; vigência 30 dias após admissão.
+- Inclusão automática na admissão; cobertura no dia 01 do mês seguinte.
+- Possibilidade de incluir dependentes (cônjuge e filhos até 21 anos), mensalidade paga pelo titular.
+- Coparticipação de 30% em consultas, pronto-socorro e exames.
+- Internações, cirurgias e terapias de alta complexidade: isentas de coparticipação.
+- Desconto da coparticipação pode levar até 12 meses para aparecer na folha.
+
+## Assistência Médica — Time Comercial (Lojas)
+Empresa contribui progressivamente: começa em 10% no 1º ano e cresce 10% por ano ativo, até 90%.
+Planos Hapvida disponíveis (custeados pelo colaborador):
+- Smart 400 QC: R$ 175,46/mês
+- Smart 400 QP: R$ 210,35/mês
+- Advance 600: R$ 228,04/mês
+
+## Como incluir dependentes após admissão
+1. Abrir chamado no portal: Gestão de Pessoal > Benefícios > Assistência Médica
+2. Anexar formulário de adesão
+3. Prazo: até dia 5 do mês para vigência dia 01 do mês seguinte
+4. Novo evento (casamento, nascimento): chamado em até 30 dias = sem carência
+
+Documentos por tipo de dependente:
+- Cônjuge: certidão de casamento + formulário + CPF + RG
+- Companheiro(a): declaração pública de união estável registrada em cartório + formulário + CPF + RG
+- Filho(a) menor de 24 anos: certidão de nascimento + formulário + CPF + RG
+
+## Cancelamento do plano de saúde
+1. Chamado: Gestão de Pessoal > Benefícios > Assistência Médica e Odontológica
+2. Anexar modelo de carta de cancelamento
+3. Prazo: até dia 5 do mês para exclusão no último dia do mês
+Após exclusão, nova inclusão somente com carência.
+
+## Seguro de Vida e Assistência Funeral (Sulamérica)
+- Plano A/B (Operação/Lojas/CDs): capital uniforme R$ 16.000, funeral até R$ 5.000
+- Plano C (Aux/Assist/Analistas/Técnicos): múltiplo 20-25x, capital até R$ 152.317
+- Plano D (Liderança): múltiplo 20-25x, capital até R$ 500.000
+- Planos E e F (Head/Diretores): múltiplo 30-35x, funeral ampliado até R$ 7.000
+Coberturas automáticas: cônjuge 50%, filhos 10%.
+Assistência Funerária 24h: 4090-1073 (capitais), 0800 778 1073 (demais)
+Central Sulamérica (info): 4004-4935, seg-sex 8h-18h30
+Portal: espacodocliente.sulamerica.com.br
+
+## Vale-Refeição (cartão Flash)
+Crédito no último dia útil do mês. Valor R$ 620,00 (desconto de 20% em folha) para:
+Operações Ateliê SP/NV, CD Pavuna, Administrativo, Técnicos e Analistas, Liderança.
+
+## Cesta Básica (sem desconto)
+R$ 101,00/mês para: CD Pavuna MOT ADM, Operações Ateliê, Operações CD Pavuna EXT, Aux e Assistente Ateliê, Aux e Assistente Mat Farm.
+
+## Vale-Transporte
+- Crédito disponibilizado até o 1º dia do mês de utilização
+- 2ª via: até 15 dias úteis
+- Alteração: somente com mudança de endereço
+- Desconto: 6% sobre o valor utilizado
+
+## Vans Corporativas (sem desconto)
+Cobertura: Botafogo, São Cristóvão, FFF/Ateliê, Jardim Botânico, CD Pavuna.
+Horários: Seg-Qui 18h-19h45, Sex 17h-18h45.
+
+## Day Off de Aniversário
+1 dia de folga remunerada no mês do aniversário. Mudança de data alinhada com o gestor.
+
+## Wellz — Saúde Mental
+Plataforma gratuita e confidencial. 25 sessões de terapia (1 acolhimento + 24 com psicólogos).
+Idade mínima: 18 anos. App "Wellz". Dados anonimizados (LGPD).
+
+## Academias — TotalPass e Wellhub
+Modalidade gratuita disponível. Adesão online, idade mínima 16 anos. Até 4 dependentes (TotalPass).
+
+## Extensão Licença Maternidade e Paternidade
+- Maternidade: 120 dias → 180 dias via Programa Empresa Cidadã
+- Paternidade: 5 dias → 20 dias (precisa comprovante do curso "Pai presente: cuidado e compromisso" AVASUS, 12h, gratuito)
+- Solicitação: chamado Gestão de Pessoas > Saúde e Segurança do Trabalho
+
+# SAÚDE E SEGURANÇA
+
+## Atestado médico
+- Envio em até 48h após emissão
+- Acidente de trabalho: até 24h (CID-10 obrigatório)
+- Itens obrigatórios: data, período, nome/registro do profissional, horário (comparecimento), CID-10 (acidente), endereço
+- Atestados multidisciplinares (psicologia, nutrição, fisioterapia) NÃO abonam automaticamente
+- Chamado: https://chamados.somagrupo.com.br/projects/saude-e-seguranca-do-trabalho-sst/issues/new
+
+## Acidente de trabalho
+- No local OU no trajeto casa-trabalho-casa
+- Comunicar gestor em até 1 dia
+- Buscar atendimento médico mesmo em lesões leves
+- Documento médico em até 24h
+
+## Licença maternidade
+- 120 dias, prorrogável por 60 (total 180)
+- Pode ser requerida de 28 dias antes do parto até o dia do parto
+- Solicitação via chamado SST
+
+## Licença paternidade
+- 5 dias corridos, prorrogável por 15 (total 20)
+- Requerimento mediante certidão de nascimento
+- Prorrogação: formulário próprio punho + certidão + comprovante de programa sobre paternidade responsável
+
+## Exame médico ocupacional
+- Demissional: até 10 dias do término
+- Dispensa se ASO recente: <135 dias (graus 1-2) ou <90 dias (graus 3-4)
+
+## Férias
+- Solicitação com mínimo 45 dias de antecedência
+- Pode ser dividida em até 3 períodos; uma parcela mínimo 14 dias; nenhuma <5 dias
+- Não inicia em fins de semana nem 2 dias antes de feriado/fim de semana
+- Recebe: salário proporcional + 1/3 + abono pecuniário (se houver venda)
+- VT e VR NÃO são pagos durante as férias
+
+# SEGURANÇA DA INFORMAÇÃO
+
+## Política Global (PGSI)
+Onde encontrar: Nas Internas, no Redmine, no processo de onboarding.
+
+## Senhas
+- Mínimo 14 caracteres, com maiúsculas, minúsculas, números e especiais
+- Use mnemônicos
+- Evite: nome + 1234, datas, nomes da empresa
+- Pessoal e intransferível. Usar senha alheia = falsa identidade (Art. 307 CP)
+- Evite salvar no navegador. Use MFA sempre que possível
+
+## E-mails suspeitos
+- Remetente/assunto estranho: não abra. Spam e delete
+- Se já abriu: NUNCA clique em imagens, links ou anexos
+- Abra chamado no Service Desk para Segurança da Informação
+- NUNCA envie informações confidenciais para e-mail pessoal externo
+
+## Responsabilidades
+- Usar TI somente para trabalho
+- Bloquear sessão ao se ausentar
+- Não emprestar equipamento logado
+- Não usar pen drive/CD/DVD/cartão sem autorização
+- Não acessar e-mails pessoais no equipamento corporativo
+- Não instalar softwares sem autorização do TI
+- Comunicar imediatamente falhas ou violações
+
+# CONTATOS
+
+- DP (Plano de Saúde): 2503-6890
+- Assistência Funerária 24h Sulamérica: 4090-1073 / 0800 778 1073
+- Central Sulamérica: 4004-4935 (seg-sex 8h-18h30)
+- PASI (sindicatos especiais): 4000-2300 / 0800-401-9000 (24/7)
+- Portal SST: https://chamados.somagrupo.com.br/projects/saude-e-seguranca-do-trabalho-sst/issues/new`;
+
+  /* ---------------- Avatar (SVG inline) ---------------- */
+  function ziAvatar(size = 40, ring = false) {
+    const uid = `zi-${Math.random().toString(36).slice(2, 8)}`;
+    const ringStyle = ring
+      ? 'box-shadow: 0 0 0 2px var(--nv-paper), 0 0 0 3px var(--nv-line);'
+      : '';
+    return `
+      <svg width="${size}" height="${size}" viewBox="0 0 200 200"
+           style="border-radius:50%; display:block; ${ringStyle}" aria-hidden="true">
+        <defs>
+          <linearGradient id="${uid}-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#f6ead6"/>
+            <stop offset="100%" stop-color="#e8d5b8"/>
+          </linearGradient>
+          <linearGradient id="${uid}-shirt" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#a8c4d8"/>
+            <stop offset="100%" stop-color="#8aabc4"/>
+          </linearGradient>
+          <linearGradient id="${uid}-shirt-s" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#7a9bb5"/>
+            <stop offset="100%" stop-color="#5d7e98"/>
+          </linearGradient>
+          <clipPath id="${uid}-clip"><circle cx="100" cy="100" r="100"/></clipPath>
+        </defs>
+        <g clip-path="url(#${uid}-clip)">
+          <circle cx="100" cy="100" r="100" fill="url(#${uid}-bg)"/>
+          <path d="M 100 28 Q 50 32 46 84 Q 42 122 50 150 Q 56 166 64 168 Q 70 158 66 148 Q 100 188 134 148 Q 130 158 136 168 Q 144 166 150 150 Q 158 122 154 84 Q 150 32 100 28 Z" fill="#241710"/>
+          <path d="M 12 200 Q 14 158 50 148 L 80 158 L 80 200 Z" fill="url(#${uid}-shirt)"/>
+          <path d="M 188 200 Q 186 158 150 148 L 120 158 L 120 200 Z" fill="url(#${uid}-shirt)"/>
+          <path d="M 80 158 L 80 200 L 120 200 L 120 158 Q 100 174 80 158 Z" fill="url(#${uid}-shirt)"/>
+          <path d="M 80 158 L 76 188 L 100 174 Z" fill="url(#${uid}-shirt-s)"/>
+          <path d="M 120 158 L 124 188 L 100 174 Z" fill="url(#${uid}-shirt-s)"/>
+          <path d="M 80 158 L 76 188" stroke="#5d7e98" stroke-width="0.8" fill="none" opacity="0.7"/>
+          <path d="M 120 158 L 124 188" stroke="#5d7e98" stroke-width="0.8" fill="none" opacity="0.7"/>
+          <path d="M 76 188 L 100 174 L 124 188" stroke="#5d7e98" stroke-width="0.8" fill="none" opacity="0.6"/>
+          <circle cx="100" cy="188" r="1.4" fill="#5d7e98"/>
+          <path d="M 100 174 L 100 200" stroke="#5d7e98" stroke-width="0.6" fill="none" opacity="0.5"/>
+          <path d="M 86 130 Q 85 152 100 158 Q 115 152 114 130 Z" fill="#9a6a44"/>
+          <path d="M 86 136 Q 100 142 114 136" stroke="#6e4530" stroke-width="3" fill="none" opacity="0.55" stroke-linecap="round"/>
+          <path d="M 100 56 C 76 56 64 78 64 100 C 64 120 76 138 100 138 C 124 138 136 120 136 100 C 136 78 124 56 100 56 Z" fill="#9a6a44"/>
+          <ellipse cx="100" cy="82" rx="22" ry="14" fill="#b08054" opacity="0.5"/>
+          <ellipse cx="78" cy="108" rx="8" ry="6" fill="#b08054" opacity="0.35"/>
+          <ellipse cx="122" cy="108" rx="8" ry="6" fill="#b08054" opacity="0.35"/>
+          <ellipse cx="66" cy="104" rx="4" ry="7" fill="#9a6a44"/>
+          <ellipse cx="134" cy="104" rx="4" ry="7" fill="#9a6a44"/>
+          <circle cx="66" cy="110" r="2" fill="#c8a472"/>
+          <circle cx="134" cy="110" r="2" fill="#c8a472"/>
+          <path d="M 100 44 C 76 42 60 56 56 80 C 54 92 58 102 64 104 C 70 96 76 84 86 76 C 92 70 100 66 106 62 Q 104 50 100 44 Z" fill="#241710"/>
+          <path d="M 60 92 Q 56 110 60 128 Q 64 116 64 100 Z" fill="#241710"/>
+          <path d="M 100 44 C 118 42 130 54 134 72 C 136 82 134 92 130 96 C 130 88 128 82 124 76 C 118 66 110 60 100 56 Z" fill="#241710"/>
+          <path d="M 138 90 Q 142 110 138 128 Q 134 116 134 100 Z" fill="#241710"/>
+          <path d="M 80 85 Q 87 82 95 84" stroke="#1a0d06" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M 105 84 Q 113 82 120 85" stroke="#1a0d06" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <ellipse cx="87" cy="94" rx="4.5" ry="3" fill="#fbf7f0"/>
+          <circle cx="87" cy="94" r="2.6" fill="#2a1810"/>
+          <circle cx="88" cy="93" r="0.9" fill="#fbf7f0"/>
+          <path d="M 82 93 Q 87 90 92 93" stroke="#1a0d06" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="113" cy="94" rx="4.5" ry="3" fill="#fbf7f0"/>
+          <circle cx="113" cy="94" r="2.6" fill="#2a1810"/>
+          <circle cx="114" cy="93" r="0.9" fill="#fbf7f0"/>
+          <path d="M 108 93 Q 113 90 118 93" stroke="#1a0d06" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="97.5" cy="112" rx="0.9" ry="0.6" fill="#5a3826" opacity="0.7"/>
+          <ellipse cx="102.5" cy="112" rx="0.9" ry="0.6" fill="#5a3826" opacity="0.7"/>
+          <ellipse cx="76" cy="114" rx="7" ry="4" fill="#c97b5a" opacity="0.32"/>
+          <ellipse cx="124" cy="114" rx="7" ry="4" fill="#c97b5a" opacity="0.32"/>
+          <path d="M 84 121 Q 100 134 116 121" stroke="#4a1f10" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          <path d="M 90 124 Q 100 128 110 124 L 109 125.5 Q 100 128 91 125.5 Z" fill="#fbf7f0"/>
+          <path d="M 116 121 Q 119 119 121 119" stroke="#5a3826" stroke-width="0.8" fill="none" opacity="0.5" stroke-linecap="round"/>
+          <path d="M 84 121 Q 81 119 79 119" stroke="#5a3826" stroke-width="0.8" fill="none" opacity="0.5" stroke-linecap="round"/>
+        </g>
+      </svg>
+    `;
+  }
+
+  /* ---------------- Helpers ---------------- */
+  function uidStr() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+  function nowISO() { return new Date().toISOString(); }
+
+  function formatDate(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+    } catch { return iso; }
+  }
+
+  function loadFromStorage(key, def = []) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : def;
+    } catch { return def; }
+  }
+  function saveToStorage(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.warn('localStorage falhou:', e); }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // ** ** -> <strong>, URLs -> <a>, newlines -> <br>
+  function renderInline(text) {
+    let s = escapeHtml(text);
+    // bold
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // auto-link URLs
+    s = s.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    // newlines
+    s = s.replace(/\n/g, '<br>');
+    return s;
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  /* ---------------- State ---------------- */
+  let messages = [
+    { id: uidStr(), role: 'assistant', content: WELCOME_TEXT, type: 'regular' }
+  ];
+  let pendingQuestions = loadFromStorage(STORAGE.pending, []);
+  let trainedAnswers = loadFromStorage(STORAGE.trained, []);
+  let currentView = 'chat';
+  let isWaitingReply = false;
+
+  /* ---------------- Prompt builder ---------------- */
+  function buildSystemPrompt(trained) {
+    const trainedSection = trained.length > 0
+      ? `\n\n# RESPOSTAS APROVADAS PELO RH (treinamento contínuo)\n${trained.map((a, i) =>
+          `**Pergunta ${i + 1}**: ${a.question}\n**Resposta oficial**: ${a.answer}`
+        ).join("\n\n")}`
+      : "";
+
+    return `Você é a Zi, assistente virtual de RH da NV. Seu trabalho é tirar dúvidas dos colaboradores sobre processos do RH com clareza e leveza.
+
+# COMO VOCÊ FALA
+- Tom amigável e descontraído, próximo de uma conversa entre colegas
+- Direto ao ponto: respostas curtas, conclusivas, sem floreio
+- Use "você" e evite jargão jurídico desnecessário
+- Pode usar emojis com moderação (1 por mensagem no máximo) quando combinar
+- Se a resposta envolve várias etapas, use listas numeradas curtas
+
+# REGRA DE OURO
+Você responde APENAS com base no conteúdo da BASE DE CONHECIMENTO abaixo. Não invente, não use conhecimento geral, não chute.
+
+Se a pergunta NÃO puder ser respondida com clareza pela base, sua resposta deve ser EXATAMENTE este token e nada mais:
+[NAO_ENCONTREI]
+
+Use [NAO_ENCONTREI] quando:
+- A informação não está na base
+- A informação está incompleta ou ambígua para resposta conclusiva
+- A pergunta é sobre caso muito específico que pediria avaliação humana
+
+NÃO use [NAO_ENCONTREI] como muleta. Se a resposta está na base, responda confiante.
+
+# BASE DE CONHECIMENTO
+
+${KNOWLEDGE_BASE}
+${trainedSection}
+
+# FORMATAÇÃO
+- Sem cabeçalhos markdown (###) — fica formal demais
+- Pode usar **negrito** pra destacar prazos, valores ou nomes de portais
+- Listas numeradas só quando o processo tem 3+ passos
+- Encerre respostas longas com "Se precisar de mais detalhe, é só falar 👋" ou similar`;
+  }
+
+  /* ---------------- Gemini API ---------------- */
+  function isApiKeyConfigured() {
+    return GEMINI_API_KEY && !GEMINI_API_KEY.startsWith("COLOQUE_") && GEMINI_API_KEY.length > 10;
+  }
+
+  async function callGemini(history, trained) {
+    const systemInstruction = buildSystemPrompt(trained);
+
+    // Pula a 1ª mensagem (boas-vindas) — Gemini exige que o array comece com role:user
+    const conv = history.filter((m, i) => !(i === 0 && m.role === 'assistant'));
+
+    const contents = conv.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+
+    const body = {
+      contents,
+      systemInstruction: { parts: [{ text: systemInstruction }] },
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 1024,
+        topP: 0.95
+      }
+    };
+
+    const resp = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`Gemini API ${resp.status}: ${errText.slice(0, 240)}`);
+    }
+
+    const data = await resp.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('Resposta vazia do Gemini');
+    return text.trim();
+  }
+
+  /* ---------------- Chat rendering ---------------- */
+  function renderMessages() {
+    const root = document.getElementById('chat-messages');
+    root.innerHTML = messages.map(renderMessageHtml).join('');
+    bindMessageHandlers();
+    scrollToBottom();
+  }
+
+  function renderMessageHtml(m) {
+    if (m.type === 'typing') {
+      return `
+        <div class="msg-row assistant" data-id="${m.id}">
+          <span class="avatar-slot">${ziAvatar(30)}</span>
+          <div class="bubble">
+            <span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          </div>
+        </div>
+      `;
+    }
+
+    const isUser = m.role === 'user';
+    const avatar = isUser ? '' : `<span class="avatar-slot">${ziAvatar(30)}</span>`;
+
+    let extra = '';
+    if (m.type === 'escalate-prompt') {
+      extra = `
+        <div class="escalation-actions">
+          <button class="btn btn-primary" data-action="open-escalate" data-id="${m.id}">Sim, encaminhar</button>
+          <button class="btn btn-secondary" data-action="dismiss-escalate" data-id="${m.id}">Não, obrigado</button>
+        </div>
+      `;
+    } else if (m.type === 'escalate-form') {
+      extra = `
+        <form class="escalation-form" data-action="submit-escalate" data-id="${m.id}" novalidate>
+          <div>
+            <label for="esc-name-${m.id}">Seu nome (opcional)</label>
+            <input id="esc-name-${m.id}" type="text" autocomplete="name" placeholder="Como o RH deve te chamar?">
+          </div>
+          <div>
+            <label for="esc-email-${m.id}">E-mail (opcional)</label>
+            <input id="esc-email-${m.id}" type="email" autocomplete="email" placeholder="pra te avisar quando tiver resposta">
+          </div>
+          <div class="row">
+            <button type="button" class="btn btn-secondary" data-action="cancel-escalate" data-id="${m.id}">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Enviar pro RH</button>
+          </div>
+        </form>
+      `;
+    }
+
+    return `
+      <div class="msg-row ${isUser ? 'user' : 'assistant'}" data-id="${m.id}">
+        ${avatar}
+        <div class="bubble">${renderInline(m.content)}${extra}</div>
+      </div>
+    `;
+  }
+
+  function bindMessageHandlers() {
+    document.querySelectorAll('[data-action="open-escalate"]').forEach(btn => {
+      btn.onclick = () => openEscalateForm(btn.dataset.id);
+    });
+    document.querySelectorAll('[data-action="dismiss-escalate"]').forEach(btn => {
+      btn.onclick = () => dismissEscalate(btn.dataset.id);
+    });
+    document.querySelectorAll('[data-action="cancel-escalate"]').forEach(btn => {
+      btn.onclick = () => cancelEscalateForm(btn.dataset.id);
+    });
+    document.querySelectorAll('[data-action="submit-escalate"]').forEach(form => {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        submitEscalation(form.dataset.id);
+      };
+    });
+  }
+
+  function scrollToBottom() {
+    // espera o paint
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+  }
+
+  function pushMessage(role, content, opts = {}) {
+    const msg = {
+      id: uidStr(),
+      role,
+      content,
+      type: opts.type || 'regular',
+      data: opts.data || null,
+    };
+    messages.push(msg);
+    renderMessages();
+    return msg;
+  }
+
+  function updateMessage(id, patch) {
+    const i = messages.findIndex(m => m.id === id);
+    if (i === -1) return;
+    messages[i] = { ...messages[i], ...patch };
+    renderMessages();
+  }
+
+  function removeMessage(id) {
+    messages = messages.filter(m => m.id !== id);
+    renderMessages();
+  }
+
+  /* ---------------- Suggestions ---------------- */
+  function renderSuggestions() {
+    const el = document.getElementById('suggestions');
+    const hasUserMsg = messages.some(m => m.role === 'user');
+    if (hasUserMsg) { el.innerHTML = ''; return; }
+
+    el.innerHTML = `
+      <div class="suggestions-label">Sugestões pra começar</div>
+      ${SUGGESTIONS.map(s => `<button class="chip" data-suggestion="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('')}
+    `;
+    el.querySelectorAll('.chip').forEach(chip => {
+      chip.onclick = () => {
+        const text = chip.getAttribute('data-suggestion');
+        sendUserMessage(text);
+      };
+    });
+  }
+
+  /* ---------------- Chat actions ---------------- */
+  async function sendUserMessage(text) {
+    text = (text || '').trim();
+    if (!text || isWaitingReply) return;
+
+    pushMessage('user', text);
+    renderSuggestions(); // hides chips after first msg
+    document.getElementById('chat-input').value = '';
+    autoResizeInput();
+
+    if (!isApiKeyConfigured()) {
+      pushMessage('assistant',
+        'Ih, parece que a API key ainda não foi configurada 😬\n\nEdite a constante `GEMINI_API_KEY` no arquivo `index.html`. ' +
+        'Você consegue uma gratuita em https://aistudio.google.com/app/apikey.'
+      );
+      return;
+    }
+
+    isWaitingReply = true;
+    setSendEnabled(false);
+    const typing = pushMessage('assistant', '', { type: 'typing' });
+
+    try {
+      const reply = await callGemini(messages.filter(m => m.type !== 'typing'), trainedAnswers);
+      removeMessage(typing.id);
+
+      if (reply.includes('[NAO_ENCONTREI]')) {
+        pushMessage(
+          'assistant',
+          "Hmm, essa eu não consigo responder com segurança só pelos documentos que tenho aqui 🤔\n\nQuer que eu encaminhe pro time de RH responder pessoalmente?",
+          { type: 'escalate-prompt', data: { originalQuestion: text } }
+        );
+      } else {
+        pushMessage('assistant', reply);
+      }
+    } catch (err) {
+      console.error(err);
+      removeMessage(typing.id);
+      pushMessage('assistant', 'Ih, deu um erro na minha conexão aqui 😬 Pode tentar de novo daqui a pouco?');
+    } finally {
+      isWaitingReply = false;
+      setSendEnabled(true);
+      document.getElementById('chat-input').focus();
+    }
+  }
+
+  function openEscalateForm(messageId) {
+    const m = messages.find(x => x.id === messageId);
+    if (!m) return;
+    updateMessage(messageId, { type: 'escalate-form' });
+    setTimeout(() => {
+      const input = document.getElementById(`esc-name-${messageId}`);
+      if (input) input.focus();
+    }, 50);
+  }
+
+  function cancelEscalateForm(messageId) {
+    updateMessage(messageId, { type: 'escalate-prompt' });
+  }
+
+  function dismissEscalate(messageId) {
+    updateMessage(messageId, {
+      type: 'regular',
+      content: 'Sem problema! Se mudar de ideia, é só perguntar de novo ou reformular a dúvida 👋',
+      data: null
+    });
+  }
+
+  function submitEscalation(messageId) {
+    const m = messages.find(x => x.id === messageId);
+    if (!m) return;
+    const question = m.data?.originalQuestion || '';
+    const name = (document.getElementById(`esc-name-${messageId}`)?.value || '').trim();
+    const email = (document.getElementById(`esc-email-${messageId}`)?.value || '').trim();
+
+    pendingQuestions.push({
+      id: uidStr(),
+      question,
+      askedBy: name || null,
+      email: email || null,
+      askedAt: nowISO(),
+    });
+    saveToStorage(STORAGE.pending, pendingQuestions);
+    updateAdminBadge();
+
+    updateMessage(messageId, {
+      type: 'regular',
+      content: 'Prontinho! Sua pergunta foi enviada pro RH ✅\n\nAssim que tiver resposta eu te aviso por aqui.',
+      data: null
+    });
+  }
+
+  /* ---------------- Input ---------------- */
+  function autoResizeInput() {
+    const t = document.getElementById('chat-input');
+    t.style.height = 'auto';
+    t.style.height = Math.min(t.scrollHeight, 140) + 'px';
+  }
+
+  function setSendEnabled(on) {
+    document.getElementById('send-btn').disabled = !on;
+  }
+
+  /* ---------------- Admin ---------------- */
+  function updateAdminBadge() {
+    const badge = document.getElementById('admin-badge');
+    const n = pendingQuestions.length;
+    if (n > 0) {
+      badge.textContent = n;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function renderAdmin() {
+    const pendingEl = document.getElementById('pending-list');
+    const trainedEl = document.getElementById('trained-list');
+
+    if (pendingQuestions.length === 0) {
+      pendingEl.innerHTML = `<div class="empty-state">Nenhuma pergunta pendente. Tudo em dia ✨</div>`;
+    } else {
+      pendingEl.innerHTML = pendingQuestions.map(p => `
+        <div class="card" data-pending="${p.id}">
+          <div class="card-meta">
+            <span class="meta-name">${escapeHtml(p.askedBy || 'Anônimo')}</span>
+            ${p.email ? `<span>${escapeHtml(p.email)}</span>` : ''}
+            <span>${escapeHtml(formatDate(p.askedAt))}</span>
+          </div>
+          <p class="card-question">"${escapeHtml(p.question)}"</p>
+          <textarea id="ans-${p.id}" placeholder="Escreva a resposta oficial do RH…"></textarea>
+          <div class="card-actions">
+            <button class="btn btn-ghost" data-action="delete-pending" data-id="${p.id}">Descartar</button>
+            <button class="btn btn-primary" data-action="train-answer" data-id="${p.id}">Salvar e treinar</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    if (trainedAnswers.length === 0) {
+      trainedEl.innerHTML = `<div class="empty-state">Nenhuma resposta treinada ainda.</div>`;
+    } else {
+      trainedEl.innerHTML = trainedAnswers.slice().reverse().map(t => `
+        <div class="card card-trained" data-trained="${t.id}">
+          <div class="card-meta">
+            <span class="meta-name">Treinada em ${escapeHtml(formatDate(t.answeredAt))}</span>
+            ${t.askedBy ? `<span>Perguntado por ${escapeHtml(t.askedBy)}</span>` : ''}
+          </div>
+          <p class="card-question">"${escapeHtml(t.question)}"</p>
+          <div class="card-answer">${renderInline(t.answer)}</div>
+          <div class="card-actions">
+            <button class="btn btn-ghost" data-action="delete-trained" data-id="${t.id}">Remover</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    bindAdminHandlers();
+  }
+
+  function bindAdminHandlers() {
+    document.querySelectorAll('[data-action="train-answer"]').forEach(btn => {
+      btn.onclick = () => trainPending(btn.dataset.id);
+    });
+    document.querySelectorAll('[data-action="delete-pending"]').forEach(btn => {
+      btn.onclick = () => deletePending(btn.dataset.id);
+    });
+    document.querySelectorAll('[data-action="delete-trained"]').forEach(btn => {
+      btn.onclick = () => deleteTrained(btn.dataset.id);
+    });
+  }
+
+  function trainPending(pendingId) {
+    const p = pendingQuestions.find(x => x.id === pendingId);
+    if (!p) return;
+    const answer = (document.getElementById(`ans-${pendingId}`)?.value || '').trim();
+    if (!answer) { toast('Escreva uma resposta antes de salvar'); return; }
+
+    trainedAnswers.push({
+      id: uidStr(),
+      question: p.question,
+      answer,
+      askedBy: p.askedBy,
+      email: p.email,
+      askedAt: p.askedAt,
+      answeredAt: nowISO(),
+    });
+    pendingQuestions = pendingQuestions.filter(x => x.id !== pendingId);
+
+    saveToStorage(STORAGE.trained, trainedAnswers);
+    saveToStorage(STORAGE.pending, pendingQuestions);
+
+    updateAdminBadge();
+    renderAdmin();
+    toast('Resposta treinada ✓');
+  }
+
+  function deletePending(pendingId) {
+    pendingQuestions = pendingQuestions.filter(x => x.id !== pendingId);
+    saveToStorage(STORAGE.pending, pendingQuestions);
+    updateAdminBadge();
+    renderAdmin();
+    toast('Pergunta descartada');
+  }
+
+  function deleteTrained(trainedId) {
+    trainedAnswers = trainedAnswers.filter(x => x.id !== trainedId);
+    saveToStorage(STORAGE.trained, trainedAnswers);
+    renderAdmin();
+    toast('Resposta removida');
+  }
+
+  /* ---------------- View toggle ---------------- */
+  function switchView(view) {
+    currentView = view;
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      const isActive = b.dataset.view === view;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    document.getElementById('view-chat').classList.toggle('active', view === 'chat');
+    document.getElementById('view-admin').classList.toggle('active', view === 'admin');
+    if (view === 'admin') renderAdmin();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  /* ---------------- Init ---------------- */
+  function init() {
+    // header avatar
+    document.getElementById('header-avatar').innerHTML = ziAvatar(52, true);
+
+    // API key warning
+    if (!isApiKeyConfigured()) {
+      document.getElementById('api-warning').style.display = 'block';
+    }
+
+    // Tabs
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.onclick = () => switchView(b.dataset.view);
+    });
+
+    // Input
+    const input = document.getElementById('chat-input');
+    input.addEventListener('input', autoResizeInput);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendUserMessage(input.value);
+      }
+    });
+    document.getElementById('send-btn').onclick = () => sendUserMessage(input.value);
+
+    // Initial render
+    renderMessages();
+    renderSuggestions();
+    updateAdminBadge();
+    input.focus();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
