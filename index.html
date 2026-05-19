@@ -974,7 +974,13 @@ ${trainedSection}
         temperature: 0.4,
         maxOutputTokens: 1024,
         topP: 0.95
-      }
+      },
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+      ]
     };
 
     const resp = await fetch(GEMINI_URL, {
@@ -985,12 +991,21 @@ ${trainedSection}
 
     if (!resp.ok) {
       const errText = await resp.text();
-      throw new Error(`Gemini API ${resp.status}: ${errText.slice(0, 240)}`);
+      throw new Error(`HTTP ${resp.status} — ${errText.slice(0, 400)}`);
     }
 
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error('Resposta vazia do Gemini');
+
+    // Bloqueio por safety / outras razões: sem candidate
+    if (!data.candidates || data.candidates.length === 0) {
+      const reason = data.promptFeedback?.blockReason || 'sem candidates';
+      throw new Error(`Resposta bloqueada (${reason}): ${JSON.stringify(data).slice(0, 300)}`);
+    }
+    const cand = data.candidates[0];
+    const text = cand.content?.parts?.[0]?.text;
+    if (!text) {
+      throw new Error(`Resposta vazia (finishReason: ${cand.finishReason || 'desconhecido'})`);
+    }
     return text.trim();
   }
 
@@ -1156,9 +1171,14 @@ ${trainedSection}
         pushMessage('assistant', reply);
       }
     } catch (err) {
-      console.error(err);
+      console.error('[Zi] Erro Gemini:', err);
       removeMessage(typing.id);
-      pushMessage('assistant', 'Ih, deu um erro na minha conexão aqui 😬 Pode tentar de novo daqui a pouco?');
+      const detail = (err && err.message) ? err.message : String(err);
+      pushMessage(
+        'assistant',
+        'Ih, deu um erro na conexão com a IA 😬\n\n**Detalhe técnico:** ' + detail +
+        '\n\n(Abra o console do navegador — F12 → Console — pra ver o erro completo.)'
+      );
     } finally {
       isWaitingReply = false;
       setSendEnabled(true);
