@@ -143,6 +143,7 @@
       gap: 14px;
       padding-bottom: 8px;
     }
+    .msg-block { display: flex; flex-direction: column; }
     .msg-row {
       display: flex;
       gap: 10px;
@@ -482,6 +483,113 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* ---------- Streaming cursor ---------- */
+    .cursor {
+      display: inline-block;
+      width: 7px;
+      height: 1.1em;
+      background: currentColor;
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: cursor-blink 1s steps(2) infinite;
+      opacity: 0.55;
+      border-radius: 1px;
+    }
+    @keyframes cursor-blink { 50% { opacity: 0; } }
+
+    /* ---------- Feedback (👍 / 👎) ---------- */
+    .feedback {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      margin-left: 40px; /* alinha com a bolha (depois do avatar 30 + gap 10) */
+    }
+    .fb-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      font-size: 15px;
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: 8px;
+      opacity: 0.45;
+      transition: all 0.15s ease;
+      line-height: 1;
+      font-family: var(--font-body);
+    }
+    .fb-btn:hover:not(:disabled) {
+      opacity: 1;
+      background: var(--nv-paper);
+      border-color: var(--nv-line);
+    }
+    .fb-btn[aria-pressed="true"] {
+      opacity: 1;
+      background: var(--nv-clay-light);
+      border-color: var(--nv-clay);
+    }
+    .fb-btn:disabled { cursor: default; }
+
+    /* ---------- Admin gate (PIN) ---------- */
+    .admin-gate {
+      max-width: 360px;
+      margin: 48px auto;
+      text-align: center;
+      padding: 32px 28px;
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-card);
+    }
+    .admin-gate h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 24px;
+      margin: 0 0 8px 0;
+      color: var(--nv-coffee);
+    }
+    .admin-gate p {
+      font-size: 14px;
+      color: var(--nv-coffee-soft);
+      margin: 0 0 20px 0;
+      line-height: 1.5;
+    }
+    .admin-gate input {
+      width: 100%;
+      text-align: center;
+      letter-spacing: 3px;
+      font-size: 16px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      padding: 12px 14px;
+      border: 1px solid var(--nv-line);
+      border-radius: 10px;
+      background: white;
+      color: var(--nv-coffee);
+      margin-bottom: 14px;
+    }
+    .admin-gate input:focus {
+      outline: none;
+      border-color: var(--nv-clay);
+      box-shadow: 0 0 0 3px rgba(201,123,90,0.12);
+    }
+    .admin-gate .btn { width: 100%; padding: 11px; }
+    .admin-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 18px;
+      margin-top: 24px;
+      border-top: 1px solid var(--nv-line);
+    }
+
+    /* ---------- Feedback cards no admin ---------- */
+    .card-feedback { border-left: 4px solid var(--nv-coffee-soft); }
+    .card-feedback.card-fb-up   { border-left-color: #4a9d6f; }
+    .card-feedback.card-fb-down { border-left-color: #c9433d; }
+    .rating-badge {
+      display: inline-block;
+      font-size: 16px;
+      line-height: 1;
+      margin-right: 6px;
+    }
+
     /* ---------- Mobile ---------- */
     @media (max-width: 560px) {
       .app-header { padding: 12px 14px; }
@@ -537,21 +645,9 @@
     </div>
   </main>
 
-  <!-- Admin view -->
+  <!-- Admin view (conteúdo gerado em JS — gate ou painel) -->
   <main id="view-admin" class="view">
-    <div class="view-inner">
-      <section class="admin-section">
-        <h2>Perguntas pendentes</h2>
-        <p class="section-hint">Perguntas que a Zi não soube responder e foram escaladas pelos colaboradores. Responda aqui pra alimentar a base.</p>
-        <div id="pending-list"></div>
-      </section>
-
-      <section class="admin-section">
-        <h2>Respostas treinadas</h2>
-        <p class="section-hint">Respostas validadas pelo RH. A Zi usa essas como referência nas próximas conversas.</p>
-        <div id="trained-list"></div>
-      </section>
-    </div>
+    <div class="view-inner" id="admin-root"></div>
   </main>
 
   <footer class="app-footer">NV · Assistente interna de RH</footer>
@@ -566,11 +662,16 @@
   // ⚠️ Substitua pelo seu Gemini API key (https://aistudio.google.com/app/apikey)
   const GEMINI_API_KEY = "AIzaSyAPUpSEgDUpsgHt7zmdOoykU-c73YI2jmk";
   const GEMINI_MODEL = "gemini-2.5-flash";
-  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const GEMINI_URL_STREAM = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
+
+  // PIN do Admin RH — friction simples, não segurança. Visível no source (repo público).
+  const ADMIN_PIN = "NVRH2026";
+  const ADMIN_AUTH_KEY = "zi_admin_auth";
 
   const STORAGE = {
-    pending: "zi_pending_questions",
-    trained: "zi_trained_answers",
+    pending:  "zi_pending_questions",
+    trained:  "zi_trained_answers",
+    feedback: "zi_feedback",
   };
 
   const SUGGESTIONS = [
@@ -906,6 +1007,7 @@ Onde encontrar: Nas Internas, no Redmine, no processo de onboarding.
   ];
   let pendingQuestions = loadFromStorage(STORAGE.pending, []);
   let trainedAnswers = loadFromStorage(STORAGE.trained, []);
+  let feedbackLog = loadFromStorage(STORAGE.feedback, []);
   let currentView = 'chat';
   let isWaitingReply = false;
 
@@ -956,7 +1058,9 @@ ${trainedSection}
     return GEMINI_API_KEY && !GEMINI_API_KEY.startsWith("COLOQUE_") && GEMINI_API_KEY.length > 10;
   }
 
-  async function callGemini(history, trained) {
+  // Streaming via SSE — cada chunk chama onChunk(textoAcumulado).
+  // Retorna o texto completo (incluindo eventual [NAO_ENCONTREI]) ao final.
+  async function callGeminiStream(history, trained, onChunk) {
     const systemInstruction = buildSystemPrompt(trained);
 
     // Pula a 1ª mensagem (boas-vindas) — Gemini exige que o array comece com role:user
@@ -983,7 +1087,7 @@ ${trainedSection}
       ]
     };
 
-    const resp = await fetch(GEMINI_URL, {
+    const resp = await fetch(GEMINI_URL_STREAM, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -994,19 +1098,54 @@ ${trainedSection}
       throw new Error(`HTTP ${resp.status} — ${errText.slice(0, 400)}`);
     }
 
-    const data = await resp.json();
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let full = '';
+    let lastFinishReason = null;
+    let blockReason = null;
 
-    // Bloqueio por safety / outras razões: sem candidate
-    if (!data.candidates || data.candidates.length === 0) {
-      const reason = data.promptFeedback?.blockReason || 'sem candidates';
-      throw new Error(`Resposta bloqueada (${reason}): ${JSON.stringify(data).slice(0, 300)}`);
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let nl;
+      while ((nl = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (!line.startsWith('data:')) continue;
+        const payload = line.slice(5).trim();
+        if (!payload) continue;
+
+        let obj;
+        try { obj = JSON.parse(payload); } catch { continue; }
+
+        if (obj.error) {
+          throw new Error(`Stream error: ${JSON.stringify(obj.error).slice(0, 300)}`);
+        }
+        if (obj.promptFeedback?.blockReason) blockReason = obj.promptFeedback.blockReason;
+
+        const cand = obj.candidates?.[0];
+        if (cand?.finishReason) lastFinishReason = cand.finishReason;
+        const piece = cand?.content?.parts?.[0]?.text || '';
+        if (piece) {
+          full += piece;
+          onChunk(full);
+        }
+      }
     }
-    const cand = data.candidates[0];
-    const text = cand.content?.parts?.[0]?.text;
-    if (!text) {
-      throw new Error(`Resposta vazia (finishReason: ${cand.finishReason || 'desconhecido'})`);
+
+    if (!full) {
+      if (blockReason) throw new Error(`Resposta bloqueada: ${blockReason}`);
+      throw new Error(`Resposta vazia (finishReason: ${lastFinishReason || 'desconhecido'})`);
     }
-    return text.trim();
+    return full;
+  }
+
+  // Esconde o token de escalação durante o streaming pra não vazar.
+  function stripMarker(s) {
+    return s.replace(/\[NAO_ENCONTREI\]/g, '');
   }
 
   /* ---------------- Chat rendering ---------------- */
@@ -1020,10 +1159,23 @@ ${trainedSection}
   function renderMessageHtml(m) {
     if (m.type === 'typing') {
       return `
-        <div class="msg-row assistant" data-id="${m.id}">
-          <span class="avatar-slot">${ziAvatar(30)}</span>
-          <div class="bubble">
-            <span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+        <div class="msg-block">
+          <div class="msg-row assistant" data-id="${m.id}">
+            <span class="avatar-slot">${ziAvatar(30)}</span>
+            <div class="bubble">
+              <span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (m.type === 'streaming') {
+      return `
+        <div class="msg-block">
+          <div class="msg-row assistant" data-id="${m.id}">
+            <span class="avatar-slot">${ziAvatar(30)}</span>
+            <div class="bubble">${renderInline(m.content)}<span class="cursor"></span></div>
           </div>
         </div>
       `;
@@ -1059,10 +1211,27 @@ ${trainedSection}
       `;
     }
 
+    // Botões de feedback só em respostas reais da Zi (não no welcome, escalações, erros)
+    let feedbackHtml = '';
+    if (m.isAiAnswer && !isUser) {
+      const up   = m.feedback === 'up';
+      const down = m.feedback === 'down';
+      const disabled = m.feedback ? 'disabled' : '';
+      feedbackHtml = `
+        <div class="feedback">
+          <button class="fb-btn" data-action="feedback" data-rating="up"   data-id="${m.id}" aria-pressed="${up}"   aria-label="Útil"     title="Útil"     ${disabled}>👍</button>
+          <button class="fb-btn" data-action="feedback" data-rating="down" data-id="${m.id}" aria-pressed="${down}" aria-label="Não útil" title="Não útil" ${disabled}>👎</button>
+        </div>
+      `;
+    }
+
     return `
-      <div class="msg-row ${isUser ? 'user' : 'assistant'}" data-id="${m.id}">
-        ${avatar}
-        <div class="bubble">${renderInline(m.content)}${extra}</div>
+      <div class="msg-block">
+        <div class="msg-row ${isUser ? 'user' : 'assistant'}" data-id="${m.id}">
+          ${avatar}
+          <div class="bubble">${renderInline(m.content)}${extra}</div>
+        </div>
+        ${feedbackHtml}
       </div>
     `;
   }
@@ -1083,6 +1252,33 @@ ${trainedSection}
         submitEscalation(form.dataset.id);
       };
     });
+    document.querySelectorAll('[data-action="feedback"]').forEach(btn => {
+      btn.onclick = () => submitFeedback(btn.dataset.id, btn.dataset.rating);
+    });
+  }
+
+  function submitFeedback(messageId, rating) {
+    const i = messages.findIndex(m => m.id === messageId);
+    if (i === -1 || messages[i].feedback) return; // já votou ou não achou
+
+    // A pergunta correspondente é o user msg imediatamente anterior
+    let question = '';
+    for (let j = i - 1; j >= 0; j--) {
+      if (messages[j].role === 'user') { question = messages[j].content; break; }
+    }
+
+    feedbackLog.push({
+      id: uidStr(),
+      question,
+      answer: messages[i].content,
+      rating,
+      timestamp: nowISO(),
+    });
+    saveToStorage(STORAGE.feedback, feedbackLog);
+
+    messages[i].feedback = rating;
+    renderMessages();
+    toast(rating === 'up' ? 'Valeu pelo feedback! 👍' : 'Anotado, vamos melhorar 👍');
   }
 
   function scrollToBottom() {
@@ -1157,28 +1353,55 @@ ${trainedSection}
     setSendEnabled(false);
     const typing = pushMessage('assistant', '', { type: 'typing' });
 
-    try {
-      const reply = await callGemini(messages.filter(m => m.type !== 'typing'), trainedAnswers);
-      removeMessage(typing.id);
+    let streamStarted = false;
 
-      if (reply.includes('[NAO_ENCONTREI]')) {
-        pushMessage(
-          'assistant',
-          "Hmm, essa eu não consigo responder com segurança só pelos documentos que tenho aqui 🤔\n\nQuer que eu encaminhe pro time de RH responder pessoalmente?",
-          { type: 'escalate-prompt', data: { originalQuestion: text } }
-        );
+    const onChunk = (full) => {
+      const display = stripMarker(full);
+      if (!streamStarted) {
+        streamStarted = true;
+        // Troca a bolha de "typing dots" pra "streaming" — full re-render (1x)
+        updateMessage(typing.id, { type: 'streaming', content: display });
       } else {
-        pushMessage('assistant', reply);
+        // Atualizações subsequentes — só mexe na innerHTML da bolha, sem re-render
+        const i = messages.findIndex(m => m.id === typing.id);
+        if (i !== -1) messages[i].content = display;
+        const bubble = document.querySelector(`.msg-row[data-id="${typing.id}"] .bubble`);
+        if (bubble) {
+          bubble.innerHTML = renderInline(display) + '<span class="cursor"></span>';
+        }
+        // Auto-scroll só se o usuário já estava perto do fundo (não rouba scroll de quem subiu)
+        if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 200) {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
+        }
+      }
+    };
+
+    try {
+      const full = await callGeminiStream(
+        messages.filter(m => m.type !== 'typing' && m.type !== 'streaming'),
+        trainedAnswers,
+        onChunk
+      );
+
+      if (full.includes('[NAO_ENCONTREI]')) {
+        updateMessage(typing.id, {
+          type: 'escalate-prompt',
+          content: "Hmm, essa eu não consigo responder com segurança só pelos documentos que tenho aqui 🤔\n\nQuer que eu encaminhe pro time de RH responder pessoalmente?",
+          data: { originalQuestion: text },
+          isAiAnswer: false,
+        });
+      } else {
+        updateMessage(typing.id, { type: 'regular', content: full, isAiAnswer: true });
       }
     } catch (err) {
       console.error('[Zi] Erro Gemini:', err);
-      removeMessage(typing.id);
       const detail = (err && err.message) ? err.message : String(err);
-      pushMessage(
-        'assistant',
-        'Ih, deu um erro na conexão com a IA 😬\n\n**Detalhe técnico:** ' + detail +
-        '\n\n(Abra o console do navegador — F12 → Console — pra ver o erro completo.)'
-      );
+      updateMessage(typing.id, {
+        type: 'regular',
+        content: 'Ih, deu um erro na conexão com a IA 😬\n\n**Detalhe técnico:** ' + detail +
+                 '\n\n(Abra o console do navegador — F12 → Console — pra ver o erro completo.)',
+        isAiAnswer: false,
+      });
     } finally {
       isWaitingReply = false;
       setSendEnabled(true);
@@ -1255,49 +1478,141 @@ ${trainedSection}
     }
   }
 
+  /* ---------- Admin auth (PIN) ---------- */
+  function isAdminAuthed() {
+    return sessionStorage.getItem(ADMIN_AUTH_KEY) === '1';
+  }
+  function logoutAdmin() {
+    sessionStorage.removeItem(ADMIN_AUTH_KEY);
+    renderAdmin();
+    toast('Você saiu do admin');
+  }
+
   function renderAdmin() {
-    const pendingEl = document.getElementById('pending-list');
-    const trainedEl = document.getElementById('trained-list');
-
-    if (pendingQuestions.length === 0) {
-      pendingEl.innerHTML = `<div class="empty-state">Nenhuma pergunta pendente. Tudo em dia ✨</div>`;
-    } else {
-      pendingEl.innerHTML = pendingQuestions.map(p => `
-        <div class="card" data-pending="${p.id}">
-          <div class="card-meta">
-            <span class="meta-name">${escapeHtml(p.askedBy || 'Anônimo')}</span>
-            ${p.email ? `<span>${escapeHtml(p.email)}</span>` : ''}
-            <span>${escapeHtml(formatDate(p.askedAt))}</span>
-          </div>
-          <p class="card-question">"${escapeHtml(p.question)}"</p>
-          <textarea id="ans-${p.id}" placeholder="Escreva a resposta oficial do RH…"></textarea>
-          <div class="card-actions">
-            <button class="btn btn-ghost" data-action="delete-pending" data-id="${p.id}">Descartar</button>
-            <button class="btn btn-primary" data-action="train-answer" data-id="${p.id}">Salvar e treinar</button>
-          </div>
+    const root = document.getElementById('admin-root');
+    if (!isAdminAuthed()) {
+      root.innerHTML = `
+        <div class="admin-gate">
+          <h2>Acesso restrito</h2>
+          <p>Esta área é exclusiva do time de RH. Digite o PIN pra continuar.</p>
+          <input id="admin-pin-input" type="password" inputmode="text" autocomplete="off" placeholder="PIN" />
+          <button class="btn btn-primary" id="admin-pin-submit">Entrar</button>
         </div>
-      `).join('');
+      `;
+      const input = document.getElementById('admin-pin-input');
+      const submit = () => {
+        if ((input.value || '').trim() === ADMIN_PIN) {
+          sessionStorage.setItem(ADMIN_AUTH_KEY, '1');
+          renderAdmin();
+        } else {
+          input.value = '';
+          input.focus();
+          toast('PIN incorreto');
+        }
+      };
+      document.getElementById('admin-pin-submit').onclick = submit;
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+      setTimeout(() => input.focus(), 50);
+      return;
     }
 
-    if (trainedAnswers.length === 0) {
-      trainedEl.innerHTML = `<div class="empty-state">Nenhuma resposta treinada ainda.</div>`;
-    } else {
-      trainedEl.innerHTML = trainedAnswers.slice().reverse().map(t => `
-        <div class="card card-trained" data-trained="${t.id}">
-          <div class="card-meta">
-            <span class="meta-name">Treinada em ${escapeHtml(formatDate(t.answeredAt))}</span>
-            ${t.askedBy ? `<span>Perguntado por ${escapeHtml(t.askedBy)}</span>` : ''}
-          </div>
-          <p class="card-question">"${escapeHtml(t.question)}"</p>
-          <div class="card-answer">${renderInline(t.answer)}</div>
-          <div class="card-actions">
-            <button class="btn btn-ghost" data-action="delete-trained" data-id="${t.id}">Remover</button>
-          </div>
-        </div>
-      `).join('');
-    }
+    // Painel autenticado
+    root.innerHTML = `
+      <section class="admin-section">
+        <h2>Perguntas pendentes</h2>
+        <p class="section-hint">Perguntas que a Zi não soube responder e foram escaladas pelos colaboradores. Responda aqui pra alimentar a base.</p>
+        <div id="pending-list">${renderPendingHtml()}</div>
+      </section>
 
+      <section class="admin-section">
+        <h2>Feedback dos colaboradores</h2>
+        <p class="section-hint">👍 e 👎 dados nas respostas da Zi. Sinal pra identificar onde ela responde bem e onde precisa melhorar.</p>
+        <div id="feedback-list">${renderFeedbackHtml()}</div>
+      </section>
+
+      <section class="admin-section">
+        <h2>Respostas treinadas</h2>
+        <p class="section-hint">Respostas validadas pelo RH. A Zi usa essas como referência nas próximas conversas.</p>
+        <div id="trained-list">${renderTrainedHtml()}</div>
+      </section>
+
+      <div class="admin-footer">
+        <button class="btn btn-ghost" id="admin-logout">Sair do admin</button>
+      </div>
+    `;
     bindAdminHandlers();
+  }
+
+  function renderPendingHtml() {
+    if (pendingQuestions.length === 0) {
+      return `<div class="empty-state">Nenhuma pergunta pendente. Tudo em dia ✨</div>`;
+    }
+    return pendingQuestions.map(p => `
+      <div class="card" data-pending="${p.id}">
+        <div class="card-meta">
+          <span class="meta-name">${escapeHtml(p.askedBy || 'Anônimo')}</span>
+          ${p.email ? `<span>${escapeHtml(p.email)}</span>` : ''}
+          <span>${escapeHtml(formatDate(p.askedAt))}</span>
+        </div>
+        <p class="card-question">"${escapeHtml(p.question)}"</p>
+        <textarea id="ans-${p.id}" placeholder="Escreva a resposta oficial do RH…"></textarea>
+        <div class="card-actions">
+          <button class="btn btn-ghost" data-action="delete-pending" data-id="${p.id}">Descartar</button>
+          <button class="btn btn-primary" data-action="train-answer" data-id="${p.id}">Salvar e treinar</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderTrainedHtml() {
+    if (trainedAnswers.length === 0) {
+      return `<div class="empty-state">Nenhuma resposta treinada ainda.</div>`;
+    }
+    return trainedAnswers.slice().reverse().map(t => `
+      <div class="card card-trained" data-trained="${t.id}">
+        <div class="card-meta">
+          <span class="meta-name">Treinada em ${escapeHtml(formatDate(t.answeredAt))}</span>
+          ${t.askedBy ? `<span>Perguntado por ${escapeHtml(t.askedBy)}</span>` : ''}
+        </div>
+        <p class="card-question">"${escapeHtml(t.question)}"</p>
+        <div class="card-answer">${renderInline(t.answer)}</div>
+        <div class="card-actions">
+          <button class="btn btn-ghost" data-action="delete-trained" data-id="${t.id}">Remover</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderFeedbackHtml() {
+    if (feedbackLog.length === 0) {
+      return `<div class="empty-state">Ainda não há feedback registrado.</div>`;
+    }
+    const ups   = feedbackLog.filter(f => f.rating === 'up').length;
+    const downs = feedbackLog.filter(f => f.rating === 'down').length;
+    const total = feedbackLog.length;
+    const upPct = Math.round((ups / total) * 100);
+
+    const summary = `
+      <p class="section-hint" style="margin-bottom:14px">
+        <strong>${ups}</strong> 👍 · <strong>${downs}</strong> 👎 · ${total} avaliações no total (${upPct}% positivas)
+      </p>
+    `;
+
+    const cards = feedbackLog.slice().reverse().map(f => `
+      <div class="card card-feedback card-fb-${f.rating}" data-feedback="${f.id}">
+        <div class="card-meta">
+          <span class="rating-badge">${f.rating === 'up' ? '👍' : '👎'}</span>
+          <span>${escapeHtml(formatDate(f.timestamp))}</span>
+        </div>
+        ${f.question ? `<p class="card-question">"${escapeHtml(f.question)}"</p>` : ''}
+        <div class="card-answer">${renderInline(f.answer)}</div>
+        <div class="card-actions">
+          <button class="btn btn-ghost" data-action="delete-feedback" data-id="${f.id}">Remover</button>
+        </div>
+      </div>
+    `).join('');
+
+    return summary + cards;
   }
 
   function bindAdminHandlers() {
@@ -1310,6 +1625,18 @@ ${trainedSection}
     document.querySelectorAll('[data-action="delete-trained"]').forEach(btn => {
       btn.onclick = () => deleteTrained(btn.dataset.id);
     });
+    document.querySelectorAll('[data-action="delete-feedback"]').forEach(btn => {
+      btn.onclick = () => deleteFeedbackEntry(btn.dataset.id);
+    });
+    const logoutBtn = document.getElementById('admin-logout');
+    if (logoutBtn) logoutBtn.onclick = logoutAdmin;
+  }
+
+  function deleteFeedbackEntry(fbId) {
+    feedbackLog = feedbackLog.filter(x => x.id !== fbId);
+    saveToStorage(STORAGE.feedback, feedbackLog);
+    renderAdmin();
+    toast('Feedback removido');
   }
 
   function trainPending(pendingId) {
