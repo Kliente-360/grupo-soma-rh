@@ -125,9 +125,9 @@ async function patchInteraction(id, patch) {
 
 // ---------------- System prompt builder ----------------
 function buildSystemPrompt(chunks, trained) {
-  const kb = chunks.map(c =>
-    `--- ${c.section_title} (fonte: ${c.source_file}) ---\n${c.content}`
-  ).join("\n\n");
+  // Chunks já têm `## Section` no início, então não adiciono delimitadores
+  // que possam confundir o modelo (ex: "--- (fonte: arquivo.md) ---").
+  const kb = chunks.map(c => c.content).join("\n\n---\n\n");
 
   const trainedBlock = trained.length > 0
     ? `\n\n# RESPOSTAS APROVADAS PELO RH (treinamento contínuo)\n${trained.map((t, i) =>
@@ -145,17 +145,16 @@ function buildSystemPrompt(chunks, trained) {
 - Várias etapas: listas numeradas curtas
 
 # REGRA DE OURO
-Responde APENAS com base na BASE DE CONHECIMENTO abaixo. Não invente, não use conhecimento geral, não chute.
+Responde com base na BASE DE CONHECIMENTO abaixo. Se a base tem a informação,
+responde direto e confiante — não fique reticente nem peça pra confirmar.
 
-Se a pergunta não puder ser respondida com clareza pela base, sua resposta deve ser EXATAMENTE este token e nada mais:
+Só retorne EXATAMENTE este token (e nada mais) se a base NÃO tem a informação:
 [NAO_ENCONTREI]
 
-Use [NAO_ENCONTREI] quando:
-- A informação não está na base
-- A informação está incompleta ou ambígua para resposta conclusiva
-- A pergunta é sobre caso muito específico que pediria avaliação humana
-
-Não use [NAO_ENCONTREI] como muleta. Se está na base, responde confiante.
+Não use [NAO_ENCONTREI] como muleta:
+- Se a base diz algo concreto sobre o tema da pergunta, RESPONDA usando isso
+- Se a base cobre um caso semelhante, generalize razoavelmente em vez de bloquear
+- Só dispare [NAO_ENCONTREI] quando claramente nada na base toca o assunto
 
 # BASE DE CONHECIMENTO
 
