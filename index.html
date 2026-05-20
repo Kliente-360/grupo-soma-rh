@@ -863,8 +863,8 @@
   <div id="login-screen" class="login-screen" style="display:none">
     <div class="login-card">
       <span id="login-avatar" class="login-avatar"></span>
-      <h2>Olá! Faça login</h2>
-      <p>Acesse com seu usuário e senha pra começar.</p>
+      <h2>Olá! Eu sou a Zi, sua assistente de RH com inteligência artificial.</h2>
+      <p>Pronto para começar? É só fazer o login!</p>
       <form id="login-form" autocomplete="on" novalidate>
         <input id="login-username" type="text" placeholder="usuário" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" />
         <input id="login-password" type="password" placeholder="senha" autocomplete="current-password" />
@@ -944,14 +944,16 @@
   const SUGGESTIONS = [
     "Como funciona o vale-refeição?",
     "Quantos dias de licença paternidade eu tenho?",
-    "Posso continuar com o plano de saúde depois que sair?",
     "Como solicito férias?",
     "Como incluir minha esposa no plano?",
+    "Tenho direito a day off no aniversário?",
+    "O que faço se receber um e-mail suspeito?",
+    "O que faço em caso de acidente de trabalho?",
+    "Posso continuar com o plano de saúde depois que sair?",
   ];
 
   const WELCOME_TEXT =
-    "Oi! Eu sou a **Zi**, sua assistente do RH da NV ✨\n\n" +
-    "Pode mandar sua dúvida — admissão, demissão, benefícios, férias, plano de saúde, segurança da informação… o que rolar.";
+    "Pode mandar sua dúvida — admissão, demissão, benefícios, férias, plano de saúde, segurança da informação… o que rolar. ✨";
 
   /* ---------------- Base de Conhecimento (REMOVIDA) ----------------
    * Antes era um template literal de ~200 linhas no client. Agora vive
