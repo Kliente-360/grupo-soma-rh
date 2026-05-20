@@ -98,15 +98,20 @@ def chunk_markdown(md_path: Path) -> list[dict]:
     return chunks
 
 
+EMBED_MODEL = "gemini-embedding-001"
+EMBED_DIM = 768  # bate com vector(768) do schema
+
+
 def embed_text(text: str, gemini_key: str, retries: int = 3) -> list[float]:
-    """Gera embedding via Gemini text-embedding-004 (768 dims)."""
+    """Gera embedding via Gemini gemini-embedding-001 (768 dims via outputDimensionality)."""
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"text-embedding-004:embedContent?key={gemini_key}"
+        f"{EMBED_MODEL}:embedContent?key={gemini_key}"
     )
     payload = {
-        "model": "models/text-embedding-004",
+        "model": f"models/{EMBED_MODEL}",
         "content": {"parts": [{"text": text}]},
+        "outputDimensionality": EMBED_DIM,
     }
     for attempt in range(1, retries + 1):
         try:

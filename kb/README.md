@@ -112,11 +112,20 @@ Recomendo um destes (em ordem de preferência por custo/qualidade em PT-BR):
 
 | Modelo | Dim | Custo / 1M tokens | Notas |
 |---|---|---|---|
-| **OpenAI `text-embedding-3-small`** | 1536 | US$ 0,02 | Padrão sólido, multilíngue forte |
-| **Gemini `text-embedding-004`** | 768 | grátis (limite free tier) | Já tá no projeto, zero atrito |
-| **Cohere `embed-multilingual-v3`** | 1024 | US$ 0,10 | Especializado multilíngue |
+| **Gemini `gemini-embedding-001`** ✅ (em uso) | 768 (configurável) | grátis (free tier) | Em produção; suporta MRL — pedimos 768 dim pra economizar storage |
+| OpenAI `text-embedding-3-small` | 1536 | US$ 0,02 | Padrão sólido, multilíngue forte |
+| Cohere `embed-multilingual-v3` | 1024 | US$ 0,10 | Especializado multilíngue |
 
-Sugestão: começar com **Gemini embedding** já que a key tá configurada e a base é pequena (75 chunks ≈ ~30 mil tokens de input total — sobra MUITO no free tier).
+**Em uso:** `gemini-embedding-001` (substituiu o `text-embedding-004` que foi descontinuado para keys novas). Output forçado em 768 dimensões via parâmetro `outputDimensionality` pra bater com o schema `vector(768)`.
+
+**Validado em retrieval** (Top-1 score em queries reais):
+- "Como solicito férias?" → chunk Férias, 0.766
+- "Licença paternidade?" → chunk Licença Paternidade, 0.798
+- "E-mail suspeito?" → chunk E-mails/Phishing, 0.780
+- "Vale-refeição?" → chunk Alimentação, 0.748
+- "Day off?" → chunk Day Off, 0.850
+
+Perguntas fora da KB (presidente da empresa, trabalho remoto de Portugal) ficam <= 0.60 — **threshold ~0.65 separa in-KB de out-of-KB** com folga.
 
 ### 4. Retrieval Pattern
 

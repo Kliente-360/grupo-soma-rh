@@ -5,3 +5,5 @@
 *.log
 .env
 .env.local
+__pycache__/
+*.pyc
