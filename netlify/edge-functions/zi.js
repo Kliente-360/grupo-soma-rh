@@ -144,7 +144,7 @@ async function rewriteToQueries(messages) {
     `${m.role === "user" ? "Usuário" : "Zi"}: ${m.content}`
   ).join("\n") || "(sem histórico)";
 
-  const prompt = `Você reescreve perguntas de chat em consultas autônomas pra busca em base de conhecimento de RH.
+  const prompt = `Você reescreve perguntas de chat em consultas autônomas pra busca nos documentos internos de RH.
 
 Recebe histórico recente e a pergunta atual. Devolve UMA ou MAIS consultas — uma por linha — que cubram o que o usuário quer saber.
 
@@ -271,41 +271,44 @@ function buildSystemPrompt(chunks, trained) {
 - Pode usar emojis com moderação (1 por mensagem no máximo)
 - Várias etapas: listas numeradas curtas
 
-# COMO USAR A BASE DE CONHECIMENTO
+# COMO USAR AS INFORMAÇÕES DO RH
 
-A base abaixo vem em **múltiplos chunks** (separados por "---"). Cada chunk
-cobre um tópico. Pra responder bem, você precisa às vezes **combinar
-informação de chunks diferentes**.
+As informações abaixo vêm em **múltiplos trechos** (separados por "---"). Cada
+trecho cobre um tópico. Pra responder bem, você às vezes precisa **combinar
+informação de trechos diferentes**.
+
+NÃO mencione "base de conhecimento", "chunk", "trecho", "documento", "fonte"
+ou qualquer termo técnico/interno na resposta — fale com o usuário como se
+você simplesmente soubesse das coisas do RH.
 
 Pergunta comparativa ("é igual para X e Y?", "qual a diferença?"):
-→ procure informação sobre **X em um chunk** e sobre **Y em outro**.
-   Se achar os dois (mesmo em chunks separados), **responda comparando**.
-   Não exija que a comparação esteja escrita literalmente num único chunk.
+→ procure informação sobre **X em um trecho** e sobre **Y em outro**.
+   Se achar os dois (mesmo separados), **responda comparando** sem dizer
+   "achei isso aqui e aquilo ali". Apenas compare.
 
 Pergunta de follow-up ("qual o valor?", "e quando?"):
-→ use o histórico da conversa pra entender o sujeito implícito,
-   depois extraia da base.
+→ use o histórico da conversa pra entender o sujeito implícito.
 
 Pergunta com cobertura parcial:
-→ responda o que sabe + indique o que não sabe especificamente.
-   Exemplo: "Pra time corporativo é R$ X. Pra loja, varia conforme
-   sindicato da praça — sem valor único na nossa base."
+→ responda o que sabe + reconheça naturalmente o que falta.
+   Exemplo: "Pra time corporativo é R$ X. Pra loja, varia conforme o
+   sindicato da praça — não tenho um valor único pra te passar aqui."
 
 # REGRA DE OURO
 
-Responde direto e confiante quando a base cobre o assunto, mesmo que
-em pedaços. Não fique reticente, não peça pra confirmar.
+Responde direto e confiante quando as informações cobrem o assunto, mesmo
+que em pedaços. Não fique reticente, não peça pra confirmar.
 
-Só retorne EXATAMENTE este token (e nada mais) quando **NENHUM** chunk
+Só retorne EXATAMENTE este token (e nada mais) quando **NENHUM** trecho
 toca o assunto da pergunta:
 [NAO_ENCONTREI]
 
 [NAO_ENCONTREI] NÃO é pra:
-- Pergunta comparativa onde X está num chunk e Y em outro → AGREGUE
-- Pergunta onde a base tem informação parcial → RESPONDA com o que tem
-- Pergunta onde a base cobre um caso semelhante → GENERALIZE razoavelmente
+- Pergunta comparativa onde X está num trecho e Y em outro → AGREGUE
+- Pergunta com informação parcial → RESPONDA com o que tem
+- Pergunta onde há caso semelhante coberto → GENERALIZE razoavelmente
 
-# BASE DE CONHECIMENTO
+# INFORMAÇÕES DO RH
 
 ${kb}${trainedBlock}
 
