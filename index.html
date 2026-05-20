@@ -3,75 +3,82 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#faf3e6" />
+  <meta name="theme-color" content="#FFFFFF" />
   <title>Zi · Assistente de RH NV</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      /* === Surfaces (warm honey/cream — quentes de verdade) === */
-      --nv-paper:        #faf3e6;   /* base mais quente (mel) */
-      --nv-cream:        #f0e3c8;   /* creme tostado */
-      --nv-cream-deep:   #e4d2af;   /* creme profundo */
-      --nv-surface:      #fdf9f0;   /* "branco" quente, off-white */
+      /* ============================================================
+       * Design tokens — alinhados ao STYLEGUIDE.md
+       * Paleta minimalista editorial: preto + navy + branco + off-white
+       * ============================================================ */
 
-      /* === Ink (text on cream) === */
-      --nv-coffee:       #1a1410;
-      --nv-coffee-soft:  #6b5b4f;
-      --nv-coffee-mute:  #9b8d7e;
+      /* === Surfaces === */
+      --nv-paper:        #FFFFFF;     /* color-bg-main */
+      --nv-cream:        #F5F5F3;     /* color-bg-surface (bolhas Zi, cards) */
+      --nv-cream-deep:   #FAFAF8;     /* color-bg-elevated (gate, empty state) */
+      --nv-surface:      #F5F5F3;     /* alias do bg-surface */
 
-      /* === Lines & dividers === */
-      --nv-line:         #e2d6bb;
-      --nv-line-strong:  #cdbe9d;
+      /* === Ink === */
+      --nv-coffee:       #1A1A1A;     /* color-brand-primary, texto, CTAs */
+      --nv-coffee-soft:  #3D3D3D;     /* color-text-soft */
+      --nv-coffee-mute:  #767676;     /* color-text-muted */
 
-      /* === Accent: Denim (Blue Matters) — protagonista === */
-      --nv-blue:         #3d6890;   /* denim mais saturado */
-      --nv-blue-deep:    #284a6c;
-      --nv-blue-soft:    #d9e4f0;   /* tint sutil */
-      --nv-blue-tint:    #b3c6dc;   /* meio-tom pra bordas */
+      /* === Borders === */
+      --nv-line:         #E0DCD3;     /* color-border-subtle */
+      --nv-line-strong:  #C9C2B4;     /* color-border-strong */
 
-      /* === Accent: Terracotta (warmth & positive) === */
-      --nv-clay:         #c97b5a;
-      --nv-clay-dark:    #a35a3b;
-      --nv-clay-light:   #f5e3d8;
+      /* === Accent: Navy NV ("Blue Matters") — usado APENAS em conteúdo
+       *   (bolhas user, links, focus, ícones). Estrutura é preto. */
+      --nv-blue:         #1B365D;     /* color-brand-accent */
+      --nv-blue-deep:    #0F2238;
+      --nv-blue-soft:    #E4EAF2;     /* color-accent-soft */
+      --nv-blue-tint:    #B3C0D2;
+
+      /* === Legado: terracotta — em uso apenas no badge de pendentes.
+       *   Não usar em novas superfícies (vide STYLEGUIDE.md §13). */
+      --nv-clay:         #C9805A;
+      --nv-clay-dark:    #A35A3B;
+      --nv-clay-light:   #F5E3D8;
 
       /* === Semantic === */
-      --nv-success:      #5a8a6f;
-      --nv-success-soft: #e0ece4;
-      --nv-danger:       #a8453d;
-      --nv-danger-soft:  #f0dad6;
+      --nv-success:      #1F6B47;
+      --nv-success-soft: #DCE9E1;
+      --nv-danger:       #8B2E26;
+      --nv-danger-soft:  #F2DDD9;
 
       /* === Radii === */
-      --radius-xs:       6px;
-      --radius-sm:       10px;
-      --radius-md:       14px;
-      --radius-lg:       20px;
-      --radius-bubble:   20px;
-      --radius-card:     18px;
+      --radius-xs:       4px;
+      --radius-sm:       6px;
+      --radius-md:       10px;
+      --radius-lg:       14px;
+      --radius-bubble:   14px;
+      --radius-card:     12px;
       --radius-pill:     999px;
 
       /* === Elevations === */
-      --shadow-xs:       0 1px 2px rgba(26,20,16,0.04);
-      --shadow-sm:       0 2px 6px rgba(26,20,16,0.05);
-      --shadow-md:       0 6px 18px rgba(26,20,16,0.07);
-      --shadow-lg:       0 16px 40px rgba(26,20,16,0.10);
+      --shadow-xs:       0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm:       0 2px 8px rgba(0,0,0,0.05);
+      --shadow-md:       0 8px 24px rgba(0,0,0,0.08);
+      --shadow-lg:       0 20px 48px rgba(0,0,0,0.12);
 
       /* === Motion === */
-      --ease-soft:       cubic-bezier(0.22, 0.61, 0.36, 1);
+      --ease-soft:       cubic-bezier(0.2, 0.8, 0.2, 1);
       --ease-spring:     cubic-bezier(0.34, 1.4, 0.5, 1);
       --dur-fast:        140ms;
       --dur-base:        220ms;
-      --dur-slow:        380ms;
+      --dur-slow:        350ms;
 
       /* === Layout === */
       --max-w:           860px;
 
-      /* === Typography === */
-      --font-display:    'Fraunces', 'Cormorant Garamond', Georgia, serif;
-      --font-body:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      /* === Typography (Inter universal) === */
+      --font-display:    'Helvetica Neue', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body:       'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
     }
 
     * { box-sizing: border-box; }
@@ -79,11 +86,7 @@
 
     body {
       font-family: var(--font-body);
-      background:
-        radial-gradient(at 0% 0%,  #fcf0d6 0%, transparent 55%),
-        radial-gradient(at 100% 0%, #f6e8c8 0%, transparent 55%),
-        var(--nv-paper);
-      background-attachment: fixed;
+      background: var(--nv-paper);
       color: var(--nv-coffee);
       min-height: 100vh;
       display: flex;
@@ -108,7 +111,7 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      background: rgba(250, 243, 230, 0.82);
+      background: rgba(255, 255, 255, 0.84);
       backdrop-filter: saturate(180%) blur(14px);
       -webkit-backdrop-filter: saturate(180%) blur(14px);
       border-bottom: 1px solid var(--nv-line);
@@ -132,23 +135,17 @@
     .header-text { min-width: 0; }
     .header-text h1 {
       margin: 0;
-      font-family: var(--font-display);
+      font-family: var(--font-body);
       font-weight: 500;
-      font-size: 28px;
-      line-height: 1.05;
+      font-size: 24px;
+      line-height: 1.2;
       color: var(--nv-coffee);
       letter-spacing: -0.4px;
-      font-variation-settings: "opsz" 36;
-    }
-    .header-text h1 .accent {
-      font-style: italic;
-      font-weight: 400;
-      color: var(--nv-blue);
     }
     .header-text p {
       margin: 3px 0 0 0;
       font-size: 13px;
-      color: var(--nv-coffee-soft);
+      color: var(--nv-coffee-mute);
       letter-spacing: 0.1px;
     }
     .tabs {
@@ -178,7 +175,7 @@
     }
     .tab-btn:hover { color: var(--nv-coffee); }
     .tab-btn.active {
-      background: var(--nv-blue);
+      background: var(--nv-coffee);
       color: white;
       box-shadow: var(--shadow-sm);
     }
@@ -192,11 +189,11 @@
       font-weight: 600;
       text-align: center;
       border-radius: var(--radius-pill);
-      background: var(--nv-clay);
+      background: var(--nv-blue);
       color: white;
       letter-spacing: 0;
     }
-    .tab-btn.active .badge { background: white; color: var(--nv-blue); }
+    .tab-btn.active .badge { background: white; color: var(--nv-coffee); }
 
     /* ---------- Views ---------- */
     .view { display: none; }
@@ -256,14 +253,13 @@
     .msg-row.user .bubble {
       background: var(--nv-blue);
       color: white;
-      border-radius: var(--radius-bubble) var(--radius-bubble) 6px var(--radius-bubble);
-      box-shadow: 0 2px 8px rgba(40, 74, 108, 0.18);
+      border-radius: var(--radius-bubble) var(--radius-bubble) 4px var(--radius-bubble);
     }
     .msg-row.assistant .bubble {
       background: var(--nv-surface);
       color: var(--nv-coffee);
       border: 1px solid var(--nv-line);
-      border-radius: 6px var(--radius-bubble) var(--radius-bubble) var(--radius-bubble);
+      border-radius: 4px var(--radius-bubble) var(--radius-bubble) var(--radius-bubble);
     }
 
     .msg-row .avatar-slot {
@@ -312,11 +308,11 @@
     }
     .btn:active { transform: scale(0.97); }
     .btn-primary {
-      background: var(--nv-blue);
+      background: var(--nv-coffee);
       color: white;
       box-shadow: var(--shadow-xs);
     }
-    .btn-primary:hover { background: var(--nv-blue-deep); box-shadow: var(--shadow-sm); }
+    .btn-primary:hover { background: #000000; box-shadow: var(--shadow-sm); }
     .btn-secondary {
       background: var(--nv-surface);
       color: var(--nv-coffee);
@@ -455,7 +451,7 @@
       flex-shrink: 0;
       width: 42px; height: 42px;
       border-radius: var(--radius-md);
-      background: var(--nv-blue);
+      background: var(--nv-coffee);
       color: white;
       border: 0;
       cursor: pointer;
@@ -464,22 +460,20 @@
       justify-content: center;
       transition: background var(--dur-fast) var(--ease-soft),
                   transform var(--dur-fast) var(--ease-soft);
-      box-shadow: 0 2px 8px rgba(40, 74, 108, 0.22);
     }
-    #send-btn:hover:not(:disabled) { background: var(--nv-blue-deep); }
+    #send-btn:hover:not(:disabled) { background: #000000; }
     #send-btn:active:not(:disabled) { transform: scale(0.94); }
-    #send-btn:disabled { background: var(--nv-line-strong); cursor: not-allowed; opacity: 0.6; box-shadow: none; }
+    #send-btn:disabled { background: var(--nv-line-strong); cursor: not-allowed; opacity: 0.6; }
 
     /* ---------- Admin ---------- */
     .admin-section { margin-bottom: 44px; }
     .admin-section h2 {
-      font-family: var(--font-display);
+      font-family: var(--font-body);
       font-weight: 500;
-      font-size: 28px;
+      font-size: 22px;
       letter-spacing: -0.3px;
       color: var(--nv-coffee);
       margin: 0 0 6px 0;
-      font-variation-settings: "opsz" 36;
     }
     .admin-section .section-hint {
       font-size: 14px;
@@ -510,7 +504,6 @@
     .card:hover { box-shadow: var(--shadow-sm); }
     .card-trained {
       border-left: 3px solid var(--nv-blue);
-      background: linear-gradient(90deg, var(--nv-blue-soft) 0%, var(--nv-surface) 4px);
     }
     .card-meta {
       display: flex;
@@ -523,14 +516,14 @@
     }
     .card-meta .meta-name { font-weight: 600; color: var(--nv-coffee); }
     .card-question {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 400;
-      font-size: 18px;
+      font-family: var(--font-body);
+      font-style: normal;
+      font-weight: 500;
+      font-size: 16px;
       color: var(--nv-coffee);
       margin: 0 0 14px 0;
-      line-height: 1.4;
-      font-variation-settings: "opsz" 24;
+      line-height: 1.45;
+      letter-spacing: -0.2px;
     }
     .card-answer {
       color: var(--nv-coffee);
@@ -661,13 +654,12 @@
       box-shadow: var(--shadow-md);
     }
     .admin-gate h2 {
-      font-family: var(--font-display);
+      font-family: var(--font-body);
       font-weight: 500;
-      font-size: 26px;
+      font-size: 22px;
       letter-spacing: -0.3px;
       margin: 0 0 8px 0;
       color: var(--nv-coffee);
-      font-variation-settings: "opsz" 32;
     }
     .admin-gate p {
       font-size: 14px;
@@ -750,8 +742,8 @@
       <div class="header-id">
         <span id="header-avatar"></span>
         <div class="header-text">
-          <h1><span class="accent">Zi</span> · Assistente de RH</h1>
-          <p>Tira dúvidas do RH da NV — na hora, sem fila.</p>
+          <h1>Zi · Assistente de RH</h1>
+          <p>O jeito mais rápido de tirar suas dúvidas com o RH.</p>
         </div>
       </div>
       <div class="tabs" role="tablist">
@@ -824,235 +816,26 @@
    * ----------------------------------------------------------------- */
 
 
-  /* ---------------- Avatar (SVG inline) ----------------
-   * Estilo fashion-illustration inspirado na Zilaide:
-   * pele morena com calor, cabelo longo castanho com mechas caramelo,
-   * sorriso largo, camisa verde-oliva, brincos discretos.
-   * ----------------------------------------------------- */
+  /* ---------------- Avatar (foto real da Zilaide) ----------------
+   * Foto profissional servida de assets/zi-avatar.jpg.
+   * Spec: STYLEGUIDE.md §9. Substituir foto: trocar o arquivo,
+   * manter aspect 1:1 e mín. 512px (renderiza em retina @64).
+   * ---------------------------------------------------------------- */
   function ziAvatar(size = 40, ring = false) {
-    const uid = `zi-${Math.random().toString(36).slice(2, 8)}`;
     const ringStyle = ring
       ? 'box-shadow: 0 0 0 2px var(--nv-paper), 0 0 0 3px var(--nv-line);'
       : '';
-    return `
-      <svg width="${size}" height="${size}" viewBox="0 0 200 200"
-           style="border-radius:50%; display:block; ${ringStyle}" aria-hidden="true">
-        <defs>
-          <!-- Fundo creme NV -->
-          <linearGradient id="${uid}-bg" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%"   stop-color="#f6ead6"/>
-            <stop offset="100%" stop-color="#e8d5b8"/>
-          </linearGradient>
-          <!-- Camisa verde-oliva -->
-          <linearGradient id="${uid}-shirt" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%"   stop-color="#7a8460"/>
-            <stop offset="100%" stop-color="#586547"/>
-          </linearGradient>
-          <linearGradient id="${uid}-shirt-s" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%"   stop-color="#5d6849"/>
-            <stop offset="100%" stop-color="#404a32"/>
-          </linearGradient>
-          <!-- Cabelo: castanho escuro com base mais quente embaixo -->
-          <linearGradient id="${uid}-hair" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%"   stop-color="#221610"/>
-            <stop offset="55%"  stop-color="#3a2418"/>
-            <stop offset="100%" stop-color="#5e3a22"/>
-          </linearGradient>
-          <!-- Mechas caramelo (highlight) -->
-          <linearGradient id="${uid}-balayage" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%"   stop-color="#7a4d2c" stop-opacity="0"/>
-            <stop offset="55%"  stop-color="#9b6638" stop-opacity="0.75"/>
-            <stop offset="100%" stop-color="#b8804a" stop-opacity="0.95"/>
-          </linearGradient>
-          <!-- Pele morena com calor -->
-          <linearGradient id="${uid}-skin" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%"   stop-color="#b08361"/>
-            <stop offset="100%" stop-color="#9a6e4f"/>
-          </linearGradient>
-          <clipPath id="${uid}-clip"><circle cx="100" cy="100" r="100"/></clipPath>
-        </defs>
-
-        <g clip-path="url(#${uid}-clip)">
-          <!-- Fundo -->
-          <circle cx="100" cy="100" r="100" fill="url(#${uid}-bg)"/>
-
-          <!-- Cabelo (camada de trás — volume no topo, ondas marcadas, assimétrico) -->
-          <!-- Silhueta com onda nos lados (S-curves) e mais volume à direita -->
-          <path d="M 100 22
-                   C 78 18, 56 26, 46 50
-                   C 36 76, 32 108, 38 140
-                   C 36 162, 44 180, 52 200
-                   L 78 200
-                   Q 62 178, 66 150
-                   Q 72 188, 100 196
-                   Q 132 188, 138 148
-                   Q 136 178, 122 200
-                   L 152 200
-                   C 162 182, 170 158, 168 130
-                   C 172 100, 168 70, 156 48
-                   C 144 28, 122 20, 100 22 Z"
-                fill="url(#${uid}-hair)"/>
-
-          <!-- Volume do topo (acentua o coque/crown) -->
-          <path d="M 80 26 Q 100 14, 124 26 Q 124 32, 100 28 Q 80 32, 80 26 Z"
-                fill="#1a100a" opacity="0.45"/>
-
-          <!-- Onda nas mechas (suggestion de cachos) — desenhos em S -->
-          <path d="M 44 96  Q 38 116, 46 140  Q 52 122, 50 104 Z" fill="#1a100a" opacity="0.35"/>
-          <path d="M 156 96 Q 162 116, 154 140 Q 148 122, 150 104 Z" fill="#1a100a" opacity="0.35"/>
-          <path d="M 50 158 Q 42 178, 54 198  Q 60 180, 58 162 Z" fill="#1a100a" opacity="0.35"/>
-          <path d="M 150 158 Q 158 178, 146 198 Q 140 180, 142 162 Z" fill="#1a100a" opacity="0.35"/>
-
-          <!-- Balayage caramelo distribuído (não só nas pontas) -->
-          <!-- Mecha grande lado esquerdo -->
-          <path d="M 56 92  Q 46 132, 52 184  Q 60 158, 62 122 Z"
-                fill="url(#${uid}-balayage)"/>
-          <!-- Mecha grande lado direito (mais comprida — assimétrica) -->
-          <path d="M 144 90 Q 156 138, 148 196 Q 138 162, 138 118 Z"
-                fill="url(#${uid}-balayage)"/>
-          <!-- Mechas finas distribuídas mid-length -->
-          <path d="M 68 130 Q 64 162, 70 192 Q 76 168, 76 138 Z"
-                fill="#a06b3f" opacity="0.55"/>
-          <path d="M 130 134 Q 134 168, 128 196 Q 122 172, 124 142 Z"
-                fill="#a06b3f" opacity="0.55"/>
-          <!-- Mechas iluminadas mais claras (luz nas pontas) -->
-          <path d="M 78 168 Q 76 188, 82 200 Q 86 184, 86 168 Z"
-                fill="#b8804a" opacity="0.5"/>
-          <path d="M 122 168 Q 124 188, 118 200 Q 114 184, 114 168 Z"
-                fill="#b8804a" opacity="0.5"/>
-
-          <!-- Linha de risca lateral à esquerda da cabeça (parte off-center) -->
-          <path d="M 96 30 Q 90 38, 88 46" stroke="#0d0805" stroke-width="1"
-                fill="none" opacity="0.6" stroke-linecap="round"/>
-
-          <!-- Camisa verde-oliva (gola aberta) -->
-          <path d="M 8 200 Q 12 158 50 146 L 80 158 L 80 200 Z" fill="url(#${uid}-shirt)"/>
-          <path d="M 192 200 Q 188 158 150 146 L 120 158 L 120 200 Z" fill="url(#${uid}-shirt)"/>
-          <path d="M 80 158 L 80 200 L 120 200 L 120 158 Q 100 174 80 158 Z"
-                fill="url(#${uid}-shirt)"/>
-          <!-- Vinco da gola V -->
-          <path d="M 80 158 L 100 178 L 120 158 L 116 156 L 100 172 L 84 156 Z"
-                fill="url(#${uid}-shirt-s)" opacity="0.8"/>
-          <!-- Costura discreta -->
-          <path d="M 80 158 L 76 196" stroke="#3d4530" stroke-width="0.7"
-                fill="none" opacity="0.55"/>
-          <path d="M 120 158 L 124 196" stroke="#3d4530" stroke-width="0.7"
-                fill="none" opacity="0.55"/>
-
-          <!-- Correntinha dourada com pingente -->
-          <path d="M 84 156 Q 100 168 116 156" stroke="#c8a472" stroke-width="0.7"
-                fill="none" opacity="0.7"/>
-          <circle cx="100" cy="167" r="1.5" fill="#d4ae6d"/>
-
-          <!-- Pescoço -->
-          <path d="M 86 132 Q 85 152 100 158 Q 115 152 114 132 Z" fill="url(#${uid}-skin)"/>
-          <!-- Sombra do queixo -->
-          <path d="M 86 138 Q 100 144 114 138" stroke="#7d5236" stroke-width="2.5"
-                fill="none" opacity="0.5" stroke-linecap="round"/>
-
-          <!-- Rosto -->
-          <path d="M 100 56 C 76 56 64 78 64 100 C 64 122 76 140 100 140
-                   C 124 140 136 122 136 100 C 136 78 124 56 100 56 Z"
-                fill="url(#${uid}-skin)"/>
-
-          <!-- Iluminação suave -->
-          <ellipse cx="100" cy="82" rx="22" ry="14" fill="#c89677" opacity="0.4"/>
-          <!-- Blush morno (NV terracota) -->
-          <ellipse cx="78"  cy="110" rx="9" ry="6" fill="#c97b5a" opacity="0.32"/>
-          <ellipse cx="122" cy="110" rx="9" ry="6" fill="#c97b5a" opacity="0.32"/>
-
-          <!-- Orelhas -->
-          <ellipse cx="65"  cy="104" rx="4" ry="7" fill="url(#${uid}-skin)"/>
-          <ellipse cx="135" cy="104" rx="4" ry="7" fill="url(#${uid}-skin)"/>
-          <ellipse cx="65"  cy="106" rx="2" ry="3" fill="#7d5236" opacity="0.55"/>
-          <ellipse cx="135" cy="106" rx="2" ry="3" fill="#7d5236" opacity="0.55"/>
-          <!-- Brincos discretos (gota dourada) -->
-          <circle cx="64"  cy="115" r="1.7" fill="#d4ae6d"/>
-          <circle cx="136" cy="115" r="1.7" fill="#d4ae6d"/>
-          <ellipse cx="64"  cy="119" rx="0.8" ry="1.4" fill="#c8a472" opacity="0.85"/>
-          <ellipse cx="136" cy="119" rx="0.8" ry="1.4" fill="#c8a472" opacity="0.85"/>
-
-          <!-- Cabelo frente (moldura lateral com onda + parte off-center) -->
-          <!-- Franja lateral à esquerda (mais marcada — lado da risca) -->
-          <path d="M 96 42
-                   C 78 40, 58 54, 52 82
-                   C 48 96, 54 108, 64 108
-                   C 66 96, 72 86, 84 78
-                   C 92 72, 100 66, 104 60
-                   Q 100 48, 96 42 Z"
-                fill="url(#${uid}-hair)"/>
-          <!-- Mecha lateral solta esquerda (S-curve sugerindo onda) -->
-          <path d="M 54 90  Q 46 110, 52 136 Q 60 124, 64 102 Z" fill="url(#${uid}-hair)"/>
-          <!-- Costeleta lateral direita -->
-          <path d="M 104 42
-                   C 122 42, 136 58, 138 80
-                   C 140 90, 136 100, 130 102
-                   C 130 92, 126 84, 122 78
-                   C 116 70, 108 64, 102 60 Z"
-                fill="url(#${uid}-hair)"/>
-          <!-- Mecha lateral solta direita (mais comprida) -->
-          <path d="M 142 90 Q 150 114, 142 142 Q 134 124, 134 100 Z" fill="url(#${uid}-hair)"/>
-
-          <!-- Caramelos visíveis na franja (balayage moldando o rosto) -->
-          <path d="M 60 96  Q 54 108, 58 122" stroke="#9b6638" stroke-width="1.2"
-                fill="none" opacity="0.7" stroke-linecap="round"/>
-          <path d="M 66 90  Q 62 100, 64 112" stroke="#a06b3f" stroke-width="0.9"
-                fill="none" opacity="0.55" stroke-linecap="round"/>
-          <path d="M 140 96 Q 146 108, 142 124" stroke="#9b6638" stroke-width="1.2"
-                fill="none" opacity="0.7" stroke-linecap="round"/>
-          <path d="M 134 90 Q 138 100, 136 112" stroke="#a06b3f" stroke-width="0.9"
-                fill="none" opacity="0.55" stroke-linecap="round"/>
-
-          <!-- Sobrancelhas (definidas, arqueadas) -->
-          <path d="M 78 84 Q 87 80 96 84" stroke="#1a0d06" stroke-width="2.3"
-                fill="none" stroke-linecap="round"/>
-          <path d="M 104 84 Q 113 80 122 84" stroke="#1a0d06" stroke-width="2.3"
-                fill="none" stroke-linecap="round"/>
-
-          <!-- Olhos amendoados (com rugulinha de sorriso) -->
-          <!-- esq -->
-          <ellipse cx="87" cy="95" rx="5" ry="3.1" fill="#fbf7f0"/>
-          <circle cx="87" cy="95" r="2.8" fill="#3a1f0e"/>
-          <circle cx="88" cy="94" r="1" fill="#fbf7f0"/>
-          <ellipse cx="86" cy="96" rx="0.5" ry="0.3" fill="#fbf7f0" opacity="0.7"/>
-          <path d="M 82 93 Q 87 89.5 92 93" stroke="#1a0d06" stroke-width="1.7"
-                fill="none" stroke-linecap="round"/>
-          <path d="M 83 98 Q 87 99.5 91 98" stroke="#1a0d06" stroke-width="0.7"
-                fill="none" stroke-linecap="round" opacity="0.55"/>
-          <!-- dir -->
-          <ellipse cx="113" cy="95" rx="5" ry="3.1" fill="#fbf7f0"/>
-          <circle cx="113" cy="95" r="2.8" fill="#3a1f0e"/>
-          <circle cx="114" cy="94" r="1" fill="#fbf7f0"/>
-          <ellipse cx="112" cy="96" rx="0.5" ry="0.3" fill="#fbf7f0" opacity="0.7"/>
-          <path d="M 108 93 Q 113 89.5 118 93" stroke="#1a0d06" stroke-width="1.7"
-                fill="none" stroke-linecap="round"/>
-          <path d="M 109 98 Q 113 99.5 117 98" stroke="#1a0d06" stroke-width="0.7"
-                fill="none" stroke-linecap="round" opacity="0.55"/>
-
-          <!-- Nariz -->
-          <path d="M 100 102 Q 98 110 95 116" stroke="#8b5c3c" stroke-width="0.6"
-                fill="none" opacity="0.5"/>
-          <ellipse cx="97.5"  cy="115" rx="1"   ry="0.7" fill="#7d5236" opacity="0.6"/>
-          <ellipse cx="102.5" cy="115" rx="1"   ry="0.7" fill="#7d5236" opacity="0.6"/>
-
-          <!-- Sorriso largo com dentes (assinatura da Zilaide) -->
-          <path d="M 82 122 Q 100 138 118 122" stroke="#5a1f10" stroke-width="2.4"
-                fill="none" stroke-linecap="round"/>
-          <path d="M 88 124.5 Q 100 132 112 124.5 L 110 126.5 Q 100 132 90 126.5 Z"
-                fill="#fbf7f0"/>
-          <path d="M 90 126 L 110 126" stroke="#d4ae8a" stroke-width="0.4"
-                fill="none" opacity="0.5"/>
-          <!-- Cantos da boca pra cima -->
-          <path d="M 118 122 Q 121 119 123 119" stroke="#7d5236" stroke-width="0.8"
-                fill="none" opacity="0.5" stroke-linecap="round"/>
-          <path d="M 82 122 Q 79 119 77 119" stroke="#7d5236" stroke-width="0.8"
-                fill="none" opacity="0.5" stroke-linecap="round"/>
-          <!-- Lábio inferior -->
-          <path d="M 90 131 Q 100 134 110 131" stroke="#a25040" stroke-width="0.7"
-                fill="none" opacity="0.45"/>
-        </g>
-      </svg>
-    `;
+    const style = [
+      `width:${size}px`,
+      `height:${size}px`,
+      'border-radius:50%',
+      'object-fit:cover',
+      'object-position:50% 22%',  // mantém o rosto centralizado depois do crop circular
+      'display:block',
+      'flex-shrink:0',
+      ringStyle,
+    ].filter(Boolean).join('; ');
+    return `<img src="assets/zi-avatar.jpg" width="${size}" height="${size}" alt="Zi" loading="lazy" style="${style}" />`;
   }
 
   /* ---------------- Helpers ---------------- */
