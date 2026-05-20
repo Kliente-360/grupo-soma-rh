@@ -294,6 +294,35 @@ ${kb}${trainedBlock}
 - Encerre respostas longas com "Se precisar de mais detalhe, é só falar 👋" ou similar`;
 }
 
+// ---------------- Debug: introspects rewriter + retrieval sem chamar Gemini ----------------
+async function handleDebugRetrieval(body) {
+  const messages = Array.isArray(body.messages) ? body.messages : null;
+  if (!messages || messages.length === 0) return err(400, "missing messages");
+  const queries = await rewriteToQueries(messages);
+  const embeddings = await Promise.all(queries.map(embed));
+  const perQuery = 8;
+  const chunkResults = await Promise.all(
+    embeddings.map(e => matchChunks(e, perQuery))
+  );
+  const seen = new Set();
+  const merged = [];
+  const maxLen = Math.max(...chunkResults.map(s => s.length));
+  for (let i = 0; i < maxLen && merged.length < 10; i++) {
+    for (const set of chunkResults) {
+      const c = set[i];
+      if (c && !seen.has(c.id)) { seen.add(c.id); merged.push(c); }
+      if (merged.length >= 10) break;
+    }
+  }
+  return json({
+    queries,
+    perQueryResults: chunkResults.map(set =>
+      set.map(c => ({ id: c.id, sim: Number(c.similarity.toFixed(3)), title: c.section_title, source: c.source_file }))
+    ),
+    finalChunks: merged.map(c => ({ id: c.id, sim: Number(c.similarity.toFixed(3)), title: c.section_title, source: c.source_file })),
+  });
+}
+
 // ---------------- Action handlers ----------------
 
 async function handleChat(body) {
@@ -576,6 +605,7 @@ export default async (req) => {
   try {
     switch (action) {
       case "chat":                 return await handleChat(body);
+      case "debug_retrieval":      return await handleDebugRetrieval(body);
       case "save_answer":          return await handleSaveAnswer(body);
       case "feedback":             return await handleFeedback(body);
       case "escalate":             return await handleEscalate(body);
