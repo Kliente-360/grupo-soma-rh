@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#fbf8f3" />
+  <meta name="theme-color" content="#faf3e6" />
   <title>Zi · Assistente de RH NV</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,11 +12,11 @@
 
   <style>
     :root {
-      /* === Surfaces (warm whites & creams) === */
-      --nv-paper:        #fbf8f3;
-      --nv-cream:        #f4ecdd;
-      --nv-cream-deep:   #ece0c9;
-      --nv-surface:      #ffffff;
+      /* === Surfaces (warm honey/cream — quentes de verdade) === */
+      --nv-paper:        #faf3e6;   /* base mais quente (mel) */
+      --nv-cream:        #f0e3c8;   /* creme tostado */
+      --nv-cream-deep:   #e4d2af;   /* creme profundo */
+      --nv-surface:      #fdf9f0;   /* "branco" quente, off-white */
 
       /* === Ink (text on cream) === */
       --nv-coffee:       #1a1410;
@@ -24,13 +24,14 @@
       --nv-coffee-mute:  #9b8d7e;
 
       /* === Lines & dividers === */
-      --nv-line:         #e6dcca;
-      --nv-line-strong:  #d4c6ad;
+      --nv-line:         #e2d6bb;
+      --nv-line-strong:  #cdbe9d;
 
-      /* === Accent: Denim (Blue Matters) === */
-      --nv-blue:         #4a6b8a;
-      --nv-blue-deep:    #344e6b;
-      --nv-blue-soft:    #e2e9f1;
+      /* === Accent: Denim (Blue Matters) — protagonista === */
+      --nv-blue:         #3d6890;   /* denim mais saturado */
+      --nv-blue-deep:    #284a6c;
+      --nv-blue-soft:    #d9e4f0;   /* tint sutil */
+      --nv-blue-tint:    #b3c6dc;   /* meio-tom pra bordas */
 
       /* === Accent: Terracotta (warmth & positive) === */
       --nv-clay:         #c97b5a;
@@ -78,14 +79,18 @@
 
     body {
       font-family: var(--font-body);
-      background: var(--nv-paper);
+      background:
+        radial-gradient(at 0% 0%,  #fcf0d6 0%, transparent 55%),
+        radial-gradient(at 100% 0%, #f6e8c8 0%, transparent 55%),
+        var(--nv-paper);
+      background-attachment: fixed;
       color: var(--nv-coffee);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      font-feature-settings: "ss01", "cv11";  /* Inter stylistic alternates */
+      font-feature-settings: "ss01", "cv11";
     }
 
     /* Accessibility: respeita o usuário */
@@ -103,7 +108,7 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      background: rgba(251, 248, 243, 0.85);
+      background: rgba(250, 243, 230, 0.82);
       backdrop-filter: saturate(180%) blur(14px);
       -webkit-backdrop-filter: saturate(180%) blur(14px);
       border-bottom: 1px solid var(--nv-line);
@@ -173,8 +178,8 @@
     }
     .tab-btn:hover { color: var(--nv-coffee); }
     .tab-btn.active {
-      background: var(--nv-coffee);
-      color: var(--nv-paper);
+      background: var(--nv-blue);
+      color: white;
       box-shadow: var(--shadow-sm);
     }
     .badge {
@@ -191,7 +196,7 @@
       color: white;
       letter-spacing: 0;
     }
-    .tab-btn.active .badge { background: var(--nv-clay-light); color: var(--nv-coffee); }
+    .tab-btn.active .badge { background: white; color: var(--nv-blue); }
 
     /* ---------- Views ---------- */
     .view { display: none; }
@@ -249,9 +254,10 @@
     .msg-row.user .bubble a { color: inherit; text-decoration-color: rgba(255,255,255,0.5); }
 
     .msg-row.user .bubble {
-      background: var(--nv-coffee);
-      color: var(--nv-paper);
+      background: var(--nv-blue);
+      color: white;
       border-radius: var(--radius-bubble) var(--radius-bubble) 6px var(--radius-bubble);
+      box-shadow: 0 2px 8px rgba(40, 74, 108, 0.18);
     }
     .msg-row.assistant .bubble {
       background: var(--nv-surface);
@@ -449,8 +455,8 @@
       flex-shrink: 0;
       width: 42px; height: 42px;
       border-radius: var(--radius-md);
-      background: var(--nv-coffee);
-      color: var(--nv-paper);
+      background: var(--nv-blue);
+      color: white;
       border: 0;
       cursor: pointer;
       display: inline-flex;
@@ -458,10 +464,11 @@
       justify-content: center;
       transition: background var(--dur-fast) var(--ease-soft),
                   transform var(--dur-fast) var(--ease-soft);
+      box-shadow: 0 2px 8px rgba(40, 74, 108, 0.22);
     }
-    #send-btn:hover:not(:disabled) { background: var(--nv-blue); }
+    #send-btn:hover:not(:disabled) { background: var(--nv-blue-deep); }
     #send-btn:active:not(:disabled) { transform: scale(0.94); }
-    #send-btn:disabled { background: var(--nv-line-strong); cursor: not-allowed; opacity: 0.6; }
+    #send-btn:disabled { background: var(--nv-line-strong); cursor: not-allowed; opacity: 0.6; box-shadow: none; }
 
     /* ---------- Admin ---------- */
     .admin-section { margin-bottom: 44px; }
@@ -869,21 +876,54 @@
           <!-- Fundo -->
           <circle cx="100" cy="100" r="100" fill="url(#${uid}-bg)"/>
 
-          <!-- Cabelo (camada de trás — longo, com babado/onda) -->
-          <path d="M 100 26 Q 44 30 38 86 Q 30 134 44 174 Q 52 196 62 200 L 80 200
-                   Q 64 184 64 156 Q 70 190 100 198 Q 130 190 136 156
-                   Q 136 184 120 200 L 138 200 Q 148 196 156 174
-                   Q 170 134 162 86 Q 156 30 100 26 Z"
+          <!-- Cabelo (camada de trás — volume no topo, ondas marcadas, assimétrico) -->
+          <!-- Silhueta com onda nos lados (S-curves) e mais volume à direita -->
+          <path d="M 100 22
+                   C 78 18, 56 26, 46 50
+                   C 36 76, 32 108, 38 140
+                   C 36 162, 44 180, 52 200
+                   L 78 200
+                   Q 62 178, 66 150
+                   Q 72 188, 100 196
+                   Q 132 188, 138 148
+                   Q 136 178, 122 200
+                   L 152 200
+                   C 162 182, 170 158, 168 130
+                   C 172 100, 168 70, 156 48
+                   C 144 28, 122 20, 100 22 Z"
                 fill="url(#${uid}-hair)"/>
-          <!-- Mechas caramelo nas pontas -->
-          <path d="M 54 110 Q 48 150 56 188 Q 62 158 64 122 Z"
+
+          <!-- Volume do topo (acentua o coque/crown) -->
+          <path d="M 80 26 Q 100 14, 124 26 Q 124 32, 100 28 Q 80 32, 80 26 Z"
+                fill="#1a100a" opacity="0.45"/>
+
+          <!-- Onda nas mechas (suggestion de cachos) — desenhos em S -->
+          <path d="M 44 96  Q 38 116, 46 140  Q 52 122, 50 104 Z" fill="#1a100a" opacity="0.35"/>
+          <path d="M 156 96 Q 162 116, 154 140 Q 148 122, 150 104 Z" fill="#1a100a" opacity="0.35"/>
+          <path d="M 50 158 Q 42 178, 54 198  Q 60 180, 58 162 Z" fill="#1a100a" opacity="0.35"/>
+          <path d="M 150 158 Q 158 178, 146 198 Q 140 180, 142 162 Z" fill="#1a100a" opacity="0.35"/>
+
+          <!-- Balayage caramelo distribuído (não só nas pontas) -->
+          <!-- Mecha grande lado esquerdo -->
+          <path d="M 56 92  Q 46 132, 52 184  Q 60 158, 62 122 Z"
                 fill="url(#${uid}-balayage)"/>
-          <path d="M 146 110 Q 152 150 144 188 Q 138 158 136 122 Z"
+          <!-- Mecha grande lado direito (mais comprida — assimétrica) -->
+          <path d="M 144 90 Q 156 138, 148 196 Q 138 162, 138 118 Z"
                 fill="url(#${uid}-balayage)"/>
-          <path d="M 72 158 Q 76 180 72 196 Q 82 178 84 156 Z"
-                fill="#9b6638" opacity="0.5"/>
-          <path d="M 128 158 Q 124 180 128 196 Q 118 178 116 156 Z"
-                fill="#9b6638" opacity="0.5"/>
+          <!-- Mechas finas distribuídas mid-length -->
+          <path d="M 68 130 Q 64 162, 70 192 Q 76 168, 76 138 Z"
+                fill="#a06b3f" opacity="0.55"/>
+          <path d="M 130 134 Q 134 168, 128 196 Q 122 172, 124 142 Z"
+                fill="#a06b3f" opacity="0.55"/>
+          <!-- Mechas iluminadas mais claras (luz nas pontas) -->
+          <path d="M 78 168 Q 76 188, 82 200 Q 86 184, 86 168 Z"
+                fill="#b8804a" opacity="0.5"/>
+          <path d="M 122 168 Q 124 188, 118 200 Q 114 184, 114 168 Z"
+                fill="#b8804a" opacity="0.5"/>
+
+          <!-- Linha de risca lateral à esquerda da cabeça (parte off-center) -->
+          <path d="M 96 30 Q 90 38, 88 46" stroke="#0d0805" stroke-width="1"
+                fill="none" opacity="0.6" stroke-linecap="round"/>
 
           <!-- Camisa verde-oliva (gola aberta) -->
           <path d="M 8 200 Q 12 158 50 146 L 80 158 L 80 200 Z" fill="url(#${uid}-shirt)"/>
@@ -932,20 +972,36 @@
           <ellipse cx="64"  cy="119" rx="0.8" ry="1.4" fill="#c8a472" opacity="0.85"/>
           <ellipse cx="136" cy="119" rx="0.8" ry="1.4" fill="#c8a472" opacity="0.85"/>
 
-          <!-- Cabelo frente (moldura lateral) -->
-          <path d="M 100 44 C 76 42 58 56 54 82 C 52 94 56 104 62 106
-                   C 68 96 74 84 86 76 C 92 70 100 66 106 62 Q 104 50 100 44 Z"
+          <!-- Cabelo frente (moldura lateral com onda + parte off-center) -->
+          <!-- Franja lateral à esquerda (mais marcada — lado da risca) -->
+          <path d="M 96 42
+                   C 78 40, 58 54, 52 82
+                   C 48 96, 54 108, 64 108
+                   C 66 96, 72 86, 84 78
+                   C 92 72, 100 66, 104 60
+                   Q 100 48, 96 42 Z"
                 fill="url(#${uid}-hair)"/>
-          <path d="M 56 92 Q 52 116 58 134 Q 62 120 64 100 Z" fill="url(#${uid}-hair)"/>
-          <path d="M 100 44 C 118 42 132 56 136 78 C 138 88 134 96 130 98
-                   C 130 90 128 84 124 78 C 118 68 110 62 100 58 Z"
+          <!-- Mecha lateral solta esquerda (S-curve sugerindo onda) -->
+          <path d="M 54 90  Q 46 110, 52 136 Q 60 124, 64 102 Z" fill="url(#${uid}-hair)"/>
+          <!-- Costeleta lateral direita -->
+          <path d="M 104 42
+                   C 122 42, 136 58, 138 80
+                   C 140 90, 136 100, 130 102
+                   C 130 92, 126 84, 122 78
+                   C 116 70, 108 64, 102 60 Z"
                 fill="url(#${uid}-hair)"/>
-          <path d="M 140 90 Q 144 114 138 130 Q 134 118 134 100 Z" fill="url(#${uid}-hair)"/>
-          <!-- Mechinhas caramelo finas na frente -->
-          <path d="M 64 92 Q 66 104 68 114" stroke="#9b6638" stroke-width="0.7"
-                fill="none" opacity="0.55"/>
-          <path d="M 136 92 Q 134 104 132 114" stroke="#9b6638" stroke-width="0.7"
-                fill="none" opacity="0.55"/>
+          <!-- Mecha lateral solta direita (mais comprida) -->
+          <path d="M 142 90 Q 150 114, 142 142 Q 134 124, 134 100 Z" fill="url(#${uid}-hair)"/>
+
+          <!-- Caramelos visíveis na franja (balayage moldando o rosto) -->
+          <path d="M 60 96  Q 54 108, 58 122" stroke="#9b6638" stroke-width="1.2"
+                fill="none" opacity="0.7" stroke-linecap="round"/>
+          <path d="M 66 90  Q 62 100, 64 112" stroke="#a06b3f" stroke-width="0.9"
+                fill="none" opacity="0.55" stroke-linecap="round"/>
+          <path d="M 140 96 Q 146 108, 142 124" stroke="#9b6638" stroke-width="1.2"
+                fill="none" opacity="0.7" stroke-linecap="round"/>
+          <path d="M 134 90 Q 138 100, 136 112" stroke="#a06b3f" stroke-width="0.9"
+                fill="none" opacity="0.55" stroke-linecap="round"/>
 
           <!-- Sobrancelhas (definidas, arqueadas) -->
           <path d="M 78 84 Q 87 80 96 84" stroke="#1a0d06" stroke-width="2.3"
