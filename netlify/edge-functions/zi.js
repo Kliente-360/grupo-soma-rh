@@ -317,21 +317,30 @@ async function handleChat(body) {
     getActiveTrained(),
   ]);
 
-  // 3) Retrieval por query, merge + dedupe por chunk id, cap em 8 chunks
-  //    - 1 query: top-6 (mais contexto)
-  //    - 2+ queries: top-4 por query (max 12 raw → dedup → cap 8)
-  const perQuery = queries.length === 1 ? 6 : 4;
+  // 3) Retrieval por query → merge ponderado por rank (round-robin dos top-N).
+  //    Round-robin garante que cada query contribui chunks de alta similaridade
+  //    em vez de uma query monopolizar os melhores slots. Sem isso, queries
+  //    semanticamente próximas devolvem chunks parecidos e cortam o lado oposto
+  //    de uma pergunta comparativa.
+  //    - 1 query: 8 chunks finais
+  //    - 2+ queries: top-8 cada → round-robin → dedup → cap 10
+  const perQuery = queries.length === 1 ? 8 : 8;
   const chunkResults = await Promise.all(
     embeddings.map(e => matchChunks(e, perQuery))
   );
+
   const seen = new Set();
   const merged = [];
-  for (const set of chunkResults) {
-    for (const c of set) {
-      if (!seen.has(c.id)) { seen.add(c.id); merged.push(c); }
+  // Round-robin: pega o i-ésimo elemento de cada query em rodadas
+  const maxLen = Math.max(...chunkResults.map(s => s.length));
+  for (let i = 0; i < maxLen && merged.length < 10; i++) {
+    for (const set of chunkResults) {
+      const c = set[i];
+      if (c && !seen.has(c.id)) { seen.add(c.id); merged.push(c); }
+      if (merged.length >= 10) break;
     }
   }
-  const chunks = merged.slice(0, 8);
+  const chunks = merged;
 
   // 3) Monta contents pra Gemini
   const contents = messages.map(m => ({
