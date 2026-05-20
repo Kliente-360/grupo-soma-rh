@@ -635,20 +635,16 @@
    * Zi · Chatbot RH NV — Protótipo (single-file)
    * ===================================================== */
 
-  // A chamada do Gemini passa por uma Edge Function (proxy) hospedada no
-  // Netlify em /api/zi. A key NÃO fica no client — vive em GEMINI_API_KEY
-  // como env var no Netlify. Veja netlify/edge-functions/zi.js.
-  const GEMINI_URL_STREAM = "/api/zi";
+  // Toda a comunicação passa pela edge function /api/zi (Netlify).
+  // Ela faz: retrieval no Supabase (pgvector) → Gemini stream → persistência
+  // (zi_interactions, zi_trained_answers). KB e respostas treinadas vivem
+  // no Supabase — o cliente não conhece nada disso.
+  const API_URL = "/api/zi";
 
-  // PIN do Admin RH — friction simples, não segurança. Visível no source (repo público).
+  // PIN do Admin RH — fricção simples, não segurança. Validado também no servidor.
   const ADMIN_PIN = "NVRH2026";
   const ADMIN_AUTH_KEY = "zi_admin_auth";
-
-  const STORAGE = {
-    pending:  "zi_pending_questions",
-    trained:  "zi_trained_answers",
-    feedback: "zi_feedback",
-  };
+  const SESSION_ID_KEY = "zi_session_id";
 
   const SUGGESTIONS = [
     "Como funciona o vale-refeição?",
@@ -663,195 +659,12 @@
     "Pode mandar sua dúvida — admissão, benefícios, férias, plano de saúde, segurança da informação… o que rolar. " +
     "Respondo na hora com base nas nossas políticas.";
 
-  /* ---------------- Base de Conhecimento ---------------- */
-  const KNOWLEDGE_BASE = `# ADMISSÃO
+  /* ---------------- Base de Conhecimento (REMOVIDA) ----------------
+   * Antes era um template literal de ~200 linhas no client. Agora vive
+   * no Supabase (tabela kb_chunks) e é recuperada pela edge function via
+   * embedding + match_kb_chunks. Veja netlify/edge-functions/zi.js e kb/.
+   * ----------------------------------------------------------------- */
 
-## Documentos da admissão
-No momento da admissão, o colaborador recebe e assina os termos admissionais que incluem:
-- Compensação de Jornada/Banco de Horas
-- Política de Utilização de Vale Transporte
-- Termo de Adesão e Regulamento do Programa de Vendas Virtuais
-- Política de Segurança da Informação
-- Ordem de Serviço (Riscos Ocupacionais/Ambientais, Regras de Segurança, Comunicação em caso de acidentes)
-
-## Vale Transporte na admissão
-- Concessão é direito do empregado, independente da distância casa-trabalho
-- Funcionário arca com 6% do salário (regra legal); não se aplica a estagiários
-- Créditos pertencem à empresa; sobras devolvidas na rescisão
-- No momento da admissão, apresentar declaração da operadora indicando inexistência de outro cartão vinculado ao CPF
-- Em caso de perda/roubo, o empregado custeia a 2ª via
-- Uso indevido ou declaração falsa = falta grave (dispensa por justa causa)
-
-# DESLIGAMENTO / DEMISSÃO
-
-## Tipos de desligamento — Iniciativa da empresa
-A empresa concede aviso prévio ao empregado, que pode ser:
-- **Trabalhado**: 30 dias com opção de redução de 2h diárias OU dispensa de 7 dias no cumprimento
-- **Indenizado**: empregador libera o funcionário imediatamente e paga valor do aviso na rescisão
-Duração estendida conforme tempo de casa: 30 dias iniciais + 3 dias adicionais por ano trabalhado, limitado a 60 dias adicionais (máx. 90 dias). Base legal: Art. 487 e 488 da CLT.
-
-## Tipos de desligamento — Iniciativa do colaborador
-Pedido voluntário com aviso prévio que pode ser:
-- **Trabalhado**: 30 dias (ou parcial), mesma carga horária
-- **Não trabalhado**: demissão imediata com multa pelo não cumprimento (até 30 dias)
-
-## Pesquisa de desligamento
-- Pesquisa do gestor (TODOS os cenários): https://forms.office.com/r/Mk9tZaMm9K
-- Pesquisa do colaborador (voluntário): https://forms.office.com/r/W4JtapZZrk
-
-## Plano de saúde após desligamento (continuidade)
-- Direito apenas para ex-colaboradores contributários e desligados sem justa causa (RN 488/2022).
-- Prazo (demitidos sem justa causa): 1/3 do tempo de contribuição. Mínimo 6 meses, máximo 24 meses.
-- Aposentados: contribuição >10 anos = permanência indefinida; <10 anos = proporcional.
-- Ex-colaborador paga o valor integral; empresa não subsidia mais.
-- Como solicitar: manifestar interesse em até 10 dias após o desligamento (DP 2503-6890). Enviar formulário + comprovante de residência.
-
-# BENEFÍCIOS
-
-## Assistência Médica — Corporativo e Operações
-- Compulsório para o titular; vigência 30 dias após admissão.
-- Inclusão automática na admissão; cobertura no dia 01 do mês seguinte.
-- Possibilidade de incluir dependentes (cônjuge e filhos até 21 anos), mensalidade paga pelo titular.
-- Coparticipação de 30% em consultas, pronto-socorro e exames.
-- Internações, cirurgias e terapias de alta complexidade: isentas de coparticipação.
-- Desconto da coparticipação pode levar até 12 meses para aparecer na folha.
-
-## Assistência Médica — Time Comercial (Lojas)
-Empresa contribui progressivamente: começa em 10% no 1º ano e cresce 10% por ano ativo, até 90%.
-Planos Hapvida disponíveis (custeados pelo colaborador):
-- Smart 400 QC: R$ 175,46/mês
-- Smart 400 QP: R$ 210,35/mês
-- Advance 600: R$ 228,04/mês
-
-## Como incluir dependentes após admissão
-1. Abrir chamado no portal: Gestão de Pessoal > Benefícios > Assistência Médica
-2. Anexar formulário de adesão
-3. Prazo: até dia 5 do mês para vigência dia 01 do mês seguinte
-4. Novo evento (casamento, nascimento): chamado em até 30 dias = sem carência
-
-Documentos por tipo de dependente:
-- Cônjuge: certidão de casamento + formulário + CPF + RG
-- Companheiro(a): declaração pública de união estável registrada em cartório + formulário + CPF + RG
-- Filho(a) menor de 24 anos: certidão de nascimento + formulário + CPF + RG
-
-## Cancelamento do plano de saúde
-1. Chamado: Gestão de Pessoal > Benefícios > Assistência Médica e Odontológica
-2. Anexar modelo de carta de cancelamento
-3. Prazo: até dia 5 do mês para exclusão no último dia do mês
-Após exclusão, nova inclusão somente com carência.
-
-## Seguro de Vida e Assistência Funeral (Sulamérica)
-- Plano A/B (Operação/Lojas/CDs): capital uniforme R$ 16.000, funeral até R$ 5.000
-- Plano C (Aux/Assist/Analistas/Técnicos): múltiplo 20-25x, capital até R$ 152.317
-- Plano D (Liderança): múltiplo 20-25x, capital até R$ 500.000
-- Planos E e F (Head/Diretores): múltiplo 30-35x, funeral ampliado até R$ 7.000
-Coberturas automáticas: cônjuge 50%, filhos 10%.
-Assistência Funerária 24h: 4090-1073 (capitais), 0800 778 1073 (demais)
-Central Sulamérica (info): 4004-4935, seg-sex 8h-18h30
-Portal: espacodocliente.sulamerica.com.br
-
-## Vale-Refeição (cartão Flash)
-Crédito no último dia útil do mês. Valor R$ 620,00 (desconto de 20% em folha) para:
-Operações Ateliê SP/NV, CD Pavuna, Administrativo, Técnicos e Analistas, Liderança.
-
-## Cesta Básica (sem desconto)
-R$ 101,00/mês para: CD Pavuna MOT ADM, Operações Ateliê, Operações CD Pavuna EXT, Aux e Assistente Ateliê, Aux e Assistente Mat Farm.
-
-## Vale-Transporte
-- Crédito disponibilizado até o 1º dia do mês de utilização
-- 2ª via: até 15 dias úteis
-- Alteração: somente com mudança de endereço
-- Desconto: 6% sobre o valor utilizado
-
-## Vans Corporativas (sem desconto)
-Cobertura: Botafogo, São Cristóvão, FFF/Ateliê, Jardim Botânico, CD Pavuna.
-Horários: Seg-Qui 18h-19h45, Sex 17h-18h45.
-
-## Day Off de Aniversário
-1 dia de folga remunerada no mês do aniversário. Mudança de data alinhada com o gestor.
-
-## Wellz — Saúde Mental
-Plataforma gratuita e confidencial. 25 sessões de terapia (1 acolhimento + 24 com psicólogos).
-Idade mínima: 18 anos. App "Wellz". Dados anonimizados (LGPD).
-
-## Academias — TotalPass e Wellhub
-Modalidade gratuita disponível. Adesão online, idade mínima 16 anos. Até 4 dependentes (TotalPass).
-
-## Extensão Licença Maternidade e Paternidade
-- Maternidade: 120 dias → 180 dias via Programa Empresa Cidadã
-- Paternidade: 5 dias → 20 dias (precisa comprovante do curso "Pai presente: cuidado e compromisso" AVASUS, 12h, gratuito)
-- Solicitação: chamado Gestão de Pessoas > Saúde e Segurança do Trabalho
-
-# SAÚDE E SEGURANÇA
-
-## Atestado médico
-- Envio em até 48h após emissão
-- Acidente de trabalho: até 24h (CID-10 obrigatório)
-- Itens obrigatórios: data, período, nome/registro do profissional, horário (comparecimento), CID-10 (acidente), endereço
-- Atestados multidisciplinares (psicologia, nutrição, fisioterapia) NÃO abonam automaticamente
-- Chamado: https://chamados.somagrupo.com.br/projects/saude-e-seguranca-do-trabalho-sst/issues/new
-
-## Acidente de trabalho
-- No local OU no trajeto casa-trabalho-casa
-- Comunicar gestor em até 1 dia
-- Buscar atendimento médico mesmo em lesões leves
-- Documento médico em até 24h
-
-## Licença maternidade
-- 120 dias, prorrogável por 60 (total 180)
-- Pode ser requerida de 28 dias antes do parto até o dia do parto
-- Solicitação via chamado SST
-
-## Licença paternidade
-- 5 dias corridos, prorrogável por 15 (total 20)
-- Requerimento mediante certidão de nascimento
-- Prorrogação: formulário próprio punho + certidão + comprovante de programa sobre paternidade responsável
-
-## Exame médico ocupacional
-- Demissional: até 10 dias do término
-- Dispensa se ASO recente: <135 dias (graus 1-2) ou <90 dias (graus 3-4)
-
-## Férias
-- Solicitação com mínimo 45 dias de antecedência
-- Pode ser dividida em até 3 períodos; uma parcela mínimo 14 dias; nenhuma <5 dias
-- Não inicia em fins de semana nem 2 dias antes de feriado/fim de semana
-- Recebe: salário proporcional + 1/3 + abono pecuniário (se houver venda)
-- VT e VR NÃO são pagos durante as férias
-
-# SEGURANÇA DA INFORMAÇÃO
-
-## Política Global (PGSI)
-Onde encontrar: Nas Internas, no Redmine, no processo de onboarding.
-
-## Senhas
-- Mínimo 14 caracteres, com maiúsculas, minúsculas, números e especiais
-- Use mnemônicos
-- Evite: nome + 1234, datas, nomes da empresa
-- Pessoal e intransferível. Usar senha alheia = falsa identidade (Art. 307 CP)
-- Evite salvar no navegador. Use MFA sempre que possível
-
-## E-mails suspeitos
-- Remetente/assunto estranho: não abra. Spam e delete
-- Se já abriu: NUNCA clique em imagens, links ou anexos
-- Abra chamado no Service Desk para Segurança da Informação
-- NUNCA envie informações confidenciais para e-mail pessoal externo
-
-## Responsabilidades
-- Usar TI somente para trabalho
-- Bloquear sessão ao se ausentar
-- Não emprestar equipamento logado
-- Não usar pen drive/CD/DVD/cartão sem autorização
-- Não acessar e-mails pessoais no equipamento corporativo
-- Não instalar softwares sem autorização do TI
-- Comunicar imediatamente falhas ou violações
-
-# CONTATOS
-
-- DP (Plano de Saúde): 2503-6890
-- Assistência Funerária 24h Sulamérica: 4090-1073 / 0800 778 1073
-- Central Sulamérica: 4004-4935 (seg-sex 8h-18h30)
-- PASI (sindicatos especiais): 4000-2300 / 0800-401-9000 (24/7)
-- Portal SST: https://chamados.somagrupo.com.br/projects/saude-e-seguranca-do-trabalho-sst/issues/new`;
 
   /* ---------------- Avatar (SVG inline) ---------------- */
   function ziAvatar(size = 40, ring = false) {
@@ -938,14 +751,29 @@ Onde encontrar: Nas Internas, no Redmine, no processo de onboarding.
     } catch { return iso; }
   }
 
-  function loadFromStorage(key, def = []) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : def;
-    } catch { return def; }
+  /* ---------------- API client (edge function /api/zi) ---------------- */
+  function getSessionId() {
+    let id = sessionStorage.getItem(SESSION_ID_KEY);
+    if (!id) {
+      id = (crypto.randomUUID?.() || uidStr() + uidStr());
+      sessionStorage.setItem(SESSION_ID_KEY, id);
+    }
+    return id;
   }
-  function saveToStorage(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.warn('localStorage falhou:', e); }
+
+  async function apiPost(action, payload = {}) {
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...payload }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '');
+      let detail = text;
+      try { detail = JSON.parse(text)?.error?.message || text; } catch {}
+      throw new Error(`${action} HTTP ${resp.status}: ${detail.slice(0, 300)}`);
+    }
+    return resp.json();
   }
 
   function escapeHtml(s) {
@@ -981,95 +809,42 @@ Onde encontrar: Nas Internas, no Redmine, no processo de onboarding.
   let messages = [
     { id: uidStr(), role: 'assistant', content: WELCOME_TEXT, type: 'regular' }
   ];
-  let pendingQuestions = loadFromStorage(STORAGE.pending, []);
-  let trainedAnswers = loadFromStorage(STORAGE.trained, []);
-  let feedbackLog = loadFromStorage(STORAGE.feedback, []);
+  let pendingCount = 0;          // populado por refreshPendingCount()
   let currentView = 'chat';
   let isWaitingReply = false;
 
-  /* ---------------- Prompt builder ---------------- */
-  function buildSystemPrompt(trained) {
-    const trainedSection = trained.length > 0
-      ? `\n\n# RESPOSTAS APROVADAS PELO RH (treinamento contínuo)\n${trained.map((a, i) =>
-          `**Pergunta ${i + 1}**: ${a.question}\n**Resposta oficial**: ${a.answer}`
-        ).join("\n\n")}`
-      : "";
+  /* ---------------- Chat streaming via edge function ---------------- */
 
-    return `Você é a Zi, assistente virtual de RH da NV. Seu trabalho é tirar dúvidas dos colaboradores sobre processos do RH com clareza e leveza.
+  // Envia o histórico atual (incluindo a mensagem do user que acabou de chegar)
+  // pra /api/zi. Edge function: embed → match_kb_chunks (Supabase) → Gemini stream.
+  // Retorna { full, interactionId }. onChunk(textoAcumulado) chamado a cada delta.
+  async function callChat(history, onChunk) {
+    const payloadMessages = history
+      .filter(m => m.type !== 'typing' && m.type !== 'streaming')
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => ({ role: m.role, content: m.content }));
 
-# COMO VOCÊ FALA
-- Tom amigável e descontraído, próximo de uma conversa entre colegas
-- Direto ao ponto: respostas curtas, conclusivas, sem floreio
-- Use "você" e evite jargão jurídico desnecessário
-- Pode usar emojis com moderação (1 por mensagem no máximo) quando combinar
-- Se a resposta envolve várias etapas, use listas numeradas curtas
+    // Pula a 1ª mensagem se for boas-vindas do assistente — Gemini exige user no início
+    if (payloadMessages.length && payloadMessages[0].role === 'assistant') {
+      payloadMessages.shift();
+    }
 
-# REGRA DE OURO
-Você responde APENAS com base no conteúdo da BASE DE CONHECIMENTO abaixo. Não invente, não use conhecimento geral, não chute.
-
-Se a pergunta NÃO puder ser respondida com clareza pela base, sua resposta deve ser EXATAMENTE este token e nada mais:
-[NAO_ENCONTREI]
-
-Use [NAO_ENCONTREI] quando:
-- A informação não está na base
-- A informação está incompleta ou ambígua para resposta conclusiva
-- A pergunta é sobre caso muito específico que pediria avaliação humana
-
-NÃO use [NAO_ENCONTREI] como muleta. Se a resposta está na base, responda confiante.
-
-# BASE DE CONHECIMENTO
-
-${KNOWLEDGE_BASE}
-${trainedSection}
-
-# FORMATAÇÃO
-- Sem cabeçalhos markdown (###) — fica formal demais
-- Pode usar **negrito** pra destacar prazos, valores ou nomes de portais
-- Listas numeradas só quando o processo tem 3+ passos
-- Encerre respostas longas com "Se precisar de mais detalhe, é só falar 👋" ou similar`;
-  }
-
-  /* ---------------- Gemini API (via /api/zi proxy) ---------------- */
-
-  // Streaming via SSE — cada chunk chama onChunk(textoAcumulado).
-  // Retorna o texto completo (incluindo eventual [NAO_ENCONTREI]) ao final.
-  async function callGeminiStream(history, trained, onChunk) {
-    const systemInstruction = buildSystemPrompt(trained);
-
-    // Pula a 1ª mensagem (boas-vindas) — Gemini exige que o array comece com role:user
-    const conv = history.filter((m, i) => !(i === 0 && m.role === 'assistant'));
-
-    const contents = conv.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
-
-    const body = {
-      contents,
-      systemInstruction: { parts: [{ text: systemInstruction }] },
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 1024,
-        topP: 0.95
-      },
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-      ]
-    };
-
-    const resp = await fetch(GEMINI_URL_STREAM, {
+    const resp = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        action: 'chat',
+        messages: payloadMessages,
+        session_id: getSessionId(),
+      }),
     });
 
     if (!resp.ok) {
       const errText = await resp.text();
       throw new Error(`HTTP ${resp.status} — ${errText.slice(0, 400)}`);
     }
+
+    const interactionId = resp.headers.get('X-Interaction-Id') || null;
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
@@ -1113,7 +888,7 @@ ${trainedSection}
       if (blockReason) throw new Error(`Resposta bloqueada: ${blockReason}`);
       throw new Error(`Resposta vazia (finishReason: ${lastFinishReason || 'desconhecido'})`);
     }
-    return full;
+    return { full, interactionId };
   }
 
   // Esconde o token de escalação durante o streaming pra não vazar.
@@ -1230,28 +1005,30 @@ ${trainedSection}
     });
   }
 
-  function submitFeedback(messageId, rating) {
+  async function submitFeedback(messageId, rating) {
     const i = messages.findIndex(m => m.id === messageId);
-    if (i === -1 || messages[i].feedback) return; // já votou ou não achou
-
-    // A pergunta correspondente é o user msg imediatamente anterior
-    let question = '';
-    for (let j = i - 1; j >= 0; j--) {
-      if (messages[j].role === 'user') { question = messages[j].content; break; }
+    if (i === -1 || messages[i].feedback) return;
+    const msg = messages[i];
+    if (!msg.interactionId) {
+      console.warn('feedback sem interactionId — provavelmente mensagem de erro/escalação');
+      toast('Esse não dá pra avaliar');
+      return;
     }
+    const apiRating = rating === 'up' ? 1 : -1;
 
-    feedbackLog.push({
-      id: uidStr(),
-      question,
-      answer: messages[i].content,
-      rating,
-      timestamp: nowISO(),
-    });
-    saveToStorage(STORAGE.feedback, feedbackLog);
-
+    // Otimista: trava o botão imediatamente
     messages[i].feedback = rating;
     renderMessages();
-    toast(rating === 'up' ? 'Valeu pelo feedback! 👍' : 'Anotado, vamos melhorar 👍');
+
+    try {
+      await apiPost('feedback', { interactionId: msg.interactionId, rating: apiRating });
+      toast(rating === 'up' ? 'Valeu pelo feedback! 👍' : 'Anotado, vamos melhorar 👍');
+    } catch (err) {
+      console.error('[Zi] feedback falhou:', err);
+      messages[i].feedback = null;       // desfaz o otimismo
+      renderMessages();
+      toast('Não rolou registrar 😬');
+    }
   }
 
   function scrollToBottom() {
@@ -1342,21 +1119,32 @@ ${trainedSection}
     };
 
     try {
-      const full = await callGeminiStream(
-        messages.filter(m => m.type !== 'typing' && m.type !== 'streaming'),
-        trainedAnswers,
-        onChunk
-      );
+      const { full, interactionId } = await callChat(messages, onChunk);
 
-      if (full.includes('[NAO_ENCONTREI]')) {
+      const isUnknown = full.includes('[NAO_ENCONTREI]');
+
+      // Salva a resposta final em zi_interactions (fire-and-forget)
+      if (interactionId) {
+        apiPost('save_answer', {
+          interactionId,
+          answer: isUnknown ? '[NAO_ENCONTREI]' : full,
+        }).catch(e => console.warn('save_answer falhou:', e));
+      }
+
+      if (isUnknown) {
         updateMessage(typing.id, {
           type: 'escalate-prompt',
           content: "Hmm, essa eu não consigo responder com segurança só pelos documentos que tenho aqui 🤔\n\nQuer que eu encaminhe pro time de RH responder pessoalmente?",
-          data: { originalQuestion: text },
+          data: { originalQuestion: text, interactionId },
           isAiAnswer: false,
         });
       } else {
-        updateMessage(typing.id, { type: 'regular', content: full, isAiAnswer: true });
+        updateMessage(typing.id, {
+          type: 'regular',
+          content: full,
+          isAiAnswer: true,
+          interactionId,
+        });
       }
     } catch (err) {
       console.error('[Zi] Erro Gemini:', err);
@@ -1396,28 +1184,30 @@ ${trainedSection}
     });
   }
 
-  function submitEscalation(messageId) {
+  async function submitEscalation(messageId) {
     const m = messages.find(x => x.id === messageId);
     if (!m) return;
-    const question = m.data?.originalQuestion || '';
+    const interactionId = m.data?.interactionId;
+    if (!interactionId) {
+      toast('Erro: não consegui identificar a pergunta 😬');
+      return;
+    }
     const name = (document.getElementById(`esc-name-${messageId}`)?.value || '').trim();
     const email = (document.getElementById(`esc-email-${messageId}`)?.value || '').trim();
 
-    pendingQuestions.push({
-      id: uidStr(),
-      question,
-      askedBy: name || null,
-      email: email || null,
-      askedAt: nowISO(),
-    });
-    saveToStorage(STORAGE.pending, pendingQuestions);
-    updateAdminBadge();
-
-    updateMessage(messageId, {
-      type: 'regular',
-      content: 'Prontinho! Sua pergunta foi enviada pro RH ✅\n\nAssim que tiver resposta eu te aviso por aqui.',
-      data: null
-    });
+    try {
+      await apiPost('escalate', { interactionId, name, email });
+      pendingCount += 1;
+      updateAdminBadge();
+      updateMessage(messageId, {
+        type: 'regular',
+        content: 'Prontinho! Sua pergunta foi enviada pro RH ✅\n\nAssim que tiver resposta eu te aviso por aqui.',
+        data: null
+      });
+    } catch (err) {
+      console.error('[Zi] escalate falhou:', err);
+      toast('Falhou ao enviar 😬 tenta de novo');
+    }
   }
 
   /* ---------------- Input ---------------- */
@@ -1434,23 +1224,61 @@ ${trainedSection}
   /* ---------------- Admin ---------------- */
   function updateAdminBadge() {
     const badge = document.getElementById('admin-badge');
-    const n = pendingQuestions.length;
-    if (n > 0) {
-      badge.textContent = n;
+    if (pendingCount > 0) {
+      badge.textContent = pendingCount;
       badge.style.display = 'inline-block';
     } else {
       badge.style.display = 'none';
     }
   }
 
+  async function refreshPendingCount() {
+    try {
+      const r = await apiPost('pending_count');
+      pendingCount = r.count || 0;
+    } catch (e) {
+      console.warn('pending_count falhou:', e);
+      pendingCount = 0;
+    }
+    updateAdminBadge();
+  }
+
   /* ---------- Admin auth (PIN) ---------- */
+  function getAdminPin() {
+    return sessionStorage.getItem(ADMIN_AUTH_KEY) || null;
+  }
   function isAdminAuthed() {
-    return sessionStorage.getItem(ADMIN_AUTH_KEY) === '1';
+    return !!getAdminPin();
   }
   function logoutAdmin() {
     sessionStorage.removeItem(ADMIN_AUTH_KEY);
     renderAdmin();
     toast('Você saiu do admin');
+  }
+
+  // Estado do painel admin (carregado do servidor sob demanda)
+  let adminPending = [];
+  let adminTrained = [];
+  let adminFeedback = [];
+
+  async function loadAdminData() {
+    const pin = getAdminPin();
+    if (!pin) return;
+    try {
+      const [pending, trained, feedback] = await Promise.all([
+        apiPost('admin_list_pending',  { pin }),
+        apiPost('admin_list_trained',  { pin }),
+        apiPost('admin_list_feedback', { pin }),
+      ]);
+      adminPending  = Array.isArray(pending)  ? pending  : [];
+      adminTrained  = Array.isArray(trained)  ? trained  : [];
+      adminFeedback = Array.isArray(feedback) ? feedback : [];
+      pendingCount  = adminPending.length;
+      updateAdminBadge();
+    } catch (e) {
+      console.error('[admin] load falhou:', e);
+      toast('Erro carregando admin — confere console');
+    }
   }
 
   function renderAdmin() {
@@ -1465,11 +1293,16 @@ ${trainedSection}
         </div>
       `;
       const input = document.getElementById('admin-pin-input');
-      const submit = () => {
-        if ((input.value || '').trim() === ADMIN_PIN) {
-          sessionStorage.setItem(ADMIN_AUTH_KEY, '1');
+      const submit = async () => {
+        const pin = (input.value || '').trim();
+        if (!pin) return;
+        // Valida no servidor com uma chamada barata (admin_list_trained)
+        try {
+          await apiPost('admin_list_trained', { pin });
+          sessionStorage.setItem(ADMIN_AUTH_KEY, pin);
+          await loadAdminData();
           renderAdmin();
-        } else {
+        } catch (e) {
           input.value = '';
           input.focus();
           toast('PIN incorreto');
@@ -1502,6 +1335,7 @@ ${trainedSection}
       </section>
 
       <div class="admin-footer">
+        <button class="btn btn-ghost" id="admin-refresh">Atualizar</button>
         <button class="btn btn-ghost" id="admin-logout">Sair do admin</button>
       </div>
     `;
@@ -1509,15 +1343,15 @@ ${trainedSection}
   }
 
   function renderPendingHtml() {
-    if (pendingQuestions.length === 0) {
+    if (adminPending.length === 0) {
       return `<div class="empty-state">Nenhuma pergunta pendente. Tudo em dia ✨</div>`;
     }
-    return pendingQuestions.map(p => `
+    return adminPending.map(p => `
       <div class="card" data-pending="${p.id}">
         <div class="card-meta">
-          <span class="meta-name">${escapeHtml(p.askedBy || 'Anônimo')}</span>
-          ${p.email ? `<span>${escapeHtml(p.email)}</span>` : ''}
-          <span>${escapeHtml(formatDate(p.askedAt))}</span>
+          <span class="meta-name">${escapeHtml(p.user_name || 'Anônimo')}</span>
+          ${p.user_email ? `<span>${escapeHtml(p.user_email)}</span>` : ''}
+          <span>${escapeHtml(formatDate(p.created_at))}</span>
         </div>
         <p class="card-question">"${escapeHtml(p.question)}"</p>
         <textarea id="ans-${p.id}" placeholder="Escreva a resposta oficial do RH…"></textarea>
@@ -1530,14 +1364,14 @@ ${trainedSection}
   }
 
   function renderTrainedHtml() {
-    if (trainedAnswers.length === 0) {
+    if (adminTrained.length === 0) {
       return `<div class="empty-state">Nenhuma resposta treinada ainda.</div>`;
     }
-    return trainedAnswers.slice().reverse().map(t => `
+    return adminTrained.map(t => `
       <div class="card card-trained" data-trained="${t.id}">
         <div class="card-meta">
-          <span class="meta-name">Treinada em ${escapeHtml(formatDate(t.answeredAt))}</span>
-          ${t.askedBy ? `<span>Perguntado por ${escapeHtml(t.askedBy)}</span>` : ''}
+          <span class="meta-name">Treinada em ${escapeHtml(formatDate(t.created_at))}</span>
+          ${t.trained_by ? `<span>por ${escapeHtml(t.trained_by)}</span>` : ''}
         </div>
         <p class="card-question">"${escapeHtml(t.question)}"</p>
         <div class="card-answer">${renderInline(t.answer)}</div>
@@ -1549,12 +1383,12 @@ ${trainedSection}
   }
 
   function renderFeedbackHtml() {
-    if (feedbackLog.length === 0) {
+    if (adminFeedback.length === 0) {
       return `<div class="empty-state">Ainda não há feedback registrado.</div>`;
     }
-    const ups   = feedbackLog.filter(f => f.rating === 'up').length;
-    const downs = feedbackLog.filter(f => f.rating === 'down').length;
-    const total = feedbackLog.length;
+    const ups   = adminFeedback.filter(f => f.rating === 1).length;
+    const downs = adminFeedback.filter(f => f.rating === -1).length;
+    const total = adminFeedback.length;
     const upPct = Math.round((ups / total) * 100);
 
     const summary = `
@@ -1563,14 +1397,14 @@ ${trainedSection}
       </p>
     `;
 
-    const cards = feedbackLog.slice().reverse().map(f => `
-      <div class="card card-feedback card-fb-${f.rating}" data-feedback="${f.id}">
+    const cards = adminFeedback.map(f => `
+      <div class="card card-feedback card-fb-${f.rating === 1 ? 'up' : 'down'}" data-feedback="${f.id}">
         <div class="card-meta">
-          <span class="rating-badge">${f.rating === 'up' ? '👍' : '👎'}</span>
-          <span>${escapeHtml(formatDate(f.timestamp))}</span>
+          <span class="rating-badge">${f.rating === 1 ? '👍' : '👎'}</span>
+          <span>${escapeHtml(formatDate(f.rating_at))}</span>
         </div>
         ${f.question ? `<p class="card-question">"${escapeHtml(f.question)}"</p>` : ''}
-        <div class="card-answer">${renderInline(f.answer)}</div>
+        <div class="card-answer">${renderInline(f.answer || '')}</div>
         <div class="card-actions">
           <button class="btn btn-ghost" data-action="delete-feedback" data-id="${f.id}">Remover</button>
         </div>
@@ -1595,53 +1429,52 @@ ${trainedSection}
     });
     const logoutBtn = document.getElementById('admin-logout');
     if (logoutBtn) logoutBtn.onclick = logoutAdmin;
+    const refreshBtn = document.getElementById('admin-refresh');
+    if (refreshBtn) refreshBtn.onclick = async () => {
+      await loadAdminData();
+      renderAdmin();
+      toast('Atualizado');
+    };
   }
 
-  function deleteFeedbackEntry(fbId) {
-    feedbackLog = feedbackLog.filter(x => x.id !== fbId);
-    saveToStorage(STORAGE.feedback, feedbackLog);
-    renderAdmin();
-    toast('Feedback removido');
+  async function deleteFeedbackEntry(interactionId) {
+    try {
+      await apiPost('admin_clear_feedback', { pin: getAdminPin(), interactionId });
+      adminFeedback = adminFeedback.filter(x => String(x.id) !== String(interactionId));
+      renderAdmin();
+      toast('Feedback removido');
+    } catch (e) { console.error(e); toast('Erro ao remover'); }
   }
 
-  function trainPending(pendingId) {
-    const p = pendingQuestions.find(x => x.id === pendingId);
-    if (!p) return;
-    const answer = (document.getElementById(`ans-${pendingId}`)?.value || '').trim();
+  async function trainPending(interactionId) {
+    const answer = (document.getElementById(`ans-${interactionId}`)?.value || '').trim();
     if (!answer) { toast('Escreva uma resposta antes de salvar'); return; }
-
-    trainedAnswers.push({
-      id: uidStr(),
-      question: p.question,
-      answer,
-      askedBy: p.askedBy,
-      email: p.email,
-      askedAt: p.askedAt,
-      answeredAt: nowISO(),
-    });
-    pendingQuestions = pendingQuestions.filter(x => x.id !== pendingId);
-
-    saveToStorage(STORAGE.trained, trainedAnswers);
-    saveToStorage(STORAGE.pending, pendingQuestions);
-
-    updateAdminBadge();
-    renderAdmin();
-    toast('Resposta treinada ✓');
+    try {
+      await apiPost('admin_save_trained', { pin: getAdminPin(), interactionId, answer });
+      await loadAdminData();
+      renderAdmin();
+      toast('Resposta treinada ✓');
+    } catch (e) { console.error(e); toast('Erro ao treinar'); }
   }
 
-  function deletePending(pendingId) {
-    pendingQuestions = pendingQuestions.filter(x => x.id !== pendingId);
-    saveToStorage(STORAGE.pending, pendingQuestions);
-    updateAdminBadge();
-    renderAdmin();
-    toast('Pergunta descartada');
+  async function deletePending(interactionId) {
+    try {
+      await apiPost('admin_delete_pending', { pin: getAdminPin(), interactionId });
+      adminPending = adminPending.filter(x => String(x.id) !== String(interactionId));
+      pendingCount = adminPending.length;
+      updateAdminBadge();
+      renderAdmin();
+      toast('Pergunta descartada');
+    } catch (e) { console.error(e); toast('Erro ao descartar'); }
   }
 
-  function deleteTrained(trainedId) {
-    trainedAnswers = trainedAnswers.filter(x => x.id !== trainedId);
-    saveToStorage(STORAGE.trained, trainedAnswers);
-    renderAdmin();
-    toast('Resposta removida');
+  async function deleteTrained(trainedId) {
+    try {
+      await apiPost('admin_delete_trained', { pin: getAdminPin(), trainedId });
+      adminTrained = adminTrained.filter(x => String(x.id) !== String(trainedId));
+      renderAdmin();
+      toast('Resposta removida');
+    } catch (e) { console.error(e); toast('Erro ao remover'); }
   }
 
   /* ---------------- View toggle ---------------- */
@@ -1654,7 +1487,10 @@ ${trainedSection}
     });
     document.getElementById('view-chat').classList.toggle('active', view === 'chat');
     document.getElementById('view-admin').classList.toggle('active', view === 'admin');
-    if (view === 'admin') renderAdmin();
+    if (view === 'admin') {
+      renderAdmin();
+      if (isAdminAuthed()) loadAdminData().then(renderAdmin);
+    }
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
@@ -1682,7 +1518,7 @@ ${trainedSection}
     // Initial render
     renderMessages();
     renderSuggestions();
-    updateAdminBadge();
+    refreshPendingCount();   // popula badge a partir do servidor
     input.focus();
   }
 

@@ -110,14 +110,18 @@ create table if not exists zi_interactions (
   rating_at       timestamptz,
   rating_comment  text,
   escalated       boolean default false,
+  resolved_at     timestamptz,                -- preenchido quando admin treina ou descarta a escalação
   user_name       text,                       -- se preencheu form de escalação
   user_email      text,
   created_at      timestamptz default now()
 );
 
+-- Migração idempotente pra bancos que já têm a tabela sem resolved_at
+alter table zi_interactions add column if not exists resolved_at timestamptz;
+
 create index if not exists zi_interactions_created_idx on zi_interactions (created_at desc);
 create index if not exists zi_interactions_rating_idx on zi_interactions (rating) where rating is not null;
-create index if not exists zi_interactions_escalated_idx on zi_interactions (escalated) where escalated = true;
+create index if not exists zi_interactions_escalated_idx on zi_interactions (escalated, resolved_at) where escalated = true;
 
 -- ============================================================================
 -- 6) Tabela de respostas treinadas (substitui zi_trained_answers do localStorage)
