@@ -17,9 +17,9 @@
 //   admin_clear_feedback     → remove rating de uma interaction
 //
 // Env vars (Netlify → Site settings → Environment variables):
-//   GEMINI_API_KEY                                   — Google AI Studio
-//   SUPABASE_ZI_URL       (ou SUPABASE_URL)          — Project URL
-//   SUPABASE_ZI_SECRET_KEY (ou SUPABASE_SECRET_KEY)  — sb_secret_... (bypassa RLS)
+//   GEMINI_ZI_API_KEY      (ou GEMINI_API_KEY)        — Google AI Studio
+//   SUPABASE_ZI_URL        (ou SUPABASE_URL)          — Project URL
+//   SUPABASE_ZI_SECRET_KEY (ou SUPABASE_SECRET_KEY)   — sb_secret_... (bypassa RLS)
 
 const MODEL_CHAT  = "gemini-2.5-flash";
 const MODEL_EMBED = "gemini-embedding-001";
@@ -33,8 +33,9 @@ function env(k) {
   return "";
 }
 
-// Aliases: SUPABASE_ZI_* (preferido) com fallback pros nomes genéricos.
-function supabaseUrl() { return env("SUPABASE_ZI_URL") || env("SUPABASE_URL"); }
+// Aliases: *_ZI_* (preferido) com fallback pros nomes genéricos.
+function geminiKey()   { return env("GEMINI_ZI_API_KEY")      || env("GEMINI_API_KEY"); }
+function supabaseUrl() { return env("SUPABASE_ZI_URL")        || env("SUPABASE_URL"); }
 function supabaseKey() { return env("SUPABASE_ZI_SECRET_KEY") || env("SUPABASE_SECRET_KEY"); }
 
 // ---------------- HTTP helpers ----------------
@@ -63,7 +64,7 @@ async function supabaseFetch(path, init = {}) {
 
 // ---------------- Gemini helpers ----------------
 async function embed(text) {
-  const key = env("GEMINI_API_KEY");
+  const key = geminiKey();
   const r = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_EMBED}:embedContent?key=${key}`,
     {
@@ -210,7 +211,7 @@ async function handleChat(body) {
 
   const upstreamUrl =
     `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_CHAT}` +
-    `:streamGenerateContent?alt=sse&key=${env("GEMINI_API_KEY")}`;
+    `:streamGenerateContent?alt=sse&key=${geminiKey()}`;
 
   const upstream = await fetch(upstreamUrl, {
     method: "POST",
@@ -387,9 +388,10 @@ export default async (req) => {
       return json({
         ok: true,
         env: {
-          hasGeminiKey:   !!env("GEMINI_API_KEY"),
+          hasGeminiKey:   !!geminiKey(),
           hasSupabaseUrl: !!supabaseUrl(),
           hasSupabaseKey: !!supabaseKey(),
+          geminiKeyVar:   env("GEMINI_ZI_API_KEY")      ? "GEMINI_ZI_API_KEY"      : (env("GEMINI_API_KEY")      ? "GEMINI_API_KEY"      : null),
           supabaseUrlVar: env("SUPABASE_ZI_URL")        ? "SUPABASE_ZI_URL"        : (env("SUPABASE_URL")        ? "SUPABASE_URL"        : null),
           supabaseKeyVar: env("SUPABASE_ZI_SECRET_KEY") ? "SUPABASE_ZI_SECRET_KEY" : (env("SUPABASE_SECRET_KEY") ? "SUPABASE_SECRET_KEY" : null),
         },
@@ -402,9 +404,9 @@ export default async (req) => {
   if (req.method !== "POST") return err(405, "method not allowed");
 
   const missingEnv = [];
-  if (!env("GEMINI_API_KEY")) missingEnv.push("GEMINI_API_KEY");
-  if (!supabaseUrl())         missingEnv.push("SUPABASE_ZI_URL (ou SUPABASE_URL)");
-  if (!supabaseKey())         missingEnv.push("SUPABASE_ZI_SECRET_KEY (ou SUPABASE_SECRET_KEY)");
+  if (!geminiKey())   missingEnv.push("GEMINI_ZI_API_KEY (ou GEMINI_API_KEY)");
+  if (!supabaseUrl()) missingEnv.push("SUPABASE_ZI_URL (ou SUPABASE_URL)");
+  if (!supabaseKey()) missingEnv.push("SUPABASE_ZI_SECRET_KEY (ou SUPABASE_SECRET_KEY)");
   if (missingEnv.length > 0) {
     return err(500, `env vars não configuradas no Netlify: ${missingEnv.join(", ")}`);
   }
