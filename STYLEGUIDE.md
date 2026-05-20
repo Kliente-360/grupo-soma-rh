@@ -1,6 +1,6 @@
-# UI/UX Style Guide — NV Chatbot (Zi)
+# UI/UX Style Guide — Grupo Soma Inspired Chatbot (Zi)
 
-Esse documento alinha a experiência digital da Zi com a identidade premium, minimalista e contemporânea da NV. É a fonte de verdade do design system. Toda mudança visual deve passar por aqui antes de virar código.
+Sistema de design da Zi alinhado com o ecossistema Grupo Soma — equilibrando **tech corporativa**, solidez operacional e um toque **criativo/orgânico** vindo das marcas (Animale, Farm, Foxton, NV…).
 
 **Audiência:** quem for mexer no `index.html`, criar variações da Zi em outros canais, ou auditar consistência visual.
 
@@ -8,109 +8,167 @@ Esse documento alinha a experiência digital da Zi com a identidade premium, min
 
 ## 1. Princípios de Design
 
-### Editorial Luxury
-Muito respiro entre elementos, hierarquia tipográfica forte e layout amplo, inspirado em revistas de moda e nas marcas-âncora do mundo NV (Aritzia, COS, The Row).
+### Corporate + Organic
+A Zi vive em ambiente corporativo (RH), mas a marca-mãe vende moda e estilo. Visual precisa ser **profissional sem ser estéril**: cantos suaves, paleta neutra com **um acento quente** (terracota), fontes humanistas.
 
-### Minimalist Friction
-Remover decoração desnecessária. Conteúdo (a conversa, a foto da Zi) e a imagem da marca são o ponto focal. Sem gradientes vistosos, sem sombras chamativas, sem ilustrações cartunescas.
+### Soft Minimalism
+Hierarquia limpa por tamanho/peso, não por decoração. Sombras quase imperceptíveis. Sem gradientes vibrantes, sem glow, sem playful bounce.
 
-### Micro-Interactions com sofisticação
-Transições rápidas (140-220ms), curvas suaves (sem bounce playful). Fade + slide estruturado, não molas. Feedback claro mas discreto.
+### Multi-brand awareness
+Tags/badges de marca (Animale, Farm, etc.) devem caber no sistema sem ruído visual — uppercase pequeno + cinza neutro.
 
 ---
 
-## 2. Paleta de Cores (Tokens)
+## 2. Color Tokens (Soma Palette)
 
-Os tokens vivem como CSS variables em `:root` no `index.html`.
+CSS variables em `:root` do `index.html`. Tokens internos mantêm o prefixo `--nv-*` por compatibilidade com o resto do código.
 
-| Token                   | Hex       | Uso                                                                | Tipo    |
-| ----------------------- | --------- | ------------------------------------------------------------------ | ------- |
-| `--color-brand-primary` | `#1A1A1A` | Texto principal, CTAs primárias, headers estruturais               | Core    |
-| `--color-brand-accent`  | `#1B365D` | Bolhas do usuário, link, foco, ícones ativos, navy NV "Blue Matters" | Accent  |
-| `--color-accent-soft`   | `#E4EAF2` | Backgrounds de tints (chip hover, focus ring)                      | Accent  |
-| `--color-bg-main`       | `#FFFFFF` | Fundo da aplicação                                                 | Base    |
-| `--color-bg-surface`    | `#F5F5F3` | Bolhas da Zi, cards, inputs, panels                                | Base    |
-| `--color-bg-elevated`   | `#FAFAF8` | Surface secundária (empty state, gate)                             | Base    |
-| `--color-border-subtle` | `#E0DCD3` | Linhas, bordas inativas, divisores                                 | Border  |
-| `--color-border-strong` | `#C9C2B4` | Bordas hover, separadores enfatizados                              | Border  |
-| `--color-text-primary`  | `#1A1A1A` | Texto de corpo, headings                                           | Text    |
-| `--color-text-soft`     | `#3D3D3D` | Texto secundário, descrições, labels                               | Text    |
-| `--color-text-muted`    | `#767676` | Timestamps, placeholders, hints                                    | Text    |
-| `--color-success`       | `#1F6B47` | Feedback positivo (👍), states de sucesso                          | Semantic |
-| `--color-danger`        | `#8B2E26` | Feedback negativo (👎), erros                                      | Semantic |
+| Token (guide)         | CSS var (no código)   | Hex       | Uso                                                              |
+| --------------------- | --------------------- | --------- | ---------------------------------------------------------------- |
+| `color-soma-dark`     | `--nv-coffee`         | `#1C1B1B` | Texto principal, títulos, fundo da bolha do usuário              |
+| `color-soma-accent`   | `--nv-clay`           | `#D98A6C` | Terracota — acentos, ícones ativos, hover de chips, brand touch  |
+| `color-soma-accent-soft` | `--nv-clay-light`  | `#F7E5DC` | Tint da terracota — bg hover, focus ring                         |
+| `color-soma-bg`       | `--nv-paper`          | `#FFFFFF` | Background principal da aplicação                                |
+| `color-soma-surface`  | `--nv-cream`          | `#F8F9FA` | Bolhas da Zi, cards, panels                                      |
+| `color-soma-elevated` | `--nv-cream-deep`     | `#FCFCFD` | Surface secundária (empty state, gate)                           |
+| `color-soma-border`   | `--nv-line`           | `#E9ECEF` | Linhas, bordas inativas, divisores                               |
+| `color-soma-border-strong` | `--nv-line-strong`| `#CED4DA` | Borders hover, separadores enfatizados                           |
+| `color-soma-muted`    | `--nv-coffee-mute`    | `#6C757D` | Texto secundário, timestamps, placeholders                       |
+| `color-soma-soft`     | `--nv-coffee-soft`    | `#495057` | Texto de hint, labels                                            |
+| `color-soma-success`  | `--nv-success`        | `#2D8456` | Feedback 👍, sucesso                                              |
+| `color-soma-danger`   | `--nv-danger`         | `#C44536` | Feedback 👎, erros                                                |
 
 **Regras:**
-- Nunca usar cor fora dessa tabela. Se faltar tom, adicionar aqui antes.
-- Acento navy (`#1B365D`) é o **único** ponto de cor. Resto é preto/cinza/branco.
-- Manter contraste WCAG AA mínimo em texto sobre superfícies.
+- Terracota é **o** acento — único ponto de cor além do preto/cinza/branco.
+- Antes navy era o acento (versão "Editorial Luxury"); foi substituído por terracota pra alinhar com a identidade do ecossistema Soma.
+- Contraste WCAG AA mínimo em texto sobre superfícies.
 
 ---
 
-## 3. Tipografia & Hierarquia
+## 3. Tipografia
 
-Stack pensada pra estrutura editorial. Inter como base universal (peso variável, ótima legibilidade), Helvetica Neue como fallback editorial em headers se quiser textura clássica.
+Abordagem **tech-humanist sans-serif** — premium e moderna sem ser fria.
 
-- **Primary:** `Inter`, `-apple-system`, `BlinkMacSystemFont`, `sans-serif`
-- **Secondary (editorial):** `Helvetica Neue`, `Arial`, `sans-serif`
-- **Numerais tabulares onde fizer sentido:** `font-variant-numeric: tabular-nums`
+- **Primária:** `Plus Jakarta Sans` (Google Fonts)
+- **Secundária:** `Satoshi` (Fontshare) — fallback editorial
+- **Sistema:** `-apple-system`, `BlinkMacSystemFont`, `system-ui`
 
-### Escala tipográfica
+### Escala
 
-| Token              | Tamanho / Line-height | Peso | Letter-spacing | Uso                                                |
-| ------------------ | --------------------- | ---- | -------------- | -------------------------------------------------- |
-| `--font-display`   | 40px / 48px           | 500  | -0.02em        | Splash / hero (não usado no chat hoje)             |
-| `--font-h1`        | 26px / 32px           | 500  | -0.015em       | Título do header ("Zi · Assistente de RH")         |
-| `--font-h2`        | 22px / 30px           | 500  | -0.01em        | Seções do admin                                    |
-| `--font-h3`        | 18px / 26px           | 500  | -0.005em       | Subseções                                          |
-| `--font-body`      | 15px / 24px           | 400  | 0              | Corpo de mensagem, parágrafos                      |
-| `--font-body-em`   | 15px / 24px           | 500  | 0              | Negrito inline                                     |
-| `--font-body-sm`   | 14px / 22px           | 400  | 0              | Inputs, descriptions                               |
-| `--font-caption`   | 12px / 18px           | 400  | 0.02em         | Metadados, datas                                   |
-| `--font-eyebrow`   | 11px / 14px           | 500  | 0.12em         | Labels em CAPS (ex: "SUGESTÕES PRA COMEÇAR")       |
+| Token              | Tamanho / Line-height | Peso | Case             | Uso                                              |
+| ------------------ | --------------------- | ---- | ---------------- | ------------------------------------------------ |
+| `--font-header`    | 16px / 24px           | 700  | Sentence case    | Título do app, seções principais                 |
+| `--font-section`   | 20px / 28px           | 700  | Sentence case    | H2 do admin (mais espaço pra hierarquia)         |
+| `--font-body`      | 15px / 1.6 (24px)     | 400  | —                | Corpo de mensagem, parágrafos                    |
+| `--font-body-em`   | 15px / 1.6            | 600  | —                | Inline emphasis (`**negrito**`)                  |
+| `--font-button`    | 13px / 18px           | 600  | Sentence case    | Botões, tabs, send                               |
+| `--font-caption`   | 11px / 14px           | 500  | Sentence case    | Timestamps, labels, hints, metadados             |
+| `--font-eyebrow`   | 10px / 14px           | 600  | UPPERCASE +0.12em | Brand badges ("ANIMALE", "FARM"), eyebrow labels |
 
-### Boas práticas
-- Hierarquia por **tamanho** + **peso** + **cor**, não por color decoration.
-- Letter-spacing negativo em tudo acima de 18px (visual mais editorial).
-- Letter-spacing positivo em CAPS (eyebrows, labels micro).
-- Linha de medida ideal: 60-70 caracteres pra leitura.
+### Letter-spacing
+- Headings (≥16px, 700): `-0.01em` (densidade tech)
+- Body: `0`
+- Eyebrows / labels CAPS: `+0.12em`
 
 ---
 
 ## 4. Spacing (8pt grid)
 
-Tudo em múltiplos de 4px / 8px. Sem números aleatórios.
-
-| Token         | Valor | Quando usar                                |
-| ------------- | ----- | ------------------------------------------ |
-| `--space-1`   | 4px   | Gaps mínimos, padding fino                 |
-| `--space-2`   | 8px   | Padding interno de chips/badges            |
-| `--space-3`   | 12px  | Gap entre elementos próximos               |
-| `--space-4`   | 16px  | Padding padrão de bolhas, gap entre cards  |
-| `--space-5`   | 24px  | Padding de view-inner, espaçamento padrão  |
-| `--space-6`   | 32px  | Separação entre seções                     |
-| `--space-7`   | 48px  | Margens grandes (admin gate)               |
-| `--space-8`   | 64px  | Hero spacing                               |
+| Token         | Valor | Uso                                          |
+| ------------- | ----- | -------------------------------------------- |
+| `--space-1`   | 4px   | Gaps mínimos                                 |
+| `--space-2`   | 8px   | Padding de chips, gap entre ícones           |
+| `--space-3`   | 12px  | **Margin bottom de bolhas** (ver §5.1)       |
+| `--space-4`   | 16px  | Padding interno de bolhas, gap entre cards   |
+| `--space-5`   | 24px  | Padding de view-inner                        |
+| `--space-6`   | 32px  | Separação entre seções                       |
+| `--space-7`   | 48px  | Hero, gate                                   |
 
 ---
 
-## 5. Radii & Shapes
+## 5. Componentes & Padrões
 
-Forma neutra e estrutural. Sem cantos excessivamente arredondados (não é app casual).
+### 5.1 Bolhas (fluidas, acolhedoras)
 
-| Token            | Valor   | Uso                                  |
-| ---------------- | ------- | ------------------------------------ |
-| `--radius-sm`    | 6px     | Inputs, buttons pequenos             |
-| `--radius-md`    | 10px    | Buttons principais, cards            |
-| `--radius-lg`    | 14px    | Bolhas de chat, cards do admin       |
-| `--radius-xl`    | 20px    | Input bar, modais                    |
-| `--radius-pill`  | 999px   | Tabs, badges, chips                  |
-| `--radius-circle`| 50%     | Avatar                               |
+**Zi (assistant):**
+- `background: var(--nv-cream)` (surface F8F9FA)
+- `color: var(--nv-coffee)` (dark)
+- `border-radius: 16px 16px 16px 4px` (TL TR BR BL — corner pequena bottom-left)
+- `padding: 14px 18px`
+- `margin-bottom: 12px` (respiro)
+
+**Usuário:**
+- `background: var(--nv-coffee)` (dark)
+- `color: white`
+- `border-radius: 16px 16px 4px 16px` (corner pequena bottom-right)
+- `padding: 14px 18px`
+
+### 5.2 Input bar (floating pill)
+
+- `border-radius: 24px` (pill)
+- `border: 1px solid var(--nv-line)`
+- `background: var(--nv-paper)`
+- `box-shadow: var(--shadow-sm)` (sutilíssimo)
+- Posição sticky/floating perto do bottom
+
+### 5.3 Quick Replies / Sugestões
+
+**Pill outlined:**
+- `border-radius: 100px` (full pill)
+- `border: 1px solid var(--nv-coffee)` (preto, contrastado)
+- `padding: 8px 16px`
+- `background: transparent`
+- `font: var(--font-button)` (13px / 600)
+- Hover: `background: var(--nv-clay-light)` (tint terracota suave)
+- Active: `background: var(--nv-clay)` (terracota cheia), `color: white`
+
+### 5.4 Botões
+
+**Primário (CTA):**
+- `background: var(--nv-coffee)`
+- `color: white`
+- `border-radius: 100px` (full pill)
+- `padding: 11px 22px`
+- `font: var(--font-button)`
+- Hover: `background: #000000`
+
+**Secundário / Ghost:**
+- `background: transparent`
+- `border: 1px solid var(--nv-line)`
+- `color: var(--nv-coffee)`
+- Hover: `border-color: var(--nv-coffee)`, `background: var(--nv-cream)`
+
+### 5.5 Tabs
+
+- Container pill em surface
+- Active: `background: var(--nv-coffee)`, `color: white`
+- Inactive: `color: var(--nv-coffee-soft)`
+- Badge: terracota (`var(--nv-clay)`) com texto branco
+
+### 5.6 Brand/Product Cards (futuro)
+
+Quando tiver carrossel multi-marca:
+- `border-radius: 8px` nas imagens (subtle curve)
+- Brand badge acima do título: `--font-eyebrow`, uppercase, cor `--nv-coffee-mute`
+- Cards em `var(--nv-cream)`, border `1px solid var(--nv-line)`
 
 ---
 
-## 6. Elevations (Shadows)
+## 6. Radii
 
-Sombras ultra-discretas — editorial não usa sombra pesada.
+| Token            | Valor   | Uso                                              |
+| ---------------- | ------- | ------------------------------------------------ |
+| `--radius-xs`    | 4px     | Bordas pequenas (corner da bolha)                |
+| `--radius-sm`    | 8px     | Imagens, badges                                  |
+| `--radius-md`    | 12px    | Cards do admin, modais                           |
+| `--radius-lg`    | 16px    | Bolhas de chat                                   |
+| `--radius-xl`    | 24px    | Input bar                                        |
+| `--radius-pill`  | 100px   | Botões, chips, tabs, badges                      |
+| `--radius-circle`| 50%     | Avatar                                           |
+
+---
+
+## 7. Shadows (sutis)
 
 ```css
 --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
@@ -119,162 +177,98 @@ Sombras ultra-discretas — editorial não usa sombra pesada.
 --shadow-lg: 0 20px 48px rgba(0,0,0,0.12);
 ```
 
-Usar shadow-xs em cards no estado de repouso, shadow-sm no hover. Reservar shadow-md+ pra modais e elementos flutuantes.
+Padrão: input bar usa `--shadow-sm`, cards em repouso usam `--shadow-xs`, modais usam `--shadow-md`.
 
 ---
 
-## 7. Motion
-
-Snap. Sophisticated. Sem bounce.
+## 8. Motion
 
 ```css
 --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
---ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+--ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
 --dur-fast:    140ms;
 --dur-base:    220ms;
 --dur-slow:    350ms;
 ```
 
-**Padrões:**
-- Hover de botão: `var(--dur-fast) var(--ease-out)`
+- Hover/foco: `var(--dur-fast) var(--ease-out)`
 - Entrada de mensagem: `var(--dur-base) var(--ease-out)` (fade + 6px slide-up)
-- Toast: `var(--dur-base) var(--ease-out)`
-- Switch de view: instantâneo (sem transição entre chat/admin)
-
-Respeitar sempre `prefers-reduced-motion: reduce`.
-
----
-
-## 8. Componentes
-
-### Bolha — Zi (assistente)
-- `background: var(--color-bg-surface)`
-- `border: 1px solid var(--color-border-subtle)`
-- `border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg)`
-- `padding: 14px 18px`
-- `box-shadow: var(--shadow-xs)`
-- Type: `--font-body`, cor `--color-text-primary`
-
-### Bolha — Usuário
-- `background: var(--color-brand-accent)` (navy)
-- `color: #FFFFFF`
-- `border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg)`
-- Sem border, sem shadow (mais sólida visualmente)
-
-### Botão Primário
-- `background: var(--color-brand-primary)` (preto)
-- `color: #FFFFFF`
-- `padding: 11px 20px`
-- `border-radius: var(--radius-md)`
-- Hover: `background: #000000` (full black)
-- Active: `transform: scale(0.97)`
-
-### Botão Secundário / Ghost
-- `background: transparent`
-- `border: 1px solid var(--color-border-subtle)`
-- `color: var(--color-text-primary)`
-- Hover: `background: var(--color-bg-surface)`, `border-color: var(--color-border-strong)`
-
-### Input / Textarea
-- `background: var(--color-bg-main)`
-- `border: 1px solid var(--color-border-subtle)`
-- `border-radius: var(--radius-sm)`
-- Focus: `border-color: var(--color-brand-accent)`, `box-shadow: 0 0 0 3px var(--color-accent-soft)`
-
-### Chip / Sugestão
-- `background: var(--color-bg-main)`
-- `border: 1px solid var(--color-border-subtle)`
-- `border-radius: var(--radius-pill)`
-- Hover: `border-color: var(--color-brand-primary)`, `background: var(--color-bg-surface)`
-
-### Tab
-- Base: pill em superfície surface
-- Active: `background: var(--color-brand-primary)` (preto), texto branco
-- Sem azul nas tabs (reservar azul pra contextos do conteúdo, não navegação)
+- Toast: `var(--dur-base) var(--ease-spring)` (entrada com squash leve)
+- Respeitar sempre `prefers-reduced-motion: reduce`
 
 ---
 
 ## 9. Avatar (Zi)
 
-A Zi é uma **assistente real** (Zilaide). O avatar é uma **fotografia profissional**, não ilustração.
-
-### Especificações
+A Zi é uma **assistente real**. Avatar é **fotografia profissional**, não ilustração.
 
 | Propriedade        | Valor                                        |
 | ------------------ | -------------------------------------------- |
 | Arquivo            | `assets/zi-avatar.jpg`                       |
-| Formato            | JPG ou WebP (otimizada, max 200KB)           |
-| Aspect ratio       | 1:1 (quadrada antes do crop)                 |
-| Dimensão mínima    | 512×512px (renderiza nítido em retina @64px) |
-| Crop              | `border-radius: 50%` + `object-fit: cover`   |
-| Posicionamento     | `object-position: 50% 22%` (face centralizada após crop) |
-| Estilo da foto     | Fundo neutro/branco, sorriso natural, iluminação suave |
-| Roupa visível      | Jaqueta verde-oliva (paleta NV consistente)  |
-| Tamanho no header  | 52×52px com ring (`box-shadow` ring de 2px) |
-| Tamanho no chat    | 30×30px sem ring                             |
+| Formato            | JPG/WebP otimizada, max 200KB                |
+| Aspect ratio       | 1:1                                          |
+| Dimensão mínima    | 512×512px                                    |
+| Crop               | `border-radius: 50%` + `object-fit: cover`   |
+| Posicionamento     | `object-position: 50% 22%`                   |
+| Estilo da foto     | Fundo neutro/branco, sorriso natural         |
+| Tamanho header     | 52×52px com ring (`box-shadow` 2px)          |
+| Tamanho chat       | 30×30px sem ring                             |
 
-### Quando substituir
-- Se mudar a pessoa: trocar `assets/zi-avatar.jpg`, manter mesmo crop/proporção.
-- Foto editorial idealmente: ombros enquadrados, olhar pra câmera, sorriso aberto, fundo claro/neutro.
-
-### Acessibilidade
-- `<img alt="Zi">` sempre (mesmo decorativo, ajuda a manter consistência).
-- Em listas de mensagens (chat), o avatar pode ser `aria-hidden="true"` pra não duplicar nome da Zi.
+### Substituir a foto
+Trocar `assets/zi-avatar.jpg` mantendo crop/proporção. Foto ideal: ombros enquadrados, olhar pra câmera, sorriso aberto, fundo claro.
 
 ---
 
 ## 10. Layout
 
-### Container
-- Max-width: `860px` (`--max-w`)
+- Container max-width: `860px`
 - Padding lateral: 24px desktop, 16px mobile
-- Header sticky com `backdrop-filter: blur(14px)` em superfície semi-translúcida
-
-### Breakpoints
-- **Mobile:** ≤ 560px → padding reduzido, type um pouco menor, tabs full-width
-- **Tablet+:** ≥ 561px → layout padrão acima
+- Header sticky com `backdrop-filter: blur(14px)` sobre superfície semi-translúcida
+- Breakpoint mobile: ≤ 560px (padding reduzido, tabs full-width)
 
 ---
 
 ## 11. Acessibilidade
 
-- Contraste **AA mínimo** em corpo, **AAA preferível** em texto pequeno
-- `:focus-visible` com outline navy 2px sempre visível (nunca remover)
-- Touch targets ≥ 44px (botões mobile, tabs, fb buttons)
-- Movimento respeita `prefers-reduced-motion`
-- `aria-live="polite"` no container de mensagens (já implementado)
-- `aria-pressed` em botões toggle (👍/👎 já implementado)
+- Contraste **AA mínimo** em corpo; **AAA preferível** em texto micro
+- `:focus-visible` com outline terracota 2px (não removido)
+- Touch targets ≥ 44px (mobile)
+- `prefers-reduced-motion` respeitado
+- `aria-live="polite"` no container de mensagens
+- `aria-pressed` em toggles (👍/👎)
 
 ---
 
-## 12. Tom de voz da Zi (não-visual, mas faz parte da identidade)
+## 12. Tom de voz da Zi
 
-- **Próximo, descontraído**, como uma colega de RH simpática
+- **Próximo, descontraído** — uma colega de RH simpática
 - **Direto ao ponto** — respostas curtas, conclusivas
-- "Você", não "vocês"; "tô", "pra" são OK no contexto
-- 1 emoji por mensagem **no máximo**, e só quando combina
-- Quando não souber: token `[NAO_ENCONTREI]` → escala pro RH
-- Quando souber: responde confiante, sem "talvez", "acho que"
+- "Você", não "vocês"; "tô", "pra" são OK
+- 1 emoji por mensagem **no máximo**
+- Não souber: token `[NAO_ENCONTREI]` → escala pro RH
+- Quando souber: confiante, sem "talvez", "acho que"
 
-(Detalhes técnicos do prompt: ver `netlify/edge-functions/zi.js` → `buildSystemPrompt`)
+(Detalhes do prompt: `netlify/edge-functions/zi.js` → `buildSystemPrompt`)
 
 ---
 
 ## 13. Don'ts
 
-- ❌ Sombras chamativas, brilhos, glow effects
-- ❌ Gradientes vibrantes (só os ultra-sutis em backgrounds, se houver)
-- ❌ Emoji nos títulos / headings
-- ❌ Animações de bounce, spring playful
 - ❌ Cor fora dos tokens
-- ❌ Italics decorativos (Zi não vai mais em itálico no header)
-- ❌ Avatar ilustrado / cartoon — usar a foto
+- ❌ Mais de um acento de cor (só terracota além do preto/cinza)
+- ❌ Sombras chamativas, glow, brilho artificial
+- ❌ Gradientes vibrantes
+- ❌ Emoji nos títulos
+- ❌ Animações bouncy/playful
+- ❌ Italics decorativos em headings
+- ❌ Avatar ilustrado / cartoon — sempre a foto
 
 ---
 
 ## 14. Referências
 
-- NV (Nati Vozza): <https://www.bynv.com.br/>
-- Inter (Google Fonts): <https://fonts.google.com/specimen/Inter>
+- Grupo Soma: <https://grupoazzas.com.br/> (AZZAS 2154 — holding)
+- Marcas-âncora: Animale, Farm, Foxton, NV, Cris Barros, Maria Filó
+- Plus Jakarta Sans: <https://fonts.google.com/specimen/Plus+Jakarta+Sans>
+- Satoshi (Fontshare): <https://www.fontshare.com/fonts/satoshi>
 - WCAG 2.1 contraste: <https://webaim.org/resources/contrastchecker/>
-- Inspiração editorial: Aritzia, COS, The Row, Toteme

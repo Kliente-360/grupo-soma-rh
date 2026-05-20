@@ -8,57 +8,58 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap" rel="stylesheet">
 
   <style>
     :root {
       /* ============================================================
-       * Design tokens — alinhados ao STYLEGUIDE.md
-       * Paleta minimalista editorial: preto + navy + branco + off-white
+       * Design tokens — alinhados ao STYLEGUIDE.md (Grupo Soma)
+       * Paleta: dark + terracota acento + off-white
        * ============================================================ */
 
       /* === Surfaces === */
-      --nv-paper:        #FFFFFF;     /* color-bg-main */
-      --nv-cream:        #F5F5F3;     /* color-bg-surface (bolhas Zi, cards) */
-      --nv-cream-deep:   #FAFAF8;     /* color-bg-elevated (gate, empty state) */
-      --nv-surface:      #F5F5F3;     /* alias do bg-surface */
+      --nv-paper:        #FFFFFF;     /* color-soma-bg */
+      --nv-cream:        #F8F9FA;     /* color-soma-surface (bolhas Zi, cards) */
+      --nv-cream-deep:   #FCFCFD;     /* color-soma-elevated */
+      --nv-surface:      #F8F9FA;
 
       /* === Ink === */
-      --nv-coffee:       #1A1A1A;     /* color-brand-primary, texto, CTAs */
-      --nv-coffee-soft:  #3D3D3D;     /* color-text-soft */
-      --nv-coffee-mute:  #767676;     /* color-text-muted */
+      --nv-coffee:       #1C1B1B;     /* color-soma-dark */
+      --nv-coffee-soft:  #495057;
+      --nv-coffee-mute:  #6C757D;     /* color-soma-muted */
 
       /* === Borders === */
-      --nv-line:         #E0DCD3;     /* color-border-subtle */
-      --nv-line-strong:  #C9C2B4;     /* color-border-strong */
+      --nv-line:         #E9ECEF;     /* color-soma-border */
+      --nv-line-strong:  #CED4DA;
 
-      /* === Accent: Navy NV ("Blue Matters") — usado APENAS em conteúdo
-       *   (bolhas user, links, focus, ícones). Estrutura é preto. */
-      --nv-blue:         #1B365D;     /* color-brand-accent */
-      --nv-blue-deep:    #0F2238;
-      --nv-blue-soft:    #E4EAF2;     /* color-accent-soft */
-      --nv-blue-tint:    #B3C0D2;
+      /* === Accent: Terracota Soma === */
+      --nv-clay:         #D98A6C;     /* color-soma-accent */
+      --nv-clay-dark:    #B86B4D;
+      --nv-clay-light:   #F7E5DC;
 
-      /* === Legado: terracotta — em uso apenas no badge de pendentes.
-       *   Não usar em novas superfícies (vide STYLEGUIDE.md §13). */
-      --nv-clay:         #C9805A;
-      --nv-clay-dark:    #A35A3B;
-      --nv-clay-light:   #F5E3D8;
+      /* === Legado: navy aliasado pra terracota (compat com refs antigas) === */
+      --nv-blue:         #D98A6C;
+      --nv-blue-deep:    #B86B4D;
+      --nv-blue-soft:    #F7E5DC;
+      --nv-blue-tint:    #E8C9B8;
 
       /* === Semantic === */
-      --nv-success:      #1F6B47;
+      --nv-success:      #2D8456;
       --nv-success-soft: #DCE9E1;
-      --nv-danger:       #8B2E26;
-      --nv-danger-soft:  #F2DDD9;
+      --nv-danger:       #C44536;
+      --nv-danger-soft:  #F5DAD6;
 
       /* === Radii === */
       --radius-xs:       4px;
-      --radius-sm:       6px;
-      --radius-md:       10px;
-      --radius-lg:       14px;
-      --radius-bubble:   14px;
+      --radius-sm:       8px;
+      --radius-md:       12px;
+      --radius-lg:       16px;
+      --radius-bubble:   16px;
       --radius-card:     12px;
-      --radius-pill:     999px;
+      --radius-xl:       24px;
+      --radius-pill:     100px;
 
       /* === Elevations === */
       --shadow-xs:       0 1px 2px rgba(0,0,0,0.04);
@@ -76,9 +77,9 @@
       /* === Layout === */
       --max-w:           860px;
 
-      /* === Typography (Inter universal) === */
-      --font-display:    'Helvetica Neue', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-body:       'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      /* === Typography (Plus Jakarta Sans humanist) === */
+      --font-display:    'Plus Jakarta Sans', 'Satoshi', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body:       'Plus Jakarta Sans', 'Satoshi', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     }
 
     * { box-sizing: border-box; }
@@ -101,7 +102,7 @@
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
     :focus-visible {
-      outline: 2px solid var(--nv-blue);
+      outline: 2px solid var(--nv-clay);
       outline-offset: 2px;
       border-radius: var(--radius-xs);
     }
@@ -136,17 +137,18 @@
     .header-text h1 {
       margin: 0;
       font-family: var(--font-body);
-      font-weight: 500;
-      font-size: 24px;
-      line-height: 1.2;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.4;
       color: var(--nv-coffee);
-      letter-spacing: -0.4px;
+      letter-spacing: -0.01em;
     }
     .header-text p {
-      margin: 3px 0 0 0;
-      font-size: 13px;
+      margin: 2px 0 0 0;
+      font-size: 11px;
+      font-weight: 500;
       color: var(--nv-coffee-mute);
-      letter-spacing: 0.1px;
+      letter-spacing: 0.02em;
     }
     .tabs {
       display: flex;
@@ -159,7 +161,7 @@
     .tab-btn {
       font-family: var(--font-body);
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--nv-coffee-soft);
       background: transparent;
       border: 0;
@@ -171,7 +173,7 @@
       gap: 7px;
       transition: color var(--dur-fast) var(--ease-soft),
                   background var(--dur-base) var(--ease-soft);
-      letter-spacing: 0.1px;
+      letter-spacing: -0.005em;
     }
     .tab-btn:hover { color: var(--nv-coffee); }
     .tab-btn.active {
@@ -233,25 +235,24 @@
       max-width: min(78%, 620px);
       padding: 14px 18px;
       font-size: 15px;
-      line-height: 1.55;
+      line-height: 1.6;
       word-wrap: break-word;
       overflow-wrap: break-word;
       box-shadow: var(--shadow-xs);
-      letter-spacing: 0.1px;
     }
     .bubble strong { font-weight: 600; }
     .bubble a {
-      color: var(--nv-blue);
+      color: var(--nv-clay);
       text-decoration: underline;
       text-decoration-thickness: 1px;
       text-underline-offset: 3px;
       transition: color var(--dur-fast) var(--ease-soft);
     }
-    .bubble a:hover { color: var(--nv-blue-deep); }
+    .bubble a:hover { color: var(--nv-clay-dark); }
     .msg-row.user .bubble a { color: inherit; text-decoration-color: rgba(255,255,255,0.5); }
 
     .msg-row.user .bubble {
-      background: var(--nv-blue);
+      background: var(--nv-coffee);
       color: white;
       border-radius: var(--radius-bubble) var(--radius-bubble) 4px var(--radius-bubble);
     }
@@ -259,8 +260,9 @@
       background: var(--nv-surface);
       color: var(--nv-coffee);
       border: 1px solid var(--nv-line);
-      border-radius: 4px var(--radius-bubble) var(--radius-bubble) var(--radius-bubble);
+      border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 4px;
     }
+    .msg-block { margin-bottom: 12px; }
 
     .msg-row .avatar-slot {
       flex-shrink: 0;
@@ -292,11 +294,11 @@
     }
     .btn {
       font-family: var(--font-body);
-      font-size: 14px;
-      font-weight: 500;
-      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
       border: 1px solid transparent;
-      padding: 10px 18px;
+      padding: 11px 22px;
       cursor: pointer;
       transition: background var(--dur-fast) var(--ease-soft),
                   color var(--dur-fast) var(--ease-soft),
@@ -304,7 +306,7 @@
                   transform var(--dur-fast) var(--ease-soft),
                   box-shadow var(--dur-fast) var(--ease-soft);
       line-height: 1.2;
-      letter-spacing: 0.1px;
+      letter-spacing: -0.005em;
     }
     .btn:active { transform: scale(0.97); }
     .btn-primary {
@@ -314,22 +316,23 @@
     }
     .btn-primary:hover { background: #000000; box-shadow: var(--shadow-sm); }
     .btn-secondary {
-      background: var(--nv-surface);
+      background: transparent;
       color: var(--nv-coffee);
       border-color: var(--nv-line);
     }
     .btn-secondary:hover {
       background: var(--nv-cream);
-      border-color: var(--nv-line-strong);
+      border-color: var(--nv-coffee);
     }
     .btn-ghost {
       background: transparent;
       color: var(--nv-coffee-soft);
       border-color: transparent;
-      padding: 7px 10px;
+      padding: 8px 14px;
       font-size: 13px;
+      font-weight: 500;
     }
-    .btn-ghost:hover { color: var(--nv-blue); background: var(--nv-blue-soft); }
+    .btn-ghost:hover { color: var(--nv-clay-dark); background: var(--nv-clay-light); }
 
     .escalation-form {
       margin-top: 14px;
@@ -363,8 +366,8 @@
     }
     .escalation-form input:focus {
       outline: none;
-      border-color: var(--nv-blue);
-      box-shadow: 0 0 0 3px var(--nv-blue-soft);
+      border-color: var(--nv-clay);
+      box-shadow: 0 0 0 3px var(--nv-clay-light);
     }
     .escalation-form .row { display: flex; justify-content: flex-end; gap: 8px; }
 
@@ -388,23 +391,30 @@
     .chip {
       font-family: var(--font-body);
       font-size: 13px;
-      font-weight: 450;
+      font-weight: 600;
       color: var(--nv-coffee);
-      background: var(--nv-surface);
-      border: 1px solid var(--nv-line);
-      padding: 9px 16px;
+      background: transparent;
+      border: 1px solid var(--nv-coffee);
+      padding: 8px 16px;
       border-radius: var(--radius-pill);
       cursor: pointer;
       transition: background var(--dur-fast) var(--ease-soft),
                   border-color var(--dur-fast) var(--ease-soft),
+                  color var(--dur-fast) var(--ease-soft),
                   transform var(--dur-fast) var(--ease-soft);
+      letter-spacing: -0.005em;
     }
     .chip:hover {
-      background: var(--nv-blue-soft);
-      border-color: var(--nv-blue);
+      background: var(--nv-clay-light);
+      border-color: var(--nv-clay);
       transform: translateY(-1px);
     }
-    .chip:active { transform: translateY(0); }
+    .chip:active {
+      background: var(--nv-clay);
+      border-color: var(--nv-clay);
+      color: white;
+      transform: translateY(0);
+    }
 
     /* input bar */
     .input-bar-wrap {
@@ -420,17 +430,17 @@
       display: flex;
       gap: 10px;
       align-items: flex-end;
-      background: var(--nv-surface);
+      background: var(--nv-paper);
       border: 1px solid var(--nv-line);
-      border-radius: var(--radius-lg);
-      padding: 12px 14px;
+      border-radius: var(--radius-xl);
+      padding: 12px 16px;
       box-shadow: var(--shadow-sm);
       transition: border-color var(--dur-fast) var(--ease-soft),
                   box-shadow var(--dur-base) var(--ease-soft);
     }
     .input-bar:focus-within {
-      border-color: var(--nv-blue);
-      box-shadow: 0 0 0 3px var(--nv-blue-soft), var(--shadow-sm);
+      border-color: var(--nv-clay);
+      box-shadow: 0 0 0 3px var(--nv-clay-light), var(--shadow-sm);
     }
     #chat-input {
       flex: 1;
@@ -450,7 +460,7 @@
     #send-btn {
       flex-shrink: 0;
       width: 42px; height: 42px;
-      border-radius: var(--radius-md);
+      border-radius: 50%;
       background: var(--nv-coffee);
       color: white;
       border: 0;
@@ -469,9 +479,9 @@
     .admin-section { margin-bottom: 44px; }
     .admin-section h2 {
       font-family: var(--font-body);
-      font-weight: 500;
-      font-size: 22px;
-      letter-spacing: -0.3px;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: -0.01em;
       color: var(--nv-coffee);
       margin: 0 0 6px 0;
     }
@@ -503,7 +513,7 @@
     }
     .card:hover { box-shadow: var(--shadow-sm); }
     .card-trained {
-      border-left: 3px solid var(--nv-blue);
+      border-left: 3px solid var(--nv-clay);
     }
     .card-meta {
       display: flex;
@@ -518,12 +528,12 @@
     .card-question {
       font-family: var(--font-body);
       font-style: normal;
-      font-weight: 500;
-      font-size: 16px;
+      font-weight: 600;
+      font-size: 15px;
       color: var(--nv-coffee);
       margin: 0 0 14px 0;
-      line-height: 1.45;
-      letter-spacing: -0.2px;
+      line-height: 1.5;
+      letter-spacing: -0.005em;
     }
     .card-answer {
       color: var(--nv-coffee);
@@ -549,9 +559,9 @@
     }
     .card textarea:focus {
       outline: none;
-      border-color: var(--nv-blue);
-      background: var(--nv-surface);
-      box-shadow: 0 0 0 3px var(--nv-blue-soft);
+      border-color: var(--nv-clay);
+      background: var(--nv-paper);
+      box-shadow: 0 0 0 3px var(--nv-clay-light);
     }
     .card-actions {
       display: flex;
@@ -597,7 +607,7 @@
       display: inline-block;
       width: 6px;
       height: 1em;
-      background: var(--nv-blue);
+      background: var(--nv-clay);
       margin-left: 3px;
       vertical-align: text-bottom;
       animation: cursor-blink 0.9s steps(2) infinite;
@@ -636,8 +646,8 @@
     }
     .fb-btn[aria-pressed="true"] {
       opacity: 1;
-      background: var(--nv-blue-soft);
-      border-color: var(--nv-blue);
+      background: var(--nv-clay-light);
+      border-color: var(--nv-clay);
       transform: scale(1);
     }
     .fb-btn:disabled { cursor: default; }
@@ -655,9 +665,9 @@
     }
     .admin-gate h2 {
       font-family: var(--font-body);
-      font-weight: 500;
-      font-size: 22px;
-      letter-spacing: -0.3px;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: -0.01em;
       margin: 0 0 8px 0;
       color: var(--nv-coffee);
     }
@@ -685,8 +695,8 @@
     }
     .admin-gate input:focus {
       outline: none;
-      border-color: var(--nv-blue);
-      box-shadow: 0 0 0 3px var(--nv-blue-soft);
+      border-color: var(--nv-clay);
+      box-shadow: 0 0 0 3px var(--nv-clay-light);
     }
     .admin-gate .btn { width: 100%; padding: 12px; font-size: 15px; }
     .admin-footer {
