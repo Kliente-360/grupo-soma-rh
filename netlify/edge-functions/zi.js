@@ -8,7 +8,7 @@
 //   escalate                 → marca interaction como escalada (+ nome/email)
 //   pending_count            → contagem pública de escalações pendentes (pro badge)
 //
-//   admin_list_pending       → lista escalações pendentes (PIN required)
+//   admin_list_pending       → lista escalações pendentes (login admin required)
 //   admin_list_trained       → lista respostas treinadas ativas
 //   admin_list_feedback      → lista interações com rating
 //   admin_save_trained       → salva resposta do RH (vira "treinada") e marca interaction resolved
@@ -24,7 +24,13 @@
 const MODEL_CHAT  = "gemini-2.5-flash";
 const MODEL_EMBED = "gemini-embedding-001";
 const EMBED_DIM   = 768;
-const ADMIN_PIN   = "NVRH2026";
+
+// Credenciais — fricção, não segurança. Substituir por SSO em produção.
+// Refletido no client (CREDENTIALS em index.html). Server é a fonte da verdade.
+const CREDENTIALS = {
+  admin: { password: "adminnv26", role: "admin" },
+  user:  { password: "usernv26",  role: "user"  },
+};
 
 // ---------------- Env helper ----------------
 function env(k) {
@@ -487,13 +493,18 @@ async function handlePendingCount() {
 }
 
 // ---------------- Admin (PIN) ----------------
-function checkPin(body) {
-  if ((body.pin || "") !== ADMIN_PIN) return err(401, "invalid pin");
+// Validação de credenciais. requiredRole = "admin" exige role admin;
+// "user" aceita qualquer login válido.
+function checkAuth(body, requiredRole = "admin") {
+  const a = body.auth || {};
+  const cred = CREDENTIALS[String(a.username || "").trim().toLowerCase()];
+  if (!cred || cred.password !== a.password) return err(401, "credenciais inválidas");
+  if (requiredRole === "admin" && cred.role !== "admin") return err(403, "acesso restrito ao admin");
   return null;
 }
 
 async function handleAdminListPending(body) {
-  const denied = checkPin(body); if (denied) return denied;
+  const denied = checkAuth(body, "admin"); if (denied) return denied;
   const r = await supabaseFetch(
     "/rest/v1/zi_interactions?escalated=eq.true&resolved_at=is.null" +
     "&order=created_at.desc&select=id,question,user_name,user_email,created_at",
@@ -503,7 +514,7 @@ async function handleAdminListPending(body) {
 }
 
 async function handleAdminListTrained(body) {
-  const denied = checkPin(body); if (denied) return denied;
+  const denied = checkAuth(body, "admin"); if (denied) return denied;
   const r = await supabaseFetch(
     "/rest/v1/zi_trained_answers?active=eq.true&order=created_at.desc" +
     "&select=id,question,answer,created_at,trained_by",
@@ -513,7 +524,7 @@ async function handleAdminListTrained(body) {
 }
 
 async function handleAdminListFeedback(body) {
-  const denied = checkPin(body); if (denied) return denied;
+  const denied = checkAuth(body, "admin"); if (denied) return denied;
   const r = await supabaseFetch(
     "/rest/v1/zi_interactions?rating=not.is.null&order=rating_at.desc&limit=200" +
     "&select=id,question,answer,rating,rating_comment,rating_at",
@@ -523,7 +534,7 @@ async function handleAdminListFeedback(body) {
 }
 
 async function handleAdminSaveTrained(body) {
-  const denied = checkPin(body); if (denied) return denied;
+  const denied = checkAuth(body, "admin"); if (denied) return denied;
   const { interactionId, answer } = body;
   if (!interactionId || !String(answer || "").trim()) {
     return err(400, "missing interactionId or answer");
@@ -556,7 +567,7 @@ async function handleAdminSaveTrained(body) {
 }
 
 async function handleAdminDeleteTrained(body) {
-  const denied = checkPin(body); if (denied) return denied;
+  const denied = checkAuth(body, "admin"); if (denied) return denied;
   const { trainedId } = body;
   if (!trainedId) return err(400, "missing trainedId");
   const r = await supabaseFetch(
@@ -568,7 +579,7 @@ async function handleAdminDeleteTrained(body) {
 }
 
 async function handleAdminDeletePending(body) {
-  const denied = checkPin(body); if (denied) return denied;
+  const denied = checkAuth(body, "admin"); if (denied) return denied;
   const { interactionId } = body;
   if (!interactionId) return err(400, "missing interactionId");
   // marca como resolvida (descartada) — preserva o registro pra telemetria
@@ -578,7 +589,7 @@ async function handleAdminDeletePending(body) {
 }
 
 async function handleAdminClearFeedback(body) {
-  const denied = checkPin(body); if (denied) return denied;
+  const denied = checkAuth(body, "admin"); if (denied) return denied;
   const { interactionId } = body;
   if (!interactionId) return err(400, "missing interactionId");
   const r = await patchInteraction(interactionId, {

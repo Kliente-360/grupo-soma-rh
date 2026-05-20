@@ -709,6 +709,118 @@
       border-top: 1px solid var(--nv-line);
     }
 
+    /* ---------- Login screen (gate da aplicação) ---------- */
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--nv-paper);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fade-in var(--dur-base) var(--ease-soft);
+    }
+    @keyframes fade-in {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      padding: 40px 32px;
+      background: var(--nv-cream);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      animation: slide-up var(--dur-base) var(--ease-soft);
+    }
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .login-avatar { display: inline-block; margin-bottom: 18px; }
+    .login-card h2 {
+      margin: 0 0 8px 0;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: var(--nv-coffee);
+    }
+    .login-card p {
+      margin: 0 0 24px 0;
+      color: var(--nv-coffee-mute);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .login-card form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .login-card input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-sm);
+      background: var(--nv-paper);
+      color: var(--nv-coffee);
+      font: 14px/1.4 var(--font-body);
+      transition: border-color var(--dur-fast) var(--ease-soft),
+                  box-shadow var(--dur-fast) var(--ease-soft);
+    }
+    .login-card input::placeholder { color: var(--nv-coffee-mute); }
+    .login-card input:focus {
+      outline: none;
+      border-color: var(--nv-clay);
+      box-shadow: 0 0 0 3px var(--nv-clay-light);
+    }
+    .login-card .btn {
+      width: 100%;
+      margin-top: 6px;
+      padding: 12px 22px;
+      font-size: 14px;
+    }
+    .login-error {
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--nv-danger);
+      letter-spacing: 0.02em;
+    }
+
+    /* ---------- Logout button (header) ---------- */
+    .logout-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid var(--nv-line);
+      color: var(--nv-coffee-soft);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: color var(--dur-fast) var(--ease-soft),
+                  border-color var(--dur-fast) var(--ease-soft),
+                  background var(--dur-fast) var(--ease-soft);
+    }
+    .logout-btn:hover {
+      color: var(--nv-coffee);
+      border-color: var(--nv-coffee);
+      background: var(--nv-cream);
+    }
+    .logout-btn .logout-label { display: inline; }
+    @media (max-width: 560px) {
+      .logout-btn .logout-label { display: none; }
+      .logout-btn { padding: 8px; }
+    }
+
     /* ---------- Feedback cards no admin ---------- */
     .card-feedback { border-left: 3px solid var(--nv-coffee-mute); }
     .card-feedback.card-fb-up   { border-left-color: var(--nv-success); }
@@ -747,7 +859,22 @@
 </head>
 <body>
 
-  <header class="app-header">
+  <!-- Login overlay (mostrado em init() se sessionStorage zi_auth vazio) -->
+  <div id="login-screen" class="login-screen" style="display:none">
+    <div class="login-card">
+      <span id="login-avatar" class="login-avatar"></span>
+      <h2>Olá! Faça login</h2>
+      <p>Acesse com seu usuário e senha pra começar.</p>
+      <form id="login-form" autocomplete="on" novalidate>
+        <input id="login-username" type="text" placeholder="usuário" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" />
+        <input id="login-password" type="password" placeholder="senha" autocomplete="current-password" />
+        <button type="submit" class="btn btn-primary" id="login-submit">Entrar</button>
+        <div id="login-error" class="login-error" role="alert" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <header class="app-header" id="app-header">
     <div class="header-inner">
       <div class="header-id">
         <span id="header-avatar"></span>
@@ -758,10 +885,14 @@
       </div>
       <div class="tabs" role="tablist">
         <button class="tab-btn active" data-view="chat" role="tab" aria-selected="true">Conversar</button>
-        <button class="tab-btn" data-view="admin" role="tab" aria-selected="false">
+        <button class="tab-btn" data-view="admin" role="tab" aria-selected="false" id="admin-tab" style="display:none">
           Admin RH <span id="admin-badge" class="badge" style="display:none">0</span>
         </button>
       </div>
+      <button class="logout-btn" id="logout-btn" type="button" aria-label="Sair">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="logout-label">Sair</span>
+      </button>
     </div>
   </header>
 
@@ -781,12 +912,12 @@
     </div>
   </main>
 
-  <!-- Admin view (conteúdo gerado em JS — gate ou painel) -->
+  <!-- Admin view (conteúdo gerado em JS) -->
   <main id="view-admin" class="view">
     <div class="view-inner" id="admin-root"></div>
   </main>
 
-  <footer class="app-footer">NV · Assistente interna de RH</footer>
+  <footer class="app-footer" id="app-footer">NV · Assistente interna de RH</footer>
 
   <div id="toast" class="toast" role="status"></div>
 
@@ -801,9 +932,13 @@
   // no Supabase — o cliente não conhece nada disso.
   const API_URL = "/api/zi";
 
-  // PIN do Admin RH — fricção simples, não segurança. Validado também no servidor.
-  const ADMIN_PIN = "NVRH2026";
-  const ADMIN_AUTH_KEY = "zi_admin_auth";
+  // Credenciais de acesso — fricção, não segurança. Validado também no servidor.
+  // Pra mudar perfis em produção: mover pra SSO (Google Workspace) ou Supabase Auth.
+  const CREDENTIALS = {
+    admin: { password: "adminnv26", role: "admin" },
+    user:  { password: "usernv26",  role: "user"  },
+  };
+  const AUTH_KEY = "zi_auth";
   const SESSION_ID_KEY = "zi_session_id";
 
   const SUGGESTIONS = [
@@ -1350,17 +1485,27 @@
     updateAdminBadge();
   }
 
-  /* ---------- Admin auth (PIN) ---------- */
-  function getAdminPin() {
-    return sessionStorage.getItem(ADMIN_AUTH_KEY) || null;
+  /* ---------- Auth (login + role) ---------- */
+  function getAuth() {
+    const raw = sessionStorage.getItem(AUTH_KEY);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
   }
-  function isAdminAuthed() {
-    return !!getAdminPin();
+  function isAuthenticated() { return !!getAuth(); }
+  function isAdmin() { return getAuth()?.role === 'admin'; }
+
+  function tryLogin(username, password) {
+    const c = CREDENTIALS[(username || '').trim().toLowerCase()];
+    if (!c || c.password !== password) return null;
+    const auth = { username: username.trim().toLowerCase(), password: c.password, role: c.role };
+    sessionStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    return auth;
   }
-  function logoutAdmin() {
-    sessionStorage.removeItem(ADMIN_AUTH_KEY);
-    renderAdmin();
-    toast('Você saiu do admin');
+
+  function logout() {
+    sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(SESSION_ID_KEY);
+    window.location.reload();
   }
 
   // Estado do painel admin (carregado do servidor sob demanda)
@@ -1369,13 +1514,13 @@
   let adminFeedback = [];
 
   async function loadAdminData() {
-    const pin = getAdminPin();
-    if (!pin) return;
+    const auth = getAuth();
+    if (!auth || auth.role !== 'admin') return;
     try {
       const [pending, trained, feedback] = await Promise.all([
-        apiPost('admin_list_pending',  { pin }),
-        apiPost('admin_list_trained',  { pin }),
-        apiPost('admin_list_feedback', { pin }),
+        apiPost('admin_list_pending',  { auth }),
+        apiPost('admin_list_trained',  { auth }),
+        apiPost('admin_list_feedback', { auth }),
       ]);
       adminPending  = Array.isArray(pending)  ? pending  : [];
       adminTrained  = Array.isArray(trained)  ? trained  : [];
@@ -1390,34 +1535,9 @@
 
   function renderAdmin() {
     const root = document.getElementById('admin-root');
-    if (!isAdminAuthed()) {
-      root.innerHTML = `
-        <div class="admin-gate">
-          <h2>Acesso restrito</h2>
-          <p>Esta área é exclusiva do time de RH. Digite o PIN pra continuar.</p>
-          <input id="admin-pin-input" type="password" inputmode="text" autocomplete="off" placeholder="PIN" />
-          <button class="btn btn-primary" id="admin-pin-submit">Entrar</button>
-        </div>
-      `;
-      const input = document.getElementById('admin-pin-input');
-      const submit = async () => {
-        const pin = (input.value || '').trim();
-        if (!pin) return;
-        // Valida no servidor com uma chamada barata (admin_list_trained)
-        try {
-          await apiPost('admin_list_trained', { pin });
-          sessionStorage.setItem(ADMIN_AUTH_KEY, pin);
-          await loadAdminData();
-          renderAdmin();
-        } catch (e) {
-          input.value = '';
-          input.focus();
-          toast('PIN incorreto');
-        }
-      };
-      document.getElementById('admin-pin-submit').onclick = submit;
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
-      setTimeout(() => input.focus(), 50);
+    // O acesso ao painel admin já é garantido pelo login + role; sem gate extra aqui.
+    if (!isAdmin()) {
+      root.innerHTML = `<div class="empty-state">Acesso restrito ao time de RH.</div>`;
       return;
     }
 
@@ -1535,7 +1655,7 @@
       btn.onclick = () => deleteFeedbackEntry(btn.dataset.id);
     });
     const logoutBtn = document.getElementById('admin-logout');
-    if (logoutBtn) logoutBtn.onclick = logoutAdmin;
+    if (logoutBtn) logoutBtn.onclick = logout;
     const refreshBtn = document.getElementById('admin-refresh');
     if (refreshBtn) refreshBtn.onclick = async () => {
       await loadAdminData();
@@ -1546,7 +1666,7 @@
 
   async function deleteFeedbackEntry(interactionId) {
     try {
-      await apiPost('admin_clear_feedback', { pin: getAdminPin(), interactionId });
+      await apiPost('admin_clear_feedback', { auth: getAuth(), interactionId });
       adminFeedback = adminFeedback.filter(x => String(x.id) !== String(interactionId));
       renderAdmin();
       toast('Feedback removido');
@@ -1557,7 +1677,7 @@
     const answer = (document.getElementById(`ans-${interactionId}`)?.value || '').trim();
     if (!answer) { toast('Escreva uma resposta antes de salvar'); return; }
     try {
-      await apiPost('admin_save_trained', { pin: getAdminPin(), interactionId, answer });
+      await apiPost('admin_save_trained', { auth: getAuth(), interactionId, answer });
       await loadAdminData();
       renderAdmin();
       toast('Resposta treinada ✓');
@@ -1566,7 +1686,7 @@
 
   async function deletePending(interactionId) {
     try {
-      await apiPost('admin_delete_pending', { pin: getAdminPin(), interactionId });
+      await apiPost('admin_delete_pending', { auth: getAuth(), interactionId });
       adminPending = adminPending.filter(x => String(x.id) !== String(interactionId));
       pendingCount = adminPending.length;
       updateAdminBadge();
@@ -1577,7 +1697,7 @@
 
   async function deleteTrained(trainedId) {
     try {
-      await apiPost('admin_delete_trained', { pin: getAdminPin(), trainedId });
+      await apiPost('admin_delete_trained', { auth: getAuth(), trainedId });
       adminTrained = adminTrained.filter(x => String(x.id) !== String(trainedId));
       renderAdmin();
       toast('Resposta removida');
@@ -1586,6 +1706,8 @@
 
   /* ---------------- View toggle ---------------- */
   function switchView(view) {
+    // Bloqueia user-role de navegar pro admin (defesa em profundidade — server também valida)
+    if (view === 'admin' && !isAdmin()) return;
     currentView = view;
     document.querySelectorAll('.tab-btn').forEach(b => {
       const isActive = b.dataset.view === view;
@@ -1596,22 +1718,67 @@
     document.getElementById('view-admin').classList.toggle('active', view === 'admin');
     if (view === 'admin') {
       renderAdmin();
-      if (isAdminAuthed()) loadAdminData().then(renderAdmin);
+      if (isAdmin()) loadAdminData().then(renderAdmin);
     }
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
+  /* ---------------- Login screen ---------------- */
+  function showLoginScreen() {
+    document.getElementById('login-avatar').innerHTML = ziAvatar(64, true);
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-header').style.visibility = 'hidden';
+    document.querySelectorAll('main.view, #app-footer').forEach(el => { el.style.visibility = 'hidden'; });
+
+    const form = document.getElementById('login-form');
+    const userInput = document.getElementById('login-username');
+    const passInput = document.getElementById('login-password');
+    const errEl = document.getElementById('login-error');
+
+    setTimeout(() => userInput.focus(), 80);
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      errEl.textContent = '';
+      const auth = tryLogin(userInput.value, passInput.value);
+      if (!auth) {
+        errEl.textContent = 'Usuário ou senha incorretos.';
+        passInput.value = '';
+        passInput.focus();
+        return;
+      }
+      hideLoginScreen();
+      bootApp();
+    };
+  }
+
+  function hideLoginScreen() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-header').style.visibility = '';
+    document.querySelectorAll('main.view, #app-footer').forEach(el => { el.style.visibility = ''; });
+  }
+
+  function applyRoleUI() {
+    const auth = getAuth();
+    const adminTab = document.getElementById('admin-tab');
+    if (auth?.role === 'admin') {
+      adminTab.style.display = '';
+    } else {
+      adminTab.style.display = 'none';
+      // Garante que está no chat
+      if (currentView === 'admin') switchView('chat');
+    }
+  }
+
   /* ---------------- Init ---------------- */
   function init() {
-    // header avatar
+    // Wiring sempre, independente de auth
     document.getElementById('header-avatar').innerHTML = ziAvatar(52, true);
 
-    // Tabs
     document.querySelectorAll('.tab-btn').forEach(b => {
       b.onclick = () => switchView(b.dataset.view);
     });
 
-    // Input
     const input = document.getElementById('chat-input');
     input.addEventListener('input', autoResizeInput);
     input.addEventListener('keydown', (e) => {
@@ -1621,12 +1788,22 @@
       }
     });
     document.getElementById('send-btn').onclick = () => sendUserMessage(input.value);
+    document.getElementById('logout-btn').onclick = logout;
 
-    // Initial render
+    // Gate: se não autenticado, mostra login. Senão, boot direto.
+    if (!isAuthenticated()) {
+      showLoginScreen();
+      return;
+    }
+    bootApp();
+  }
+
+  function bootApp() {
+    applyRoleUI();
     renderMessages();
     renderSuggestions();
-    refreshPendingCount();   // popula badge a partir do servidor
-    input.focus();
+    if (isAdmin()) refreshPendingCount();   // só admin precisa do contador
+    document.getElementById('chat-input').focus();
   }
 
   document.addEventListener('DOMContentLoaded', init);
