@@ -17,9 +17,9 @@
 //   admin_clear_feedback     → remove rating de uma interaction
 //
 // Env vars (Netlify → Site settings → Environment variables):
-//   GEMINI_API_KEY           — Google AI Studio
-//   SUPABASE_URL             — Project URL
-//   SUPABASE_SECRET_KEY      — service-role / sb_secret_... (bypassa RLS)
+//   GEMINI_API_KEY                                   — Google AI Studio
+//   SUPABASE_ZI_URL       (ou SUPABASE_URL)          — Project URL
+//   SUPABASE_ZI_SECRET_KEY (ou SUPABASE_SECRET_KEY)  — sb_secret_... (bypassa RLS)
 
 const MODEL_CHAT  = "gemini-2.5-flash";
 const MODEL_EMBED = "gemini-embedding-001";
@@ -33,6 +33,10 @@ function env(k) {
   return "";
 }
 
+// Aliases: SUPABASE_ZI_* (preferido) com fallback pros nomes genéricos.
+function supabaseUrl() { return env("SUPABASE_ZI_URL") || env("SUPABASE_URL"); }
+function supabaseKey() { return env("SUPABASE_ZI_SECRET_KEY") || env("SUPABASE_SECRET_KEY"); }
+
 // ---------------- HTTP helpers ----------------
 const json = (obj, init = {}) => new Response(JSON.stringify(obj), {
   status: init.status || 200,
@@ -44,8 +48,8 @@ const err = (status, message, extra = {}) =>
 
 // ---------------- Supabase REST helper ----------------
 async function supabaseFetch(path, init = {}) {
-  const url = env("SUPABASE_URL").replace(/\/$/, "") + path;
-  const key = env("SUPABASE_SECRET_KEY");
+  const url = supabaseUrl().replace(/\/$/, "") + path;
+  const key = supabaseKey();
   return fetch(url, {
     ...init,
     headers: {
@@ -384,8 +388,10 @@ export default async (req) => {
         ok: true,
         env: {
           hasGeminiKey:   !!env("GEMINI_API_KEY"),
-          hasSupabaseUrl: !!env("SUPABASE_URL"),
-          hasSupabaseKey: !!env("SUPABASE_SECRET_KEY"),
+          hasSupabaseUrl: !!supabaseUrl(),
+          hasSupabaseKey: !!supabaseKey(),
+          supabaseUrlVar: env("SUPABASE_ZI_URL")        ? "SUPABASE_ZI_URL"        : (env("SUPABASE_URL")        ? "SUPABASE_URL"        : null),
+          supabaseKeyVar: env("SUPABASE_ZI_SECRET_KEY") ? "SUPABASE_ZI_SECRET_KEY" : (env("SUPABASE_SECRET_KEY") ? "SUPABASE_SECRET_KEY" : null),
         },
         model: { chat: MODEL_CHAT, embed: MODEL_EMBED, embedDim: EMBED_DIM },
       });
@@ -395,10 +401,12 @@ export default async (req) => {
 
   if (req.method !== "POST") return err(405, "method not allowed");
 
-  const missing = ["GEMINI_API_KEY", "SUPABASE_URL", "SUPABASE_SECRET_KEY"]
-    .filter(k => !env(k));
-  if (missing.length > 0) {
-    return err(500, `env vars não configuradas no Netlify: ${missing.join(", ")}`);
+  const missingEnv = [];
+  if (!env("GEMINI_API_KEY")) missingEnv.push("GEMINI_API_KEY");
+  if (!supabaseUrl())         missingEnv.push("SUPABASE_ZI_URL (ou SUPABASE_URL)");
+  if (!supabaseKey())         missingEnv.push("SUPABASE_ZI_SECRET_KEY (ou SUPABASE_SECRET_KEY)");
+  if (missingEnv.length > 0) {
+    return err(500, `env vars não configuradas no Netlify: ${missingEnv.join(", ")}`);
   }
 
   let body;
