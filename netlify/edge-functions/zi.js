@@ -199,7 +199,12 @@ async function handleChat(body) {
   const payload = {
     contents,
     systemInstruction: { parts: [{ text: buildSystemPrompt(chunks, trained) }] },
-    generationConfig: { temperature: 0.4, maxOutputTokens: 1024, topP: 0.95 },
+    generationConfig: {
+      temperature: 0.2,                           // determinismo > criatividade
+      maxOutputTokens: 1024,
+      topP: 0.95,
+      thinkingConfig: { thinkingBudget: 0 },      // desliga "thinking" — tarefa é só retrieval
+    },
     safetySettings: [
       { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
       { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
