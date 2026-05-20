@@ -104,65 +104,88 @@ async function getActiveTrained(limit = 20) {
   return r.json();
 }
 
-// ---------------- Query rewriter (contextual standalone query) ----------------
+// ---------------- Query rewriter + decomposer (multi-query) ----------------
 //
-// Resolve o "follow-up question problem": embedding semântico não enxerga
-// histórico, então perguntas dependentes ("qual o valor?", "e quando?")
-// retornam chunks irrelevantes. Antes de embed/retrieval, reescrevemos
-// pra uma query autônoma usando o histórico.
+// Resolve dois problemas clássicos de RAG conversacional:
 //
-// Padrão clássico de RAG conversacional (LangChain ConversationalRetrievalChain,
-// Perplexity, ChatGPT Search). Custo: 1 call Gemini (~300ms) + ~200 tokens.
+//   1. Follow-up: "qual o valor?" depende de histórico — embedding não vê.
+//   2. Comparativo: "é igual para loja e corporativo?" cobre 2 aspectos
+//      separados na KB — embedding único puxa só o lado mais saliente.
+//
+// Estratégia: reescreve a pergunta em UMA OU MAIS consultas autônomas.
+// Pergunta simples → 1 query. Pergunta comparativa/multi-caso → 2-3 queries.
+// Cada query vira retrieval separado; chunks são merged+deduped depois.
+//
+// Padrões: ConversationalRetrievalChain + MultiQueryRetriever (LangChain).
 
-async function rewriteStandaloneQuery(messages) {
+async function rewriteToQueries(messages) {
   const current = String(messages[messages.length - 1]?.content || "").trim();
 
-  // Sem histórico real (só a pergunta atual), nada pra reescrever
   const priorTurns = messages.slice(0, -1).filter(m =>
     (m.role === "user" || m.role === "assistant") && String(m.content || "").trim()
   );
-  if (priorTurns.length === 0) return current;
 
-  // Atalho barato: se a pergunta já tem entidade clara (substantivo concreto),
-  // pula a chamada ao Gemini. Heurística simples — palavras-chave da KB.
+  // Triggers comparativos — força reescrita mesmo se a pergunta tem entidade da KB
+  const comparativeRegex = /\b(igual|diferen[çc]a|diferente|comparad|vs\b|versus|ou (corporativo|loja|admin|comercial)|loja e corporativo|corporativo e loja|antes e depois|cada (caso|tipo))/i;
+  const isComparative = comparativeRegex.test(current);
+
+  // Sem histórico e não-comparativa → usa a pergunta direto
+  if (priorTurns.length === 0 && !isComparative) return [current];
+
+  // Bypass de heurística pra perguntas claramente autônomas e não-comparativas
   const looksStandalone =
-    current.length > 80 ||
-    /vale[-\s]?(refei[çc][ãa]o|transporte)|f[ée]rias|licen[çc]a|plano de sa[úu]de|odontol[óo]gico|day off|wellz|sesc|admiss[ãa]o|desligamento|paternidade|maternidade|pgsi|seguran[çc]a da informa[çc][ãa]o|gnd[i]?|sulam[ée]rica|hapvida|cesta b[áa]sica|seguro de vida|cr[ée]dito de natal/i.test(current);
-  if (looksStandalone) return current;
+    !isComparative && (
+      current.length > 80 ||
+      /vale[-\s]?(refei[çc][ãa]o|transporte)|f[ée]rias|licen[çc]a|plano de sa[úu]de|odontol[óo]gico|day off|wellz|sesc|admiss[ãa]o|desligamento|paternidade|maternidade|pgsi|seguran[çc]a da informa[çc][ãa]o|gnd[i]?|sulam[ée]rica|hapvida|cesta b[áa]sica|seguro de vida|cr[ée]dito de natal/i.test(current)
+    );
+  if (looksStandalone && priorTurns.length === 0) return [current];
 
-  // Últimos 6 turnos (3 trocas) — contexto suficiente sem inflar o prompt
   const recent = priorTurns.slice(-6).map(m =>
     `${m.role === "user" ? "Usuário" : "Zi"}: ${m.content}`
-  ).join("\n");
+  ).join("\n") || "(sem histórico)";
 
   const prompt = `Você reescreve perguntas de chat em consultas autônomas pra busca em base de conhecimento de RH.
 
-Recebe histórico recente da conversa e a pergunta atual. Devolve UMA pergunta autônoma que captura todo o contexto necessário pra encontrar a resposta na base.
+Recebe histórico recente e a pergunta atual. Devolve UMA ou MAIS consultas — uma por linha — que cubram o que o usuário quer saber.
 
 Regras:
-1. Se a pergunta atual JÁ é autônoma e clara, devolve ela EXATAMENTE como está.
-2. Se contém referência implícita (pronomes, "isso", "esse", "o valor", "quanto", "quando", "como funciona"), incorpora o assunto do histórico.
-3. NÃO invente contexto fora do histórico.
-4. Devolve SÓ a pergunta reescrita — sem aspas, sem prefixos ("Pergunta:"), sem explicações.
+1. Se a pergunta atual já é autônoma e cobre UM tema, devolve 1 linha.
+2. Se contém referência implícita (pronomes, "isso", "o valor", "quanto", "quando"), incorpora o assunto do histórico.
+3. Se a pergunta COMPARA, DIFERENCIA ou cobre MÚLTIPLOS casos (ex: "loja e corporativo", "PJ e CLT", "antes e depois"), devolve uma consulta POR CASO — uma por linha.
+4. Limite máximo: 3 linhas.
+5. NÃO invente contexto fora do histórico.
+6. Devolve SÓ as consultas, uma por linha — sem aspas, sem prefixos, sem numeração, sem explicações.
 
 Exemplos:
+
 Histórico:
 Usuário: Como funciona o vale-refeição?
 Zi: É um cartão Flash...
 Pergunta atual: qual o valor?
-Reescrita: Qual o valor do vale-refeição?
+Reescrita:
+Qual o valor do vale-refeição?
 
 Histórico:
-Usuário: Tenho direito a day off no aniversário?
-Zi: Sim, todos têm direito...
-Pergunta atual: e quando posso usar?
-Reescrita: Quando posso usar o day off de aniversário?
+Usuário: Como funciona o vale-refeição?
+Zi: ...R$ 620,00...
+Pergunta atual: é igual para loja e corporativo?
+Reescrita:
+Vale-refeição para colaboradores de loja
+Vale-refeição para colaboradores corporativos
 
 Histórico:
 Usuário: Como solicito férias?
-Zi: Precisa avisar com 45 dias...
-Pergunta atual: como funciona o vale-transporte?
-Reescrita: Como funciona o vale-transporte?
+Zi: 45 dias de antecedência...
+Pergunta atual: e quanto recebo?
+Reescrita:
+Quanto recebo durante as férias?
+
+Histórico:
+(sem histórico)
+Pergunta atual: qual a diferença do plano de saúde para loja e corporativo?
+Reescrita:
+Plano de saúde para colaboradores de loja
+Plano de saúde para colaboradores corporativos
 
 ---
 
@@ -182,23 +205,29 @@ Reescrita:`;
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 120,
+          maxOutputTokens: 200,
           thinkingConfig: { thinkingBudget: 0 },
         },
       }),
     });
-    if (!r.ok) return current;
+    if (!r.ok) return [current];
     const data = await r.json();
-    let rewritten = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-    // Limpeza defensiva — modelo às vezes adiciona aspas ou prefixos
-    rewritten = rewritten
-      .replace(/^["'`]+|["'`]+$/g, "")
-      .replace(/^(Reescrita|Pergunta reescrita|Pergunta autônoma|Query):\s*/i, "")
-      .trim();
-    if (rewritten.length < 3 || rewritten.length > 300) return current;
-    return rewritten;
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+
+    const queries = raw
+      .split(/\n+/)
+      .map(line => line
+        .replace(/^[\s\-•*0-9.)]+/, "")                       // tira bullets/números
+        .replace(/^["'`]+|["'`]+$/g, "")                       // tira aspas
+        .replace(/^(Reescrita|Pergunta reescrita|Query):\s*/i, "")
+        .trim()
+      )
+      .filter(q => q.length >= 3 && q.length <= 300)
+      .slice(0, 3);                                            // hard cap
+
+    return queries.length > 0 ? queries : [current];
   } catch {
-    return current;  // falha silenciosa — cai pro fallback original
+    return [current];
   }
 }
 
@@ -278,18 +307,31 @@ async function handleChat(body) {
   const currentQuestion = String(last.content).trim();
   const sessionId = body.session_id || null;
 
-  // 1) Reescreve a pergunta pra forma autônoma (resolve follow-ups com pronomes/elipse).
-  //    Se for primeira pergunta ou já autônoma, devolve a mesma string.
-  const standaloneQuery = await rewriteStandaloneQuery(messages);
+  // 1) Reescreve em 1+ consultas autônomas (multi-query pra perguntas comparativas).
+  const queries = await rewriteToQueries(messages);
 
-  // 2) Embed da query autônoma + retrieval (5 chunks pra mais contexto).
-  //    Pre-insert da interaction em paralelo (id volta no header).
-  const [queryEmbedding, interactionId, trained] = await Promise.all([
-    embed(standaloneQuery),
+  // 2) Embed de cada query + insert interaction + fetch trained, tudo em paralelo
+  const [embeddings, interactionId, trained] = await Promise.all([
+    Promise.all(queries.map(embed)),
     insertInteraction(sessionId, currentQuestion),
     getActiveTrained(),
   ]);
-  const chunks = await matchChunks(queryEmbedding, 5);
+
+  // 3) Retrieval por query, merge + dedupe por chunk id, cap em 8 chunks
+  //    - 1 query: top-6 (mais contexto)
+  //    - 2+ queries: top-4 por query (max 12 raw → dedup → cap 8)
+  const perQuery = queries.length === 1 ? 6 : 4;
+  const chunkResults = await Promise.all(
+    embeddings.map(e => matchChunks(e, perQuery))
+  );
+  const seen = new Set();
+  const merged = [];
+  for (const set of chunkResults) {
+    for (const c of set) {
+      if (!seen.has(c.id)) { seen.add(c.id); merged.push(c); }
+    }
+  }
+  const chunks = merged.slice(0, 8);
 
   // 3) Monta contents pra Gemini
   const contents = messages.map(m => ({
