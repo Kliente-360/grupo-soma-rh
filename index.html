@@ -444,26 +444,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* ---------- API-key warning ---------- */
-    .api-warning {
-      max-width: var(--max-w);
-      margin: 12px auto 0;
-      padding: 12px 16px;
-      background: #fff4e6;
-      border: 1px solid #e8c98a;
-      border-radius: 12px;
-      color: #6b4a1a;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-    .api-warning code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      background: rgba(0,0,0,0.05);
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-
     /* ---------- Toast ---------- */
     .toast {
       position: fixed;
@@ -623,10 +603,6 @@
         </button>
       </div>
     </div>
-    <div id="api-warning" class="api-warning" style="display:none">
-      ⚠️ <strong>API key não configurada.</strong> Edite a constante <code>GEMINI_API_KEY</code> no <code>index.html</code>.
-      Pegue uma gratuita em <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a>.
-    </div>
   </header>
 
   <!-- Chat view -->
@@ -659,10 +635,10 @@
    * Zi · Chatbot RH NV — Protótipo (single-file)
    * ===================================================== */
 
-  // ⚠️ Substitua pelo seu Gemini API key (https://aistudio.google.com/app/apikey)
-  const GEMINI_API_KEY = "AIzaSyAPUpSEgDUpsgHt7zmdOoykU-c73YI2jmk";
-  const GEMINI_MODEL = "gemini-2.5-flash";
-  const GEMINI_URL_STREAM = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
+  // A chamada do Gemini passa por uma Edge Function (proxy) hospedada no
+  // Netlify em /api/zi. A key NÃO fica no client — vive em GEMINI_API_KEY
+  // como env var no Netlify. Veja netlify/edge-functions/zi.js.
+  const GEMINI_URL_STREAM = "/api/zi";
 
   // PIN do Admin RH — friction simples, não segurança. Visível no source (repo público).
   const ADMIN_PIN = "NVRH2026";
@@ -1053,10 +1029,7 @@ ${trainedSection}
 - Encerre respostas longas com "Se precisar de mais detalhe, é só falar 👋" ou similar`;
   }
 
-  /* ---------------- Gemini API ---------------- */
-  function isApiKeyConfigured() {
-    return GEMINI_API_KEY && !GEMINI_API_KEY.startsWith("COLOQUE_") && GEMINI_API_KEY.length > 10;
-  }
+  /* ---------------- Gemini API (via /api/zi proxy) ---------------- */
 
   // Streaming via SSE — cada chunk chama onChunk(textoAcumulado).
   // Retorna o texto completo (incluindo eventual [NAO_ENCONTREI]) ao final.
@@ -1340,14 +1313,6 @@ ${trainedSection}
     renderSuggestions(); // hides chips after first msg
     document.getElementById('chat-input').value = '';
     autoResizeInput();
-
-    if (!isApiKeyConfigured()) {
-      pushMessage('assistant',
-        'Ih, parece que a API key ainda não foi configurada 😬\n\nEdite a constante `GEMINI_API_KEY` no arquivo `index.html`. ' +
-        'Você consegue uma gratuita em https://aistudio.google.com/app/apikey.'
-      );
-      return;
-    }
 
     isWaitingReply = true;
     setSendEnabled(false);
@@ -1697,11 +1662,6 @@ ${trainedSection}
   function init() {
     // header avatar
     document.getElementById('header-avatar').innerHTML = ziAvatar(52, true);
-
-    // API key warning
-    if (!isApiKeyConfigured()) {
-      document.getElementById('api-warning').style.display = 'block';
-    }
 
     // Tabs
     document.querySelectorAll('.tab-btn').forEach(b => {
