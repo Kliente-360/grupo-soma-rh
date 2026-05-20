@@ -104,6 +104,104 @@ async function getActiveTrained(limit = 20) {
   return r.json();
 }
 
+// ---------------- Query rewriter (contextual standalone query) ----------------
+//
+// Resolve o "follow-up question problem": embedding semântico não enxerga
+// histórico, então perguntas dependentes ("qual o valor?", "e quando?")
+// retornam chunks irrelevantes. Antes de embed/retrieval, reescrevemos
+// pra uma query autônoma usando o histórico.
+//
+// Padrão clássico de RAG conversacional (LangChain ConversationalRetrievalChain,
+// Perplexity, ChatGPT Search). Custo: 1 call Gemini (~300ms) + ~200 tokens.
+
+async function rewriteStandaloneQuery(messages) {
+  const current = String(messages[messages.length - 1]?.content || "").trim();
+
+  // Sem histórico real (só a pergunta atual), nada pra reescrever
+  const priorTurns = messages.slice(0, -1).filter(m =>
+    (m.role === "user" || m.role === "assistant") && String(m.content || "").trim()
+  );
+  if (priorTurns.length === 0) return current;
+
+  // Atalho barato: se a pergunta já tem entidade clara (substantivo concreto),
+  // pula a chamada ao Gemini. Heurística simples — palavras-chave da KB.
+  const looksStandalone =
+    current.length > 80 ||
+    /vale[-\s]?(refei[çc][ãa]o|transporte)|f[ée]rias|licen[çc]a|plano de sa[úu]de|odontol[óo]gico|day off|wellz|sesc|admiss[ãa]o|desligamento|paternidade|maternidade|pgsi|seguran[çc]a da informa[çc][ãa]o|gnd[i]?|sulam[ée]rica|hapvida|cesta b[áa]sica|seguro de vida|cr[ée]dito de natal/i.test(current);
+  if (looksStandalone) return current;
+
+  // Últimos 6 turnos (3 trocas) — contexto suficiente sem inflar o prompt
+  const recent = priorTurns.slice(-6).map(m =>
+    `${m.role === "user" ? "Usuário" : "Zi"}: ${m.content}`
+  ).join("\n");
+
+  const prompt = `Você reescreve perguntas de chat em consultas autônomas pra busca em base de conhecimento de RH.
+
+Recebe histórico recente da conversa e a pergunta atual. Devolve UMA pergunta autônoma que captura todo o contexto necessário pra encontrar a resposta na base.
+
+Regras:
+1. Se a pergunta atual JÁ é autônoma e clara, devolve ela EXATAMENTE como está.
+2. Se contém referência implícita (pronomes, "isso", "esse", "o valor", "quanto", "quando", "como funciona"), incorpora o assunto do histórico.
+3. NÃO invente contexto fora do histórico.
+4. Devolve SÓ a pergunta reescrita — sem aspas, sem prefixos ("Pergunta:"), sem explicações.
+
+Exemplos:
+Histórico:
+Usuário: Como funciona o vale-refeição?
+Zi: É um cartão Flash...
+Pergunta atual: qual o valor?
+Reescrita: Qual o valor do vale-refeição?
+
+Histórico:
+Usuário: Tenho direito a day off no aniversário?
+Zi: Sim, todos têm direito...
+Pergunta atual: e quando posso usar?
+Reescrita: Quando posso usar o day off de aniversário?
+
+Histórico:
+Usuário: Como solicito férias?
+Zi: Precisa avisar com 45 dias...
+Pergunta atual: como funciona o vale-transporte?
+Reescrita: Como funciona o vale-transporte?
+
+---
+
+Histórico recente:
+${recent}
+
+Pergunta atual: ${current}
+
+Reescrita:`;
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_CHAT}:generateContent?key=${geminiKey()}`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 120,
+          thinkingConfig: { thinkingBudget: 0 },
+        },
+      }),
+    });
+    if (!r.ok) return current;
+    const data = await r.json();
+    let rewritten = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+    // Limpeza defensiva — modelo às vezes adiciona aspas ou prefixos
+    rewritten = rewritten
+      .replace(/^["'`]+|["'`]+$/g, "")
+      .replace(/^(Reescrita|Pergunta reescrita|Pergunta autônoma|Query):\s*/i, "")
+      .trim();
+    if (rewritten.length < 3 || rewritten.length > 300) return current;
+    return rewritten;
+  } catch {
+    return current;  // falha silenciosa — cai pro fallback original
+  }
+}
+
 // ---------------- Interaction helpers ----------------
 async function insertInteraction(sessionId, question) {
   const r = await supabaseFetch("/rest/v1/zi_interactions", {
@@ -180,15 +278,18 @@ async function handleChat(body) {
   const currentQuestion = String(last.content).trim();
   const sessionId = body.session_id || null;
 
-  // 1) Embed + retrieval (paralelo com fetch trained)
-  const queryEmbedding = await embed(currentQuestion);
-  const [chunks, trained] = await Promise.all([
-    matchChunks(queryEmbedding, 3),
+  // 1) Reescreve a pergunta pra forma autônoma (resolve follow-ups com pronomes/elipse).
+  //    Se for primeira pergunta ou já autônoma, devolve a mesma string.
+  const standaloneQuery = await rewriteStandaloneQuery(messages);
+
+  // 2) Embed da query autônoma + retrieval (5 chunks pra mais contexto).
+  //    Pre-insert da interaction em paralelo (id volta no header).
+  const [queryEmbedding, interactionId, trained] = await Promise.all([
+    embed(standaloneQuery),
+    insertInteraction(sessionId, currentQuestion),
     getActiveTrained(),
   ]);
-
-  // 2) Pre-insert da interaction (id volta no header pra o client guardar)
-  const interactionId = await insertInteraction(sessionId, currentQuestion);
+  const chunks = await matchChunks(queryEmbedding, 5);
 
   // 3) Monta contents pra Gemini
   const contents = messages.map(m => ({
