@@ -238,11 +238,11 @@ Reescrita:`;
 }
 
 // ---------------- Interaction helpers ----------------
-async function insertInteraction(sessionId, question) {
+async function insertInteraction(sessionId, question, username = null) {
   const r = await supabaseFetch("/rest/v1/zi_interactions", {
     method: "POST",
     headers: { "Prefer": "return=representation" },
-    body: JSON.stringify({ session_id: sessionId, question }),
+    body: JSON.stringify({ session_id: sessionId, question, username }),
   });
   if (!r.ok) throw new Error(`insert interaction failed: HTTP ${r.status} — ${await r.text()}`);
   const rows = await r.json();
@@ -366,6 +366,9 @@ async function handleChat(body) {
   }
   const currentQuestion = String(last.content).trim();
   const sessionId = body.session_id || null;
+  // Captura o username do login (admin/user) pra contar usuários únicos no dashboard.
+  // Sem auth (rota pública) → null, ok.
+  const authUsername = body.auth?.username || null;
 
   // 1) Reescreve em 1+ consultas autônomas (multi-query pra perguntas comparativas).
   const queries = await rewriteToQueries(messages);
@@ -373,7 +376,7 @@ async function handleChat(body) {
   // 2) Embed de cada query + insert interaction + fetch trained, tudo em paralelo
   const [embeddings, interactionId, trained] = await Promise.all([
     Promise.all(queries.map(embed)),
-    insertInteraction(sessionId, currentQuestion),
+    insertInteraction(sessionId, currentQuestion, authUsername),
     getActiveTrained(),
   ]);
 
@@ -624,23 +627,24 @@ async function handleAdminMetrics(body) {
   const denied = checkAuth(body, "admin"); if (denied) return denied;
 
   const filterSessions = Array.isArray(body.filter?.sessions) ? body.filter.sessions : null;
+  // Período configurável: 30, 15 ou 7 dias. Default 30 (mensal).
+  const periodDays = [30, 15, 7].includes(body.period_days) ? body.period_days : 30;
 
-  // Pega todas as interactions (volume baixo na fase de prototipagem)
-  // Em produção, paginar ou usar queries SQL via RPC.
   const r = await supabaseFetch(
-    "/rest/v1/zi_interactions?select=id,session_id,question,answer,rating,rating_at,escalated,resolved_at,user_name,user_email,created_at&order=created_at.desc&limit=5000",
+    "/rest/v1/zi_interactions?select=id,session_id,question,answer,rating,rating_at,escalated,resolved_at,user_name,user_email,username,created_at&order=created_at.desc&limit=5000",
   );
   if (!r.ok) return err(500, "list interactions failed", { detail: await r.text() });
   const allInteractions = await r.json();
 
-  // ---------- Sessões disponíveis (pra o filtro) — sempre da população completa ----------
+  // ---------- Sessões disponíveis (pra o filtro) ----------
   const sessionMap = new Map();
   for (const i of allInteractions) {
     const sid = i.session_id || "anônima";
-    const cur = sessionMap.get(sid) || { session_id: sid, messages: 0, email: null, name: null, last_at: null };
+    const cur = sessionMap.get(sid) || { session_id: sid, messages: 0, email: null, name: null, username: null, last_at: null };
     cur.messages += 1;
-    if (i.user_email && !cur.email) cur.email = i.user_email;
-    if (i.user_name  && !cur.name)  cur.name  = i.user_name;
+    if (i.user_email && !cur.email)  cur.email = i.user_email;
+    if (i.user_name  && !cur.name)   cur.name  = i.user_name;
+    if (i.username   && !cur.username) cur.username = i.username;
     if (!cur.last_at || (i.created_at && i.created_at > cur.last_at)) cur.last_at = i.created_at;
     sessionMap.set(sid, cur);
   }
@@ -648,7 +652,7 @@ async function handleAdminMetrics(body) {
     .sort((a, b) => (b.last_at || "").localeCompare(a.last_at || ""))
     .map(s => {
       const idShort = String(s.session_id).slice(0, 8);
-      const who = s.email || s.name || "anônima";
+      const who = s.email || s.name || s.username || "anônima";
       return { ...s, label: `${who} · ${s.messages} msg${s.messages !== 1 ? "s" : ""} · ${idShort}` };
     });
 
@@ -661,56 +665,60 @@ async function handleAdminMetrics(body) {
   const NAO_TOKEN = "[NAO_ENCONTREI]";
   const isAnswered = (i) => i.answer && i.answer.trim() && !i.answer.includes(NAO_TOKEN);
   const isEscalated = (i) => !!i.escalated;
+  const isRated = (i) => i.rating === 1 || i.rating === -1;
+  // Pra contar usuários únicos: prefere username (login) e cai pro session_id se for null.
+  const userKey = (i) => i.username || `sess:${i.session_id || "anon"}`;
+
   const now = new Date();
   const dayMs = 24 * 60 * 60 * 1000;
   const startOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   const today = startOfDay(now);
-  const yesterday = new Date(today.getTime() - dayMs);
-  const weekAgo = new Date(today.getTime() - 7 * dayMs);
-  const fourteenAgo = new Date(today.getTime() - 13 * dayMs);
-  const thirtyAgo = new Date(today.getTime() - 30 * dayMs);
-
+  const periodStart = new Date(today.getTime() - (periodDays - 1) * dayMs);
   const within = (i, from, to) => {
     const d = new Date(i.created_at);
     return d >= from && (!to || d < to);
   };
 
-  // ---------- KPIs ----------
-  const weekInteractions = interactions.filter(i => within(i, weekAgo, null));
-  const weeklyUsers = new Set(weekInteractions.map(i => i.session_id || "anônima")).size;
+  const inPeriod = interactions.filter(i => within(i, periodStart, null));
 
-  const messagesToday = interactions.filter(i => within(i, today, null)).length;
-  const messagesYesterday = interactions.filter(i => within(i, yesterday, today)).length;
-
-  const last30 = interactions.filter(i => within(i, thirtyAgo, null));
-  const last30Total = last30.length;
-  const last30Autonomous = last30.filter(isAnswered).length;
-  const autonomousRate = last30Total > 0 ? last30Autonomous / last30Total : 0;
-
-  const rated = interactions.filter(i => i.rating === 1 || i.rating === -1);
-  const ups = rated.filter(i => i.rating === 1).length;
-  const downs = rated.filter(i => i.rating === -1).length;
+  // ---------- KPIs (todas dentro do período) ----------
+  const uniqueUsers = new Set(inPeriod.map(userKey)).size;
+  const totalMessages = inPeriod.length;
+  const autonomousCount = inPeriod.filter(isAnswered).length;
+  const autonomousRate  = totalMessages > 0 ? autonomousCount / totalMessages : 0;
+  const ratedTotal = inPeriod.filter(isRated).length;
+  const ups   = inPeriod.filter(i => i.rating === 1).length;
+  const downs = inPeriod.filter(i => i.rating === -1).length;
   const likeRatio = (ups + downs) > 0 ? ups / (ups + downs) : 0;
 
-  // ---------- Messages by day (14 dias) ----------
+  // ---------- Breakdown por dia (todas as métricas — pro chart) ----------
   const messagesByDay = [];
-  for (let i = 13; i >= 0; i--) {
+  for (let i = periodDays - 1; i >= 0; i--) {
     const d = new Date(today.getTime() - i * dayMs);
     const next = new Date(d.getTime() + dayMs);
-    const count = interactions.filter(it => within(it, d, next)).length;
-    messagesByDay.push({ date: d.toISOString().slice(0, 10), count });
+    const dayItems = interactions.filter(it => within(it, d, next));
+    const dayAuto  = dayItems.filter(isAnswered).length;
+    const dayPct   = dayItems.length > 0 ? dayAuto / dayItems.length : 0;
+    messagesByDay.push({
+      date: d.toISOString().slice(0, 10),
+      messages: dayItems.length,
+      unique_users: new Set(dayItems.map(userKey)).size,
+      autonomous: dayAuto,
+      autonomous_pct: +(dayPct * 100).toFixed(1),
+      rated: dayItems.filter(isRated).length,
+    });
   }
 
-  // ---------- Respondidas vs escaladas (período 30 dias) ----------
-  const responded = last30.filter(i => isAnswered(i) && !isEscalated(i)).length;
-  const escalatedResolved = last30.filter(i => isEscalated(i) && i.resolved_at).length;
-  const escalatedPending  = last30.filter(i => isEscalated(i) && !i.resolved_at).length;
+  // ---------- Respondidas vs escaladas (período) ----------
+  const responded = inPeriod.filter(i => isAnswered(i) && !isEscalated(i)).length;
+  const escalatedResolved = inPeriod.filter(i => isEscalated(i) && i.resolved_at).length;
+  const escalatedPending  = inPeriod.filter(i => isEscalated(i) && !i.resolved_at).length;
 
-  // ---------- Feedback (totais) ----------
-  const noRating = interactions.filter(i => i.rating !== 1 && i.rating !== -1 && isAnswered(i)).length;
+  // ---------- Feedback (totais no período) ----------
+  const noRating = inPeriod.filter(i => !isRated(i) && isAnswered(i)).length;
   const feedback = { up: ups, down: downs, none: noRating };
 
-  // ---------- Top escalações (recentes — gaps na KB) ----------
+  // ---------- Top escalações (10 mais recentes — gaps na KB) ----------
   const topEscalations = interactions
     .filter(isEscalated)
     .slice(0, 10)
@@ -719,35 +727,41 @@ async function handleAdminMetrics(body) {
       question: i.question,
       user_email: i.user_email || null,
       user_name: i.user_name || null,
+      username: i.username || null,
       created_at: i.created_at,
       resolved_at: i.resolved_at || null,
     }));
 
   // ---------- SLA: tempo médio de resolução das escalações ----------
-  const resolved = interactions.filter(i => isEscalated(i) && i.resolved_at);
+  const resolvedInPeriod = inPeriod.filter(i => isEscalated(i) && i.resolved_at);
   let avgResolutionMin = null;
-  if (resolved.length > 0) {
-    const totalMin = resolved.reduce((sum, i) => {
+  if (resolvedInPeriod.length > 0) {
+    const totalMin = resolvedInPeriod.reduce((sum, i) => {
       const dt = (new Date(i.resolved_at) - new Date(i.created_at)) / 60000;
       return sum + Math.max(0, dt);
     }, 0);
-    avgResolutionMin = Math.round(totalMin / resolved.length);
+    avgResolutionMin = Math.round(totalMin / resolvedInPeriod.length);
   }
 
-  // ---------- Horas liberadas estimadas (30 dias × 5 min/ticket) ----------
-  const MIN_PER_TICKET = 5;
-  const freedHoursEstimate = +(last30Autonomous * MIN_PER_TICKET / 60).toFixed(1);
+  // ---------- Tempo economizado (baseline: 2 dias úteis × 8h = 16h por ticket manual) ----------
+  const BUSINESS_DAYS_BASELINE = 2;
+  const HOURS_PER_BUSINESS_DAY = 8;
+  const hoursPerTicket = BUSINESS_DAYS_BASELINE * HOURS_PER_BUSINESS_DAY;
+  const freedHoursEstimate = +(autonomousCount * hoursPerTicket).toFixed(0);
 
   return json({
     filter: { sessions: filterSessions },
+    period_days: periodDays,
     session_options: sessionOptions,
     kpis: {
-      weekly_users: weeklyUsers,
-      messages_today: messagesToday,
-      messages_yesterday: messagesYesterday,
+      unique_users: uniqueUsers,
+      messages: totalMessages,
       autonomous_rate: +autonomousRate.toFixed(3),
+      autonomous_count: autonomousCount,
+      rated_total: ratedTotal,
       like_ratio: +likeRatio.toFixed(3),
-      targets: { autonomous: 0.8, likes: 0.8 },
+      ups, downs,
+      targets: { autonomous: 0.8 },
     },
     messages_by_day: messagesByDay,
     responded_vs_escalated: { responded, escalated_resolved: escalatedResolved, escalated_pending: escalatedPending },
@@ -756,8 +770,10 @@ async function handleAdminMetrics(body) {
     sla: {
       avg_resolution_minutes: avgResolutionMin,
       freed_hours_estimate: freedHoursEstimate,
-      autonomous_count_30d: last30Autonomous,
-      min_per_ticket: MIN_PER_TICKET,
+      autonomous_count_in_period: autonomousCount,
+      business_days_baseline: BUSINESS_DAYS_BASELINE,
+      hours_per_business_day: HOURS_PER_BUSINESS_DAY,
+      hours_per_ticket: hoursPerTicket,
     },
     total_interactions: interactions.length,
   });

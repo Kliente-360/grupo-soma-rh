@@ -119,6 +119,11 @@ create table if not exists zi_interactions (
 -- Migração idempotente pra bancos que já têm a tabela sem resolved_at
 alter table zi_interactions add column if not exists resolved_at timestamptz;
 
+-- Coluna username — quem mandou o chat (admin/user role)
+-- Usada pra contar usuários únicos no dashboard
+alter table zi_interactions add column if not exists username text;
+create index if not exists zi_interactions_username_idx on zi_interactions (username);
+
 create index if not exists zi_interactions_created_idx on zi_interactions (created_at desc);
 create index if not exists zi_interactions_rating_idx on zi_interactions (rating) where rating is not null;
 create index if not exists zi_interactions_escalated_idx on zi_interactions (escalated, resolved_at) where escalated = true;

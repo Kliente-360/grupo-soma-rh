@@ -475,6 +475,165 @@
     #send-btn:active:not(:disabled) { transform: scale(0.94); }
     #send-btn:disabled { background: var(--nv-line-strong); cursor: not-allowed; opacity: 0.6; }
 
+    /* ---------- Admin: sub-tabs ---------- */
+    .subtabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--nv-line);
+      margin-bottom: 28px;
+      overflow-x: auto;
+    }
+    .subtab-btn {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--nv-coffee-mute);
+      background: transparent;
+      border: 0;
+      padding: 12px 16px;
+      cursor: pointer;
+      position: relative;
+      letter-spacing: -0.005em;
+      transition: color var(--dur-fast) var(--ease-soft);
+      white-space: nowrap;
+    }
+    .subtab-btn::after {
+      content: "";
+      position: absolute;
+      left: 12px; right: 12px; bottom: -1px;
+      height: 2px;
+      background: transparent;
+      transition: background var(--dur-fast) var(--ease-soft);
+    }
+    .subtab-btn:hover { color: var(--nv-coffee); }
+    .subtab-btn.active { color: var(--nv-coffee); }
+    .subtab-btn.active::after { background: var(--nv-clay); }
+    .subtab-btn .subtab-badge {
+      display: inline-block;
+      margin-left: 6px;
+      min-width: 18px;
+      padding: 0 6px;
+      height: 18px;
+      line-height: 18px;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      border-radius: var(--radius-pill);
+      background: var(--nv-clay);
+      color: white;
+    }
+
+    /* ---------- Admin: Dashboard ---------- */
+    .period-toggle {
+      display: inline-flex;
+      gap: 2px;
+      background: var(--nv-cream);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+    }
+    .period-toggle button {
+      font: 600 11px/1 var(--font-body);
+      letter-spacing: 0.02em;
+      background: transparent;
+      border: 0;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: var(--radius-pill);
+      color: var(--nv-coffee-mute);
+      transition: all var(--dur-fast) var(--ease-soft);
+      text-transform: uppercase;
+    }
+    .period-toggle button:hover { color: var(--nv-coffee); }
+    .period-toggle button.active {
+      background: var(--nv-coffee);
+      color: white;
+    }
+
+    /* KPI cards — agora clicáveis pra trocar a métrica do chart */
+    .kpi { cursor: pointer; position: relative; }
+    .kpi.kpi--inactive { opacity: 0.65; }
+    .kpi.kpi--active {
+      border-color: var(--nv-clay);
+      background: var(--nv-clay-light);
+      box-shadow: 0 0 0 2px var(--nv-clay-light), var(--shadow-sm);
+    }
+    .kpi.kpi--active .kpi-label,
+    .kpi.kpi--active .kpi-value { color: var(--nv-clay-dark); }
+    .kpi.kpi--active::after {
+      content: "Em destaque no gráfico ↓";
+      position: absolute;
+      bottom: 6px;
+      right: 10px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--nv-clay-dark);
+    }
+    .kpi-hint {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--nv-line);
+      color: var(--nv-coffee-soft);
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: 6px;
+      cursor: help;
+      position: relative;
+    }
+    .kpi-hint:hover { background: var(--nv-coffee); color: white; }
+    .kpi-hint:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      background: var(--nv-coffee);
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      line-height: 1.4;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* Feedback section: filter pills */
+    .feedback-filter {
+      display: inline-flex;
+      gap: 4px;
+      background: var(--nv-cream);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      margin-bottom: 16px;
+    }
+    .feedback-filter button {
+      font: 600 12px/1 var(--font-body);
+      background: transparent;
+      border: 0;
+      padding: 7px 14px;
+      cursor: pointer;
+      border-radius: var(--radius-pill);
+      color: var(--nv-coffee-mute);
+      transition: all var(--dur-fast) var(--ease-soft);
+      letter-spacing: -0.005em;
+    }
+    .feedback-filter button:hover { color: var(--nv-coffee); }
+    .feedback-filter button.active {
+      background: var(--nv-coffee);
+      color: white;
+    }
+
     /* ---------- Admin: Dashboard de métricas ---------- */
     .metrics-bar {
       display: flex;
@@ -1440,6 +1599,7 @@
         action: 'chat',
         messages: payloadMessages,
         session_id: getSessionId(),
+        auth: getAuth(),   // captura username pro dashboard (admin/user)
       }),
     });
 
@@ -1883,13 +2043,17 @@
     window.location.reload();
   }
 
-  // Estado do painel admin (carregado do servidor sob demanda)
+  // Estado do painel admin
   let adminPending = [];
   let adminTrained = [];
   let adminFeedback = [];
   let metricsData  = null;
   let selectedSessions = [];   // [] = todas; array com session_ids = filtradas
   let filterPanelOpen = false;
+  let adminSubTab = 'pending';                  // 'pending' | 'dashboard' | 'feedback' | 'trained'
+  let dashPeriod = 30;                          // 30 | 15 | 7
+  let chartMetric = 'messages';                 // 'messages' | 'unique_users' | 'autonomous' | 'rated'
+  let feedbackFilter = 'down';                  // 'down' (default) | 'up' | 'all'
 
   async function loadAdminData() {
     const auth = getAuth();
@@ -1899,7 +2063,11 @@
         apiPost('admin_list_pending',  { auth }),
         apiPost('admin_list_trained',  { auth }),
         apiPost('admin_list_feedback', { auth }),
-        apiPost('admin_metrics',       { auth, filter: { sessions: selectedSessions.length ? selectedSessions : null } }),
+        apiPost('admin_metrics', {
+          auth,
+          period_days: dashPeriod,
+          filter: { sessions: selectedSessions.length ? selectedSessions : null },
+        }),
       ]);
       adminPending  = Array.isArray(pending)  ? pending  : [];
       adminTrained  = Array.isArray(trained)  ? trained  : [];
@@ -1919,6 +2087,7 @@
     try {
       metricsData = await apiPost('admin_metrics', {
         auth,
+        period_days: dashPeriod,
         filter: { sessions: selectedSessions.length ? selectedSessions : null },
       });
       const root = document.getElementById('metrics-root');
@@ -1938,39 +2107,67 @@
       return;
     }
 
-    // Painel autenticado
+    // Painel autenticado com sub-tabs
+    const pendingBadge = pendingCount > 0 ? `<span class="subtab-badge">${pendingCount}</span>` : '';
     root.innerHTML = `
-      <section class="admin-section">
-        <h2>Métricas</h2>
-        <p class="section-hint">Acompanhe adoção, qualidade e impacto operacional da Zi. Dados dos últimos 30 dias.</p>
-        <div id="metrics-root">${renderMetricsHtml()}</div>
-      </section>
-
-      <section class="admin-section">
-        <h2>Perguntas pendentes</h2>
-        <p class="section-hint">Perguntas que a Zi não soube responder e foram escaladas pelos colaboradores. Responda aqui pra alimentar a base.</p>
-        <div id="pending-list">${renderPendingHtml()}</div>
-      </section>
-
-      <section class="admin-section">
-        <h2>Feedback dos colaboradores</h2>
-        <p class="section-hint">👍 e 👎 dados nas respostas da Zi. Sinal pra identificar onde ela responde bem e onde precisa melhorar.</p>
-        <div id="feedback-list">${renderFeedbackHtml()}</div>
-      </section>
-
-      <section class="admin-section">
-        <h2>Respostas treinadas</h2>
-        <p class="section-hint">Respostas validadas pelo RH. A Zi usa essas como referência nas próximas conversas.</p>
-        <div id="trained-list">${renderTrainedHtml()}</div>
-      </section>
-
+      <div class="subtabs" role="tablist">
+        <button class="subtab-btn ${adminSubTab === 'pending'   ? 'active' : ''}" data-subtab="pending">Perguntas pendentes${pendingBadge}</button>
+        <button class="subtab-btn ${adminSubTab === 'dashboard' ? 'active' : ''}" data-subtab="dashboard">Dashboard</button>
+        <button class="subtab-btn ${adminSubTab === 'feedback'  ? 'active' : ''}" data-subtab="feedback">Feedback dos colaboradores</button>
+        <button class="subtab-btn ${adminSubTab === 'trained'   ? 'active' : ''}" data-subtab="trained">Respostas treinadas</button>
+      </div>
+      <div id="subtab-content">${renderSubTabContent()}</div>
       <div class="admin-footer">
         <button class="btn btn-ghost" id="admin-refresh">Atualizar</button>
         <button class="btn btn-ghost" id="admin-logout">Sair do admin</button>
       </div>
     `;
     bindAdminHandlers();
-    bindMetricsHandlers();
+    bindSubTabHandlers();
+    if (adminSubTab === 'dashboard') bindMetricsHandlers();
+    if (adminSubTab === 'feedback')  bindFeedbackFilterHandlers();
+  }
+
+  function renderSubTabContent() {
+    if (adminSubTab === 'pending') return `
+      <section class="admin-section">
+        <h2>Perguntas pendentes</h2>
+        <p class="section-hint">Perguntas que a Zi não soube responder e foram escaladas pelos colaboradores. Responda aqui pra alimentar a base.</p>
+        <div id="pending-list">${renderPendingHtml()}</div>
+      </section>
+    `;
+    if (adminSubTab === 'dashboard') return `
+      <section class="admin-section">
+        <h2>Dashboard</h2>
+        <p class="section-hint">Adoção, qualidade e impacto operacional da Zi. Clique em qualquer KPI pra trocar a métrica do gráfico.</p>
+        <div id="metrics-root">${renderMetricsHtml()}</div>
+      </section>
+    `;
+    if (adminSubTab === 'feedback') return `
+      <section class="admin-section">
+        <h2>Feedback dos colaboradores</h2>
+        <p class="section-hint">👍 e 👎 dados nas respostas da Zi. Sinal pra identificar onde ela responde bem e onde precisa melhorar.</p>
+        ${renderFeedbackFilterHtml()}
+        <div id="feedback-list">${renderFeedbackHtml()}</div>
+      </section>
+    `;
+    if (adminSubTab === 'trained') return `
+      <section class="admin-section">
+        <h2>Respostas treinadas</h2>
+        <p class="section-hint">Respostas validadas pelo RH. A Zi usa essas como referência nas próximas conversas.</p>
+        <div id="trained-list">${renderTrainedHtml()}</div>
+      </section>
+    `;
+    return '';
+  }
+
+  function bindSubTabHandlers() {
+    document.querySelectorAll('[data-subtab]').forEach(btn => {
+      btn.onclick = () => {
+        adminSubTab = btn.dataset.subtab;
+        renderAdmin();
+      };
+    });
   }
 
   /* ---------------- Dashboard de métricas ---------------- */
@@ -1980,7 +2177,7 @@
     }
     const m = metricsData;
     return `
-      ${renderFilterHtml(m)}
+      ${renderDashboardControlsHtml(m)}
       ${renderKpisHtml(m)}
       ${renderChartHtml(m)}
       ${renderSplitHtml(m)}
@@ -1989,44 +2186,17 @@
     `;
   }
 
-  function renderFilterHtml(m) {
-    const opts = m.session_options || [];
-    const allSelected = selectedSessions.length === 0;
-    const label = allSelected
-      ? `Todas as sessões (${opts.length})`
-      : `${selectedSessions.length} de ${opts.length} selecionada${selectedSessions.length !== 1 ? 's' : ''}`;
+  function renderDashboardControlsHtml(m) {
     return `
       <div class="metrics-bar">
-        <span class="label">Filtrar por usuário:</span>
-        <div class="filter-shell">
-          <button class="filter-btn" id="filter-btn" type="button">
-            <span>${escapeHtml(label)}</span>
-            <span class="chev">▾</span>
-          </button>
-          <div class="filter-panel ${filterPanelOpen ? 'open' : ''}" id="filter-panel">
-            <div class="filter-head">
-              <button data-action="filter-all" type="button">Selecionar todas</button>
-              <button data-action="filter-none" type="button">Limpar</button>
-            </div>
-            ${opts.length === 0
-              ? `<div class="empty-state" style="padding:14px; font-size:12px;">Sem sessões registradas ainda.</div>`
-              : opts.map(o => {
-                  const checked = selectedSessions.includes(o.session_id) || allSelected;
-                  const who = o.email || o.name || 'Anônima';
-                  const meta = `${o.messages} msg${o.messages !== 1 ? 's' : ''} · ${formatDate(o.last_at)} · ${o.session_id.slice(0,8)}`;
-                  return `
-                    <label class="filter-option">
-                      <input type="checkbox" data-action="filter-toggle" data-sid="${escapeHtml(o.session_id)}" ${checked ? 'checked' : ''}>
-                      <div>
-                        <div>${escapeHtml(who)}</div>
-                        <span class="opt-meta">${escapeHtml(meta)}</span>
-                      </div>
-                    </label>
-                  `;
-                }).join('')
-            }
-          </div>
+        <span class="label">Período:</span>
+        <div class="period-toggle" role="tablist">
+          <button data-period="30" class="${dashPeriod === 30 ? 'active' : ''}">Últimos 30 dias</button>
+          <button data-period="15" class="${dashPeriod === 15 ? 'active' : ''}">Últimos 15 dias</button>
+          <button data-period="7"  class="${dashPeriod === 7  ? 'active' : ''}">Últimos 7 dias</button>
         </div>
+        <span class="label">Filtrar por usuário:</span>
+        ${renderFilterShellHtml(m)}
         ${m.total_interactions !== undefined
           ? `<span class="label" style="margin-left:auto;">Total: <strong>${m.total_interactions}</strong> interações no escopo</span>`
           : ''}
@@ -2034,35 +2204,70 @@
     `;
   }
 
+  function renderFilterShellHtml(m) {
+    const opts = m.session_options || [];
+    const allSelected = selectedSessions.length === 0;
+    const label = allSelected
+      ? `Todos os usuários (${opts.length})`
+      : `${selectedSessions.length} de ${opts.length} selecionado${selectedSessions.length !== 1 ? 's' : ''}`;
+    return `
+      <div class="filter-shell">
+        <button class="filter-btn" id="filter-btn" type="button">
+          <span>${escapeHtml(label)}</span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="filter-panel ${filterPanelOpen ? 'open' : ''}" id="filter-panel">
+          <div class="filter-head">
+            <button data-action="filter-all" type="button">Selecionar todos</button>
+            <button data-action="filter-none" type="button">Limpar</button>
+          </div>
+          ${opts.length === 0
+            ? `<div class="empty-state" style="padding:14px; font-size:12px;">Sem sessões registradas ainda.</div>`
+            : opts.map(o => {
+                const checked = selectedSessions.includes(o.session_id) || allSelected;
+                const who = o.username || o.email || o.name || 'Anônima';
+                const meta = `${o.messages} msg${o.messages !== 1 ? 's' : ''} · ${formatDate(o.last_at)} · ${o.session_id.slice(0,8)}`;
+                return `
+                  <label class="filter-option">
+                    <input type="checkbox" data-action="filter-toggle" data-sid="${escapeHtml(o.session_id)}" ${checked ? 'checked' : ''}>
+                    <div>
+                      <div>${escapeHtml(who)}</div>
+                      <span class="opt-meta">${escapeHtml(meta)}</span>
+                    </div>
+                  </label>
+                `;
+              }).join('')
+          }
+        </div>
+      </div>
+    `;
+  }
+
   function renderKpisHtml(m) {
     const k = m.kpis;
+    const periodLabel = m.period_days === 30 ? 'no mês' : (m.period_days === 15 ? 'em 15 dias' : 'em 7 dias');
     const pctAuto = Math.round(k.autonomous_rate * 100);
-    const pctLike = Math.round(k.like_ratio * 100);
     const tAuto = Math.round(k.targets.autonomous * 100);
-    const tLike = Math.round(k.targets.likes * 100);
-    const autoMet  = k.autonomous_rate >= k.targets.autonomous;
-    const likesMet = k.like_ratio      >= k.targets.likes;
-
-    const delta = k.messages_today - k.messages_yesterday;
-    const deltaTxt = k.messages_yesterday === 0
-      ? (k.messages_today === 0 ? 'sem dado de ontem' : 'primeira atividade do período')
-      : `${delta >= 0 ? '+' : ''}${delta} vs ontem`;
-    const deltaClass = delta > 0 ? 'up' : (delta < 0 ? 'down' : '');
+    const autoMet = k.autonomous_rate >= k.targets.autonomous;
+    const cls = (key) => `kpi ${chartMetric === key ? 'kpi--active' : 'kpi--inactive'}`;
 
     return `
       <div class="kpi-row">
-        <div class="kpi">
-          <div class="kpi-label">Usuários únicos (7d)</div>
-          <div class="kpi-value">${k.weekly_users}</div>
-          <div class="kpi-sub">sessões com atividade na última semana</div>
+        <div class="${cls('unique_users')}" data-metric="unique_users" title="Clique pra ver no gráfico">
+          <div class="kpi-label">Usuários únicos ${periodLabel}</div>
+          <div class="kpi-value">${k.unique_users}</div>
+          <div class="kpi-sub">logins distintos (admin/user)</div>
         </div>
-        <div class="kpi">
-          <div class="kpi-label">Mensagens hoje</div>
-          <div class="kpi-value">${k.messages_today}</div>
-          <div class="kpi-sub ${deltaClass}">${escapeHtml(deltaTxt)}</div>
+        <div class="${cls('messages')}" data-metric="messages" title="Clique pra ver no gráfico">
+          <div class="kpi-label">Mensagens totais ${periodLabel}</div>
+          <div class="kpi-value">${k.messages}</div>
+          <div class="kpi-sub">perguntas feitas pra Zi</div>
         </div>
-        <div class="kpi">
-          <div class="kpi-label">Taxa autônoma (30d)</div>
+        <div class="${cls('autonomous')}" data-metric="autonomous" title="Clique pra ver no gráfico">
+          <div class="kpi-label">
+            Taxa autônoma ${periodLabel}
+            <span class="kpi-hint" data-tip="% de perguntas que a Zi respondeu sem precisar escalar pro RH. Fórmula: respostas com conteúdo (≠ [NAO_ENCONTREI]) ÷ total de perguntas no período.">?</span>
+          </div>
           <div class="kpi-value">${pctAuto}%</div>
           <div class="kpi-progress">
             <div class="kpi-progress-fill ${autoMet ? 'target-met' : ''}" style="width:${Math.min(100, pctAuto)}%"></div>
@@ -2073,17 +2278,10 @@
             <span class="${autoMet ? 'met' : 'miss'}">${autoMet ? '✓ meta batida' : `faltam ${tAuto - pctAuto}pp`}</span>
           </div>
         </div>
-        <div class="kpi">
-          <div class="kpi-label">👍 / total avaliados</div>
-          <div class="kpi-value">${pctLike}%</div>
-          <div class="kpi-progress">
-            <div class="kpi-progress-fill ${likesMet ? 'target-met' : ''}" style="width:${Math.min(100, pctLike)}%"></div>
-            <div class="kpi-target-line" style="left:${tLike}%"></div>
-          </div>
-          <div class="kpi-meta">
-            <span>Meta ${tLike}%</span>
-            <span class="${likesMet ? 'met' : 'miss'}">${likesMet ? '✓ meta batida' : (m.feedback.up + m.feedback.down) === 0 ? 'sem avaliações' : `faltam ${tLike - pctLike}pp`}</span>
-          </div>
+        <div class="${cls('rated')}" data-metric="rated" title="Clique pra ver no gráfico">
+          <div class="kpi-label">Total avaliados ${periodLabel}</div>
+          <div class="kpi-value">${k.rated_total}</div>
+          <div class="kpi-sub">${k.ups} 👍 · ${k.downs} 👎</div>
         </div>
       </div>
     `;
@@ -2091,20 +2289,38 @@
 
   function renderChartHtml(m) {
     const days = m.messages_by_day || [];
-    const max = Math.max(1, ...days.map(d => d.count));
+    // Mapeamento métrica → field + label/formatter
+    const metricConfig = {
+      messages:     { field: 'messages',       title: 'Mensagens totais',  unit: 'msg',  fmt: v => `${v} msg${v !== 1 ? 's' : ''}` },
+      unique_users: { field: 'unique_users',   title: 'Usuários únicos',   unit: 'user', fmt: v => `${v} usuário${v !== 1 ? 's' : ''} único${v !== 1 ? 's' : ''}` },
+      autonomous:   { field: 'autonomous_pct', title: 'Taxa autônoma',     unit: '%',    fmt: v => `${v}%` },
+      rated:        { field: 'rated',          title: 'Total avaliados',   unit: 'av',   fmt: v => `${v} avalia${v !== 1 ? 'ções' : 'ção'}` },
+    };
+    const cfg = metricConfig[chartMetric] || metricConfig.messages;
+    const periodLabel = m.period_days === 30 ? 'últimos 30 dias' : (m.period_days === 15 ? 'últimos 15 dias' : 'últimos 7 dias');
+
+    const vals = days.map(d => d[cfg.field] || 0);
+    const max = Math.max(1, ...vals);
+
+    // Adapta column count pra não ficar muito apertado em 30d (mostra rótulo a cada 3 dias)
+    const labelEvery = m.period_days >= 30 ? 5 : (m.period_days >= 15 ? 3 : 1);
+
     return `
       <div class="chart-card">
-        <h3>Mensagens por dia · últimos 14 dias</h3>
-        <div class="bar-chart">
-          ${days.map(d => {
-            const h = (d.count / max) * 100;
-            const dayLabel = new Date(d.date + 'T00:00:00').getDate();
+        <h3>${cfg.title} por dia · ${periodLabel}</h3>
+        <div class="bar-chart" style="grid-template-columns: repeat(${days.length}, 1fr);">
+          ${days.map((d, idx) => {
+            const v = d[cfg.field] || 0;
+            const h = (v / max) * 100;
+            const dayD = new Date(d.date + 'T00:00:00');
+            const showLabel = (idx % labelEvery === 0) || idx === days.length - 1;
+            const label = showLabel ? dayD.getDate() : '';
             return `
               <div class="bar-col">
                 <div class="bar" style="height:${h}%">
-                  <div class="bar-tip">${d.count} msg${d.count !== 1 ? 's' : ''} · ${formatDateShort(d.date)}</div>
+                  <div class="bar-tip">${cfg.fmt(v)} · ${formatDateShort(d.date)}</div>
                 </div>
-                <div class="bar-label">${dayLabel}</div>
+                <div class="bar-label">${label}</div>
               </div>
             `;
           }).join('')}
@@ -2170,21 +2386,22 @@
 
   function renderSlaHtml(m) {
     const sla = m.sla;
+    const periodLabel = m.period_days === 30 ? 'no mês' : (m.period_days === 15 ? 'em 15 dias' : 'em 7 dias');
     const avg = sla.avg_resolution_minutes;
     const avgTxt = avg === null
       ? '—'
-      : (avg < 60 ? `${avg} min` : `${Math.floor(avg / 60)}h ${avg % 60 ? (avg % 60) + 'min' : ''}`.trim());
+      : (avg < 60 ? `${avg} min` : `${Math.floor(avg / 60)}h${avg % 60 ? ' ' + (avg % 60) + 'min' : ''}`);
     return `
       <div class="sla-row">
         <div class="sla-card">
-          <div class="sla-label">Tempo médio até resposta do RH</div>
+          <div class="sla-label">Tempo médio até resposta do RH ${periodLabel}</div>
           <div class="sla-value">${escapeHtml(avgTxt)}</div>
-          <div class="sla-sub">média do tempo entre a escalação e a resposta no painel admin</div>
+          <div class="sla-sub">média do tempo entre a escalação e a resposta do RH no painel admin · baseline manual: <strong>${sla.business_days_baseline} dias úteis</strong></div>
         </div>
         <div class="sla-card">
-          <div class="sla-label">Horas liberadas estimadas (30d)</div>
+          <div class="sla-label">Horas liberadas estimadas ${periodLabel}</div>
           <div class="sla-value">${sla.freed_hours_estimate}h</div>
-          <div class="sla-sub"><strong>${sla.autonomous_count_30d}</strong> perguntas resolvidas pela Zi × <strong>${sla.min_per_ticket} min</strong>/ticket de RH manual</div>
+          <div class="sla-sub"><strong>${sla.autonomous_count_in_period}</strong> perguntas resolvidas pela Zi × <strong>${sla.hours_per_ticket}h</strong>/ticket (SLA de ${sla.business_days_baseline} dias úteis × ${sla.hours_per_business_day}h)</div>
         </div>
       </div>
     `;
@@ -2239,6 +2456,30 @@
   }
 
   function bindMetricsHandlers() {
+    // Período (30/15/7)
+    document.querySelectorAll('[data-period]').forEach(b => {
+      b.onclick = () => {
+        dashPeriod = parseInt(b.dataset.period, 10);
+        reloadMetricsOnly();
+      };
+    });
+
+    // KPI cards clicáveis — trocam a métrica do bar chart
+    document.querySelectorAll('.kpi[data-metric]').forEach(card => {
+      card.onclick = (e) => {
+        // Não dispara se clicou no tooltip "?"
+        if (e.target.closest('.kpi-hint')) return;
+        chartMetric = card.dataset.metric;
+        // Re-render local sem refetch (dados já estão em metricsData)
+        const root = document.getElementById('metrics-root');
+        if (root) {
+          root.innerHTML = renderMetricsHtml();
+          bindMetricsHandlers();
+        }
+      };
+    });
+
+    // Filtro por usuário
     const btn = document.getElementById('filter-btn');
     if (btn) btn.onclick = (e) => {
       e.stopPropagation();
@@ -2251,35 +2492,22 @@
       input.onchange = (e) => {
         const sid = e.target.dataset.sid;
         const opts = (metricsData?.session_options || []).map(o => o.session_id);
-
-        // Se vinha de "todas selecionadas" (selectedSessions vazio), começamos com TODOS
         if (selectedSessions.length === 0) selectedSessions = [...opts];
-
         if (e.target.checked) {
           if (!selectedSessions.includes(sid)) selectedSessions.push(sid);
         } else {
           selectedSessions = selectedSessions.filter(s => s !== sid);
         }
-        // Se selecionou todos, normaliza pra [] (= "todas")
         if (selectedSessions.length === opts.length) selectedSessions = [];
-
         reloadMetricsOnly();
       };
     });
 
     const allBtn = document.querySelector('[data-action="filter-all"]');
-    if (allBtn) allBtn.onclick = () => {
-      selectedSessions = [];
-      reloadMetricsOnly();
-    };
+    if (allBtn) allBtn.onclick = () => { selectedSessions = []; reloadMetricsOnly(); };
 
     const noneBtn = document.querySelector('[data-action="filter-none"]');
-    if (noneBtn) noneBtn.onclick = () => {
-      // Marca todas como desmarcadas — ainda mostra dados? Vamos manter selectedSessions como ['__nada__']
-      // pra distinguir de "todas". Mais simples: mantemos selectedSessions com 1 placeholder que não bate.
-      selectedSessions = ['__none_selected__'];
-      reloadMetricsOnly();
-    };
+    if (noneBtn) noneBtn.onclick = () => { selectedSessions = ['__none_selected__']; reloadMetricsOnly(); };
 
     // Close panel on outside click
     if (filterPanelOpen) {
@@ -2294,6 +2522,27 @@
       };
       setTimeout(() => document.addEventListener('click', closeOnOutside), 0);
     }
+  }
+
+  /* ---------------- Feedback filter ---------------- */
+  function renderFeedbackFilterHtml() {
+    const counts = { down: 0, up: 0, all: adminFeedback.length };
+    adminFeedback.forEach(f => { if (f.rating === 1) counts.up++; else if (f.rating === -1) counts.down++; });
+    return `
+      <div class="feedback-filter">
+        <button data-fb-filter="down" class="${feedbackFilter === 'down' ? 'active' : ''}">👎 Negativos (${counts.down})</button>
+        <button data-fb-filter="up"   class="${feedbackFilter === 'up'   ? 'active' : ''}">👍 Positivos (${counts.up})</button>
+        <button data-fb-filter="all"  class="${feedbackFilter === 'all'  ? 'active' : ''}">Todos (${counts.all})</button>
+      </div>
+    `;
+  }
+  function bindFeedbackFilterHandlers() {
+    document.querySelectorAll('[data-fb-filter]').forEach(b => {
+      b.onclick = () => {
+        feedbackFilter = b.dataset.fbFilter;
+        renderAdmin();
+      };
+    });
   }
 
   function renderPendingHtml() {
@@ -2343,7 +2592,14 @@
     const ups   = adminFeedback.filter(f => f.rating === 1).length;
     const downs = adminFeedback.filter(f => f.rating === -1).length;
     const total = adminFeedback.length;
-    const upPct = Math.round((ups / total) * 100);
+    const upPct = total > 0 ? Math.round((ups / total) * 100) : 0;
+
+    // Aplica o filtro selecionado (default: 👎)
+    const visible = adminFeedback.filter(f => {
+      if (feedbackFilter === 'down') return f.rating === -1;
+      if (feedbackFilter === 'up')   return f.rating === 1;
+      return true;
+    });
 
     const summary = `
       <p class="section-hint" style="margin-bottom:14px">
@@ -2351,7 +2607,11 @@
       </p>
     `;
 
-    const cards = adminFeedback.map(f => `
+    if (visible.length === 0) {
+      return summary + `<div class="empty-state">Nenhum feedback no filtro atual. ${feedbackFilter === 'down' ? 'Sem avaliações negativas ainda — ✨' : ''}</div>`;
+    }
+
+    const cards = visible.map(f => `
       <div class="card card-feedback card-fb-${f.rating === 1 ? 'up' : 'down'}" data-feedback="${f.id}">
         <div class="card-meta">
           <span class="rating-badge">${f.rating === 1 ? '👍' : '👎'}</span>
