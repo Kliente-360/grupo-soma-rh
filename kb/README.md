@@ -12,8 +12,11 @@ Markdown estruturado dos documentos oficiais de RH da NV (Grupo Soma / AZZAS 215
 | [beneficios.md](beneficios.md) | `beneficios` | Colaborador | 23 | Cartilha de Benefícios (Maio/26) |
 | [saude_bem_estar.md](saude_bem_estar.md) | `saude_seguranca` | Colaborador | 7 | Perguntas Frequentes SST |
 | [seguranca_informacao.md](seguranca_informacao.md) | `seguranca_informacao` | Colaborador | 11 | Cartilha de Segurança da Informação |
+| [regras_desconto.md](regras_desconto.md) | `beneficios` | Colaborador | 4 | Regras de Desconto NV (50% NV / 30% AZZAS) |
+| [retirada_uniforme.md](retirada_uniforme.md) | `beneficios` | Time Loja | 8 | Regras para Retirada de Uniforme NV |
+| [modelos_trabalho.md](modelos_trabalho.md) | `gestao_pessoas` | Colaborador | 11 | Movimento NV+Flex — Manual e Boas Práticas |
 
-**Total:** 75 chunks (boundaries em H2).
+**Total:** 98 chunks (boundaries em H2).
 
 ## Convenção de Estrutura
 
