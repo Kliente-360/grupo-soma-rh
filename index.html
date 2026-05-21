@@ -475,6 +475,354 @@
     #send-btn:active:not(:disabled) { transform: scale(0.94); }
     #send-btn:disabled { background: var(--nv-line-strong); cursor: not-allowed; opacity: 0.6; }
 
+    /* ---------- Admin: Dashboard de métricas ---------- */
+    .metrics-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .metrics-bar .label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--nv-coffee-mute);
+    }
+    .filter-shell { position: relative; }
+    .filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-pill);
+      padding: 8px 14px;
+      font: 600 13px/1.2 var(--font-body);
+      color: var(--nv-coffee);
+      cursor: pointer;
+      transition: border-color var(--dur-fast) var(--ease-soft);
+      letter-spacing: -0.005em;
+    }
+    .filter-btn:hover { border-color: var(--nv-coffee); }
+    .filter-btn .chev { font-size: 10px; opacity: 0.6; }
+    .filter-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      width: 340px;
+      max-height: 380px;
+      overflow-y: auto;
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: 8px;
+      z-index: 30;
+      display: none;
+    }
+    .filter-panel.open { display: block; }
+    .filter-panel .filter-head {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px 10px;
+      border-bottom: 1px solid var(--nv-line);
+      margin-bottom: 6px;
+    }
+    .filter-panel .filter-head button {
+      background: transparent;
+      border: 0;
+      color: var(--nv-clay-dark);
+      font: 600 12px/1 var(--font-body);
+      cursor: pointer;
+      padding: 0;
+      letter-spacing: 0.02em;
+    }
+    .filter-panel .filter-head button:hover { color: var(--nv-coffee); }
+    .filter-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--nv-coffee);
+      transition: background var(--dur-fast) var(--ease-soft);
+    }
+    .filter-option:hover { background: var(--nv-cream); }
+    .filter-option input { margin-top: 2px; accent-color: var(--nv-clay); }
+    .filter-option .opt-meta {
+      display: block;
+      font-size: 11px;
+      color: var(--nv-coffee-mute);
+      margin-top: 2px;
+    }
+
+    /* KPI cards */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .kpi {
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      transition: box-shadow var(--dur-base) var(--ease-soft);
+    }
+    .kpi:hover { box-shadow: var(--shadow-xs); }
+    .kpi .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--nv-coffee-mute);
+      margin-bottom: 8px;
+    }
+    .kpi .kpi-value {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.025em;
+      color: var(--nv-coffee);
+      margin-bottom: 4px;
+    }
+    .kpi .kpi-sub {
+      font-size: 12px;
+      color: var(--nv-coffee-soft);
+      line-height: 1.4;
+    }
+    .kpi .kpi-sub.up   { color: var(--nv-success); font-weight: 600; }
+    .kpi .kpi-sub.down { color: var(--nv-danger); font-weight: 600; }
+
+    /* Progress bar inside KPI */
+    .kpi-progress {
+      margin-top: 10px;
+      height: 6px;
+      background: var(--nv-cream);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      position: relative;
+    }
+    .kpi-progress .kpi-progress-fill {
+      height: 100%;
+      background: var(--nv-clay);
+      border-radius: var(--radius-pill);
+      transition: width var(--dur-slow) var(--ease-soft);
+    }
+    .kpi-progress .kpi-progress-fill.target-met { background: var(--nv-success); }
+    .kpi-progress .kpi-target-line {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      width: 2px;
+      background: var(--nv-coffee);
+      opacity: 0.55;
+    }
+    .kpi-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--nv-coffee-mute);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+    .kpi-meta .met { color: var(--nv-success); }
+    .kpi-meta .miss { color: var(--nv-clay-dark); }
+
+    /* Charts */
+    .chart-card {
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .chart-card h3 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--nv-coffee-mute);
+      margin: 0 0 14px 0;
+    }
+    .bar-chart {
+      display: grid;
+      grid-template-columns: repeat(14, 1fr);
+      gap: 4px;
+      align-items: end;
+      height: 120px;
+    }
+    .bar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .bar {
+      width: 100%;
+      background: var(--nv-clay);
+      border-radius: 4px 4px 0 0;
+      min-height: 2px;
+      transition: height var(--dur-slow) var(--ease-soft);
+      cursor: default;
+      position: relative;
+    }
+    .bar:hover { background: var(--nv-clay-dark); }
+    .bar:hover .bar-tip { opacity: 1; }
+    .bar-tip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--nv-coffee);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity var(--dur-fast) var(--ease-soft);
+      pointer-events: none;
+    }
+    .bar-label {
+      font-size: 10px;
+      color: var(--nv-coffee-mute);
+      letter-spacing: 0.02em;
+    }
+
+    /* Split row: 2 cards lado a lado */
+    .split-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    /* Stacked bar (respondidas vs escaladas) */
+    .stacked-bar {
+      display: flex;
+      height: 36px;
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      background: var(--nv-cream);
+      margin: 12px 0 8px;
+    }
+    .stacked-bar .seg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: width var(--dur-slow) var(--ease-soft);
+    }
+    .stacked-bar .seg.responded { background: var(--nv-success); }
+    .stacked-bar .seg.resolved  { background: var(--nv-clay); }
+    .stacked-bar .seg.pending   { background: var(--nv-danger); }
+    .stacked-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--nv-coffee-soft);
+      letter-spacing: 0.02em;
+    }
+    .stacked-legend .swatch {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .stacked-legend .swatch.responded { background: var(--nv-success); }
+    .stacked-legend .swatch.resolved  { background: var(--nv-clay); }
+    .stacked-legend .swatch.pending   { background: var(--nv-danger); }
+
+    /* SLA cards */
+    .sla-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .sla-card {
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+    .sla-card .sla-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--nv-coffee-mute);
+      margin-bottom: 10px;
+    }
+    .sla-card .sla-value {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.025em;
+      color: var(--nv-clay-dark);
+      margin-bottom: 6px;
+    }
+    .sla-card .sla-sub {
+      font-size: 12px;
+      color: var(--nv-coffee-soft);
+      line-height: 1.5;
+    }
+
+    /* Tabela top escalações */
+    .escalations-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .escalations-table th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--nv-coffee-mute);
+      border-bottom: 1px solid var(--nv-line);
+    }
+    .escalations-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--nv-line);
+      vertical-align: top;
+      color: var(--nv-coffee);
+    }
+    .escalations-table td.q { font-weight: 500; }
+    .escalations-table .status-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+    }
+    .escalations-table .status-pill.resolved { background: var(--nv-success-soft); color: var(--nv-success); }
+    .escalations-table .status-pill.pending  { background: var(--nv-danger-soft); color: var(--nv-danger); }
+
+    @media (max-width: 720px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .split-row, .sla-row { grid-template-columns: 1fr; }
+      .bar-chart { grid-template-columns: repeat(7, 1fr); }
+      .bar-chart .bar-col:nth-child(n+8) { display: none; }
+      .filter-panel { width: 280px; }
+    }
+
     /* ---------- Admin ---------- */
     .admin-section { margin-bottom: 44px; }
     .admin-section h2 {
@@ -1539,24 +1887,46 @@
   let adminPending = [];
   let adminTrained = [];
   let adminFeedback = [];
+  let metricsData  = null;
+  let selectedSessions = [];   // [] = todas; array com session_ids = filtradas
+  let filterPanelOpen = false;
 
   async function loadAdminData() {
     const auth = getAuth();
     if (!auth || auth.role !== 'admin') return;
     try {
-      const [pending, trained, feedback] = await Promise.all([
+      const [pending, trained, feedback, metrics] = await Promise.all([
         apiPost('admin_list_pending',  { auth }),
         apiPost('admin_list_trained',  { auth }),
         apiPost('admin_list_feedback', { auth }),
+        apiPost('admin_metrics',       { auth, filter: { sessions: selectedSessions.length ? selectedSessions : null } }),
       ]);
       adminPending  = Array.isArray(pending)  ? pending  : [];
       adminTrained  = Array.isArray(trained)  ? trained  : [];
       adminFeedback = Array.isArray(feedback) ? feedback : [];
+      metricsData   = metrics;
       pendingCount  = adminPending.length;
       updateAdminBadge();
     } catch (e) {
       console.error('[admin] load falhou:', e);
       toast('Erro carregando admin — confere console');
+    }
+  }
+
+  async function reloadMetricsOnly() {
+    const auth = getAuth();
+    if (!auth || auth.role !== 'admin') return;
+    try {
+      metricsData = await apiPost('admin_metrics', {
+        auth,
+        filter: { sessions: selectedSessions.length ? selectedSessions : null },
+      });
+      const root = document.getElementById('metrics-root');
+      if (root) root.innerHTML = renderMetricsHtml();
+      bindMetricsHandlers();
+    } catch (e) {
+      console.error('[metrics] reload falhou:', e);
+      toast('Erro carregando métricas');
     }
   }
 
@@ -1570,6 +1940,12 @@
 
     // Painel autenticado
     root.innerHTML = `
+      <section class="admin-section">
+        <h2>Métricas</h2>
+        <p class="section-hint">Acompanhe adoção, qualidade e impacto operacional da Zi. Dados dos últimos 30 dias.</p>
+        <div id="metrics-root">${renderMetricsHtml()}</div>
+      </section>
+
       <section class="admin-section">
         <h2>Perguntas pendentes</h2>
         <p class="section-hint">Perguntas que a Zi não soube responder e foram escaladas pelos colaboradores. Responda aqui pra alimentar a base.</p>
@@ -1594,6 +1970,330 @@
       </div>
     `;
     bindAdminHandlers();
+    bindMetricsHandlers();
+  }
+
+  /* ---------------- Dashboard de métricas ---------------- */
+  function renderMetricsHtml() {
+    if (!metricsData) {
+      return `<div class="empty-state">Carregando métricas…</div>`;
+    }
+    const m = metricsData;
+    return `
+      ${renderFilterHtml(m)}
+      ${renderKpisHtml(m)}
+      ${renderChartHtml(m)}
+      ${renderSplitHtml(m)}
+      ${renderSlaHtml(m)}
+      ${renderEscalationsTableHtml(m)}
+    `;
+  }
+
+  function renderFilterHtml(m) {
+    const opts = m.session_options || [];
+    const allSelected = selectedSessions.length === 0;
+    const label = allSelected
+      ? `Todas as sessões (${opts.length})`
+      : `${selectedSessions.length} de ${opts.length} selecionada${selectedSessions.length !== 1 ? 's' : ''}`;
+    return `
+      <div class="metrics-bar">
+        <span class="label">Filtrar por usuário:</span>
+        <div class="filter-shell">
+          <button class="filter-btn" id="filter-btn" type="button">
+            <span>${escapeHtml(label)}</span>
+            <span class="chev">▾</span>
+          </button>
+          <div class="filter-panel ${filterPanelOpen ? 'open' : ''}" id="filter-panel">
+            <div class="filter-head">
+              <button data-action="filter-all" type="button">Selecionar todas</button>
+              <button data-action="filter-none" type="button">Limpar</button>
+            </div>
+            ${opts.length === 0
+              ? `<div class="empty-state" style="padding:14px; font-size:12px;">Sem sessões registradas ainda.</div>`
+              : opts.map(o => {
+                  const checked = selectedSessions.includes(o.session_id) || allSelected;
+                  const who = o.email || o.name || 'Anônima';
+                  const meta = `${o.messages} msg${o.messages !== 1 ? 's' : ''} · ${formatDate(o.last_at)} · ${o.session_id.slice(0,8)}`;
+                  return `
+                    <label class="filter-option">
+                      <input type="checkbox" data-action="filter-toggle" data-sid="${escapeHtml(o.session_id)}" ${checked ? 'checked' : ''}>
+                      <div>
+                        <div>${escapeHtml(who)}</div>
+                        <span class="opt-meta">${escapeHtml(meta)}</span>
+                      </div>
+                    </label>
+                  `;
+                }).join('')
+            }
+          </div>
+        </div>
+        ${m.total_interactions !== undefined
+          ? `<span class="label" style="margin-left:auto;">Total: <strong>${m.total_interactions}</strong> interações no escopo</span>`
+          : ''}
+      </div>
+    `;
+  }
+
+  function renderKpisHtml(m) {
+    const k = m.kpis;
+    const pctAuto = Math.round(k.autonomous_rate * 100);
+    const pctLike = Math.round(k.like_ratio * 100);
+    const tAuto = Math.round(k.targets.autonomous * 100);
+    const tLike = Math.round(k.targets.likes * 100);
+    const autoMet  = k.autonomous_rate >= k.targets.autonomous;
+    const likesMet = k.like_ratio      >= k.targets.likes;
+
+    const delta = k.messages_today - k.messages_yesterday;
+    const deltaTxt = k.messages_yesterday === 0
+      ? (k.messages_today === 0 ? 'sem dado de ontem' : 'primeira atividade do período')
+      : `${delta >= 0 ? '+' : ''}${delta} vs ontem`;
+    const deltaClass = delta > 0 ? 'up' : (delta < 0 ? 'down' : '');
+
+    return `
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Usuários únicos (7d)</div>
+          <div class="kpi-value">${k.weekly_users}</div>
+          <div class="kpi-sub">sessões com atividade na última semana</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Mensagens hoje</div>
+          <div class="kpi-value">${k.messages_today}</div>
+          <div class="kpi-sub ${deltaClass}">${escapeHtml(deltaTxt)}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Taxa autônoma (30d)</div>
+          <div class="kpi-value">${pctAuto}%</div>
+          <div class="kpi-progress">
+            <div class="kpi-progress-fill ${autoMet ? 'target-met' : ''}" style="width:${Math.min(100, pctAuto)}%"></div>
+            <div class="kpi-target-line" style="left:${tAuto}%"></div>
+          </div>
+          <div class="kpi-meta">
+            <span>Meta ${tAuto}%</span>
+            <span class="${autoMet ? 'met' : 'miss'}">${autoMet ? '✓ meta batida' : `faltam ${tAuto - pctAuto}pp`}</span>
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">👍 / total avaliados</div>
+          <div class="kpi-value">${pctLike}%</div>
+          <div class="kpi-progress">
+            <div class="kpi-progress-fill ${likesMet ? 'target-met' : ''}" style="width:${Math.min(100, pctLike)}%"></div>
+            <div class="kpi-target-line" style="left:${tLike}%"></div>
+          </div>
+          <div class="kpi-meta">
+            <span>Meta ${tLike}%</span>
+            <span class="${likesMet ? 'met' : 'miss'}">${likesMet ? '✓ meta batida' : (m.feedback.up + m.feedback.down) === 0 ? 'sem avaliações' : `faltam ${tLike - pctLike}pp`}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderChartHtml(m) {
+    const days = m.messages_by_day || [];
+    const max = Math.max(1, ...days.map(d => d.count));
+    return `
+      <div class="chart-card">
+        <h3>Mensagens por dia · últimos 14 dias</h3>
+        <div class="bar-chart">
+          ${days.map(d => {
+            const h = (d.count / max) * 100;
+            const dayLabel = new Date(d.date + 'T00:00:00').getDate();
+            return `
+              <div class="bar-col">
+                <div class="bar" style="height:${h}%">
+                  <div class="bar-tip">${d.count} msg${d.count !== 1 ? 's' : ''} · ${formatDateShort(d.date)}</div>
+                </div>
+                <div class="bar-label">${dayLabel}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSplitHtml(m) {
+    const r = m.responded_vs_escalated;
+    const total = r.responded + r.escalated_resolved + r.escalated_pending;
+    const pctR  = total > 0 ? (r.responded / total) * 100 : 0;
+    const pctRR = total > 0 ? (r.escalated_resolved / total) * 100 : 0;
+    const pctP  = total > 0 ? (r.escalated_pending / total) * 100 : 0;
+
+    const fb = m.feedback;
+    const fbTotal = fb.up + fb.down + fb.none;
+    const fbPctUp   = fbTotal > 0 ? (fb.up   / fbTotal) * 100 : 0;
+    const fbPctDown = fbTotal > 0 ? (fb.down / fbTotal) * 100 : 0;
+    const fbPctNone = fbTotal > 0 ? (fb.none / fbTotal) * 100 : 0;
+
+    return `
+      <div class="split-row">
+        <div class="chart-card">
+          <h3>Respondidas vs escaladas · 30 dias</h3>
+          ${total === 0
+            ? `<div class="empty-state" style="font-size:13px;">Sem dados no período.</div>`
+            : `
+              <div class="stacked-bar" role="img" aria-label="Distribuição de respostas">
+                ${pctR  > 4 ? `<div class="seg responded" style="width:${pctR}%">${Math.round(pctR)}%</div>` : ''}
+                ${pctRR > 4 ? `<div class="seg resolved"  style="width:${pctRR}%">${Math.round(pctRR)}%</div>` : ''}
+                ${pctP  > 4 ? `<div class="seg pending"   style="width:${pctP}%">${Math.round(pctP)}%</div>` : ''}
+              </div>
+              <div class="stacked-legend">
+                <span><span class="swatch responded"></span> Respondidas pela Zi (${r.responded})</span>
+                <span><span class="swatch resolved"></span> Escaladas, resolvidas (${r.escalated_resolved})</span>
+                <span><span class="swatch pending"></span> Escaladas, pendentes (${r.escalated_pending})</span>
+              </div>
+            `
+          }
+        </div>
+        <div class="chart-card">
+          <h3>Feedback dos colaboradores · total</h3>
+          ${fbTotal === 0
+            ? `<div class="empty-state" style="font-size:13px;">Sem dados ainda.</div>`
+            : `
+              <div class="stacked-bar" role="img" aria-label="Distribuição de feedback">
+                ${fbPctUp   > 4 ? `<div class="seg responded" style="width:${fbPctUp}%">${Math.round(fbPctUp)}%</div>` : ''}
+                ${fbPctDown > 4 ? `<div class="seg pending"   style="width:${fbPctDown}%">${Math.round(fbPctDown)}%</div>` : ''}
+                ${fbPctNone > 4 ? `<div class="seg" style="width:${fbPctNone}%; background: var(--nv-line-strong); color: var(--nv-coffee);">${Math.round(fbPctNone)}%</div>` : ''}
+              </div>
+              <div class="stacked-legend">
+                <span><span class="swatch responded"></span> 👍 (${fb.up})</span>
+                <span><span class="swatch pending"></span> 👎 (${fb.down})</span>
+                <span><span class="swatch" style="background:var(--nv-line-strong)"></span> sem avaliação (${fb.none})</span>
+              </div>
+            `
+          }
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSlaHtml(m) {
+    const sla = m.sla;
+    const avg = sla.avg_resolution_minutes;
+    const avgTxt = avg === null
+      ? '—'
+      : (avg < 60 ? `${avg} min` : `${Math.floor(avg / 60)}h ${avg % 60 ? (avg % 60) + 'min' : ''}`.trim());
+    return `
+      <div class="sla-row">
+        <div class="sla-card">
+          <div class="sla-label">Tempo médio até resposta do RH</div>
+          <div class="sla-value">${escapeHtml(avgTxt)}</div>
+          <div class="sla-sub">média do tempo entre a escalação e a resposta no painel admin</div>
+        </div>
+        <div class="sla-card">
+          <div class="sla-label">Horas liberadas estimadas (30d)</div>
+          <div class="sla-value">${sla.freed_hours_estimate}h</div>
+          <div class="sla-sub"><strong>${sla.autonomous_count_30d}</strong> perguntas resolvidas pela Zi × <strong>${sla.min_per_ticket} min</strong>/ticket de RH manual</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEscalationsTableHtml(m) {
+    const items = m.top_escalations || [];
+    if (items.length === 0) {
+      return `
+        <div class="chart-card">
+          <h3>Escalações recentes — gaps na KB</h3>
+          <div class="empty-state" style="font-size:13px;">Nenhuma escalação no escopo. ✨</div>
+        </div>
+      `;
+    }
+    return `
+      <div class="chart-card">
+        <h3>Escalações recentes — gaps na KB</h3>
+        <table class="escalations-table">
+          <thead>
+            <tr>
+              <th style="width:50%">Pergunta</th>
+              <th>Quem</th>
+              <th>Quando</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(e => {
+              const who = e.user_email || e.user_name || 'anônima';
+              const isResolved = !!e.resolved_at;
+              return `
+                <tr>
+                  <td class="q">${escapeHtml(e.question)}</td>
+                  <td>${escapeHtml(who)}</td>
+                  <td>${escapeHtml(formatDate(e.created_at))}</td>
+                  <td><span class="status-pill ${isResolved ? 'resolved' : 'pending'}">${isResolved ? 'Resolvida' : 'Pendente'}</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function formatDateShort(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+    } catch { return iso; }
+  }
+
+  function bindMetricsHandlers() {
+    const btn = document.getElementById('filter-btn');
+    if (btn) btn.onclick = (e) => {
+      e.stopPropagation();
+      filterPanelOpen = !filterPanelOpen;
+      const panel = document.getElementById('filter-panel');
+      if (panel) panel.classList.toggle('open', filterPanelOpen);
+    };
+
+    document.querySelectorAll('[data-action="filter-toggle"]').forEach(input => {
+      input.onchange = (e) => {
+        const sid = e.target.dataset.sid;
+        const opts = (metricsData?.session_options || []).map(o => o.session_id);
+
+        // Se vinha de "todas selecionadas" (selectedSessions vazio), começamos com TODOS
+        if (selectedSessions.length === 0) selectedSessions = [...opts];
+
+        if (e.target.checked) {
+          if (!selectedSessions.includes(sid)) selectedSessions.push(sid);
+        } else {
+          selectedSessions = selectedSessions.filter(s => s !== sid);
+        }
+        // Se selecionou todos, normaliza pra [] (= "todas")
+        if (selectedSessions.length === opts.length) selectedSessions = [];
+
+        reloadMetricsOnly();
+      };
+    });
+
+    const allBtn = document.querySelector('[data-action="filter-all"]');
+    if (allBtn) allBtn.onclick = () => {
+      selectedSessions = [];
+      reloadMetricsOnly();
+    };
+
+    const noneBtn = document.querySelector('[data-action="filter-none"]');
+    if (noneBtn) noneBtn.onclick = () => {
+      // Marca todas como desmarcadas — ainda mostra dados? Vamos manter selectedSessions como ['__nada__']
+      // pra distinguir de "todas". Mais simples: mantemos selectedSessions com 1 placeholder que não bate.
+      selectedSessions = ['__none_selected__'];
+      reloadMetricsOnly();
+    };
+
+    // Close panel on outside click
+    if (filterPanelOpen) {
+      const closeOnOutside = (e) => {
+        const panel = document.getElementById('filter-panel');
+        const btn = document.getElementById('filter-btn');
+        if (panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
+          filterPanelOpen = false;
+          panel.classList.remove('open');
+          document.removeEventListener('click', closeOnOutside);
+        }
+      };
+      setTimeout(() => document.addEventListener('click', closeOnOutside), 0);
+    }
   }
 
   function renderPendingHtml() {
