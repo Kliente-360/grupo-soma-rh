@@ -2254,9 +2254,12 @@
     return `
       <div class="kpi-row">
         <div class="${cls('unique_users')}" data-metric="unique_users" title="Clique pra ver no gráfico">
-          <div class="kpi-label">Usuários únicos ${periodLabel}</div>
+          <div class="kpi-label">
+            Usuários únicos ${periodLabel}
+            <span class="kpi-hint" data-tip="Conta apenas logins identificados (admin/user). Interações sem login — chamadas diretas à API ou histórico anterior à feature — não entram nesse número.">?</span>
+          </div>
           <div class="kpi-value">${k.unique_users}</div>
-          <div class="kpi-sub">logins distintos (admin/user)</div>
+          <div class="kpi-sub">${(k.unique_usernames || []).join(', ') || 'nenhum login identificado'}${k.anonymous_sessions ? ` · ${k.anonymous_sessions} sessões anônimas (histórico)` : ''}</div>
         </div>
         <div class="${cls('messages')}" data-metric="messages" title="Clique pra ver no gráfico">
           <div class="kpi-label">Mensagens totais ${periodLabel}</div>

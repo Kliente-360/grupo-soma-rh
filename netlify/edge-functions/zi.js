@@ -666,8 +666,10 @@ async function handleAdminMetrics(body) {
   const isAnswered = (i) => i.answer && i.answer.trim() && !i.answer.includes(NAO_TOKEN);
   const isEscalated = (i) => !!i.escalated;
   const isRated = (i) => i.rating === 1 || i.rating === -1;
-  // Pra contar usuários únicos: prefere username (login) e cai pro session_id se for null.
-  const userKey = (i) => i.username || `sess:${i.session_id || "anon"}`;
+  // "Usuários únicos" = logins identificados (admin/user). Interações sem username
+  // (histórico pré-feature ou chamadas direto à API) NÃO contam — ficam expostas
+  // como sub-métrica de transparência.
+  const userKey = (i) => i.username || null;
 
   const now = new Date();
   const dayMs = 24 * 60 * 60 * 1000;
@@ -682,7 +684,14 @@ async function handleAdminMetrics(body) {
   const inPeriod = interactions.filter(i => within(i, periodStart, null));
 
   // ---------- KPIs (todas dentro do período) ----------
-  const uniqueUsers = new Set(inPeriod.map(userKey)).size;
+  // unique_users: só logins identificados (admin/user)
+  const usernameSet = new Set(inPeriod.map(userKey).filter(Boolean));
+  const uniqueUsers = usernameSet.size;
+  // Anonymous: sessions sem username (histórico pré-feature). Métrica de transparência.
+  const anonSessions = new Set(
+    inPeriod.filter(i => !i.username).map(i => i.session_id || "anon")
+  ).size;
+  const anonMessages = inPeriod.filter(i => !i.username).length;
   const totalMessages = inPeriod.length;
   const autonomousCount = inPeriod.filter(isAnswered).length;
   const autonomousRate  = totalMessages > 0 ? autonomousCount / totalMessages : 0;
@@ -702,7 +711,7 @@ async function handleAdminMetrics(body) {
     messagesByDay.push({
       date: d.toISOString().slice(0, 10),
       messages: dayItems.length,
-      unique_users: new Set(dayItems.map(userKey)).size,
+      unique_users: new Set(dayItems.map(userKey).filter(Boolean)).size,
       autonomous: dayAuto,
       autonomous_pct: +(dayPct * 100).toFixed(1),
       rated: dayItems.filter(isRated).length,
@@ -755,6 +764,9 @@ async function handleAdminMetrics(body) {
     session_options: sessionOptions,
     kpis: {
       unique_users: uniqueUsers,
+      unique_usernames: Array.from(usernameSet),
+      anonymous_sessions: anonSessions,
+      anonymous_messages: anonMessages,
       messages: totalMessages,
       autonomous_rate: +autonomousRate.toFixed(3),
       autonomous_count: autonomousCount,
