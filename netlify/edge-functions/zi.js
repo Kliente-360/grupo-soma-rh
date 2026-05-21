@@ -626,7 +626,8 @@ async function handleAdminClearFeedback(body) {
 async function handleAdminMetrics(body) {
   const denied = checkAuth(body, "admin"); if (denied) return denied;
 
-  const filterSessions = Array.isArray(body.filter?.sessions) ? body.filter.sessions : null;
+  // Filtro AGORA é por USERNAME (login), não mais por session_id.
+  const filterUsernames = Array.isArray(body.filter?.usernames) ? body.filter.usernames : null;
   // Período configurável: 30, 15 ou 7 dias. Default 30 (mensal).
   const periodDays = [30, 15, 7].includes(body.period_days) ? body.period_days : 30;
 
@@ -636,29 +637,34 @@ async function handleAdminMetrics(body) {
   if (!r.ok) return err(500, "list interactions failed", { detail: await r.text() });
   const allInteractions = await r.json();
 
-  // ---------- Sessões disponíveis (pra o filtro) ----------
-  const sessionMap = new Map();
+  // ---------- Opções de filtro: por USERNAME (login) ----------
+  // Anônimos (interações sem username — histórico pré-feature) viram bucket "__anonymous__".
+  const userMap = new Map();
   for (const i of allInteractions) {
-    const sid = i.session_id || "anônima";
-    const cur = sessionMap.get(sid) || { session_id: sid, messages: 0, email: null, name: null, username: null, last_at: null };
+    const uname = i.username || "__anonymous__";
+    const cur = userMap.get(uname) || { username: uname, messages: 0, last_at: null, is_anonymous: !i.username };
     cur.messages += 1;
-    if (i.user_email && !cur.email)  cur.email = i.user_email;
-    if (i.user_name  && !cur.name)   cur.name  = i.user_name;
-    if (i.username   && !cur.username) cur.username = i.username;
     if (!cur.last_at || (i.created_at && i.created_at > cur.last_at)) cur.last_at = i.created_at;
-    sessionMap.set(sid, cur);
+    userMap.set(uname, cur);
   }
-  const sessionOptions = Array.from(sessionMap.values())
-    .sort((a, b) => (b.last_at || "").localeCompare(a.last_at || ""))
-    .map(s => {
-      const idShort = String(s.session_id).slice(0, 8);
-      const who = s.email || s.name || s.username || "anônima";
-      return { ...s, label: `${who} · ${s.messages} msg${s.messages !== 1 ? "s" : ""} · ${idShort}` };
+  const userOptions = Array.from(userMap.values())
+    .map(u => ({
+      ...u,
+      label: u.is_anonymous
+        ? `Anônimos · ${u.messages} msg${u.messages !== 1 ? "s" : ""} (histórico sem login)`
+        : `${u.username} · ${u.messages} msg${u.messages !== 1 ? "s" : ""}`,
+    }))
+    .sort((a, b) => {
+      if (a.is_anonymous !== b.is_anonymous) return a.is_anonymous ? 1 : -1;
+      return (b.last_at || "").localeCompare(a.last_at || "");
     });
 
   // ---------- Aplica filtro ----------
-  const interactions = filterSessions && filterSessions.length > 0
-    ? allInteractions.filter(i => filterSessions.includes(i.session_id))
+  const interactions = filterUsernames && filterUsernames.length > 0
+    ? allInteractions.filter(i => {
+        const key = i.username || "__anonymous__";
+        return filterUsernames.includes(key);
+      })
     : allInteractions;
 
   // ---------- Helpers ----------
@@ -759,9 +765,9 @@ async function handleAdminMetrics(body) {
   const freedHoursEstimate = +(autonomousCount * hoursPerTicket).toFixed(0);
 
   return json({
-    filter: { sessions: filterSessions },
+    filter: { usernames: filterUsernames },
     period_days: periodDays,
-    session_options: sessionOptions,
+    user_options: userOptions,
     kpis: {
       unique_users: uniqueUsers,
       unique_usernames: Array.from(usernameSet),

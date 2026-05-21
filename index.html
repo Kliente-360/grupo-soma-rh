@@ -2048,7 +2048,7 @@
   let adminTrained = [];
   let adminFeedback = [];
   let metricsData  = null;
-  let selectedSessions = [];   // [] = todas; array com session_ids = filtradas
+  let selectedUsernames = [];   // [] = todos; array com usernames = filtrados
   let filterPanelOpen = false;
   let adminSubTab = 'pending';                  // 'pending' | 'dashboard' | 'feedback' | 'trained'
   let dashPeriod = 30;                          // 30 | 15 | 7
@@ -2066,7 +2066,7 @@
         apiPost('admin_metrics', {
           auth,
           period_days: dashPeriod,
-          filter: { sessions: selectedSessions.length ? selectedSessions : null },
+          filter: { usernames: selectedUsernames.length ? selectedUsernames : null },
         }),
       ]);
       adminPending  = Array.isArray(pending)  ? pending  : [];
@@ -2088,7 +2088,7 @@
       metricsData = await apiPost('admin_metrics', {
         auth,
         period_days: dashPeriod,
-        filter: { sessions: selectedSessions.length ? selectedSessions : null },
+        filter: { usernames: selectedUsernames.length ? selectedUsernames : null },
       });
       const root = document.getElementById('metrics-root');
       if (root) root.innerHTML = renderMetricsHtml();
@@ -2205,11 +2205,12 @@
   }
 
   function renderFilterShellHtml(m) {
-    const opts = m.session_options || [];
-    const allSelected = selectedSessions.length === 0;
+    const opts = m.user_options || [];
+    const identifiedCount = opts.filter(o => !o.is_anonymous).length;
+    const allSelected = selectedUsernames.length === 0;
     const label = allSelected
-      ? `Todos os usuários (${opts.length})`
-      : `${selectedSessions.length} de ${opts.length} selecionado${selectedSessions.length !== 1 ? 's' : ''}`;
+      ? `Todos os usuários (${identifiedCount})`
+      : `${selectedUsernames.length} selecionado${selectedUsernames.length !== 1 ? 's' : ''}`;
     return `
       <div class="filter-shell">
         <button class="filter-btn" id="filter-btn" type="button">
@@ -2222,14 +2223,16 @@
             <button data-action="filter-none" type="button">Limpar</button>
           </div>
           ${opts.length === 0
-            ? `<div class="empty-state" style="padding:14px; font-size:12px;">Sem sessões registradas ainda.</div>`
+            ? `<div class="empty-state" style="padding:14px; font-size:12px;">Sem usuários no escopo.</div>`
             : opts.map(o => {
-                const checked = selectedSessions.includes(o.session_id) || allSelected;
-                const who = o.username || o.email || o.name || 'Anônima';
-                const meta = `${o.messages} msg${o.messages !== 1 ? 's' : ''} · ${formatDate(o.last_at)} · ${o.session_id.slice(0,8)}`;
+                const checked = selectedUsernames.includes(o.username) || allSelected;
+                const who  = o.is_anonymous ? 'Anônimos (sem login)' : o.username;
+                const meta = o.is_anonymous
+                  ? `${o.messages} msg${o.messages !== 1 ? 's' : ''} · histórico pré-feature`
+                  : `${o.messages} msg${o.messages !== 1 ? 's' : ''} · última atividade ${formatDate(o.last_at)}`;
                 return `
                   <label class="filter-option">
-                    <input type="checkbox" data-action="filter-toggle" data-sid="${escapeHtml(o.session_id)}" ${checked ? 'checked' : ''}>
+                    <input type="checkbox" data-action="filter-toggle" data-uname="${escapeHtml(o.username)}" ${checked ? 'checked' : ''}>
                     <div>
                       <div>${escapeHtml(who)}</div>
                       <span class="opt-meta">${escapeHtml(meta)}</span>
@@ -2262,7 +2265,10 @@
           <div class="kpi-sub">${(k.unique_usernames || []).join(', ') || 'nenhum login identificado'}${k.anonymous_sessions ? ` · ${k.anonymous_sessions} sessões anônimas (histórico)` : ''}</div>
         </div>
         <div class="${cls('messages')}" data-metric="messages" title="Clique pra ver no gráfico">
-          <div class="kpi-label">Mensagens totais ${periodLabel}</div>
+          <div class="kpi-label">
+            Mensagens totais ${periodLabel}
+            <span class="kpi-hint" data-tip="Total de perguntas enviadas pra Zi no período. Cada interação conta uma vez — inclui follow-ups, perguntas repetidas e perguntas comparativas.">?</span>
+          </div>
           <div class="kpi-value">${k.messages}</div>
           <div class="kpi-sub">perguntas feitas pra Zi</div>
         </div>
@@ -2282,7 +2288,10 @@
           </div>
         </div>
         <div class="${cls('rated')}" data-metric="rated" title="Clique pra ver no gráfico">
-          <div class="kpi-label">Total avaliados ${periodLabel}</div>
+          <div class="kpi-label">
+            Total avaliados ${periodLabel}
+            <span class="kpi-hint" data-tip="Quantidade de respostas que receberam 👍 ou 👎. Respostas sem avaliação não entram — é o engajamento dos colaboradores com o feedback.">?</span>
+          </div>
           <div class="kpi-value">${k.rated_total}</div>
           <div class="kpi-sub">${k.ups} 👍 · ${k.downs} 👎</div>
         </div>
@@ -2493,24 +2502,24 @@
 
     document.querySelectorAll('[data-action="filter-toggle"]').forEach(input => {
       input.onchange = (e) => {
-        const sid = e.target.dataset.sid;
-        const opts = (metricsData?.session_options || []).map(o => o.session_id);
-        if (selectedSessions.length === 0) selectedSessions = [...opts];
+        const uname = e.target.dataset.uname;
+        const opts = (metricsData?.user_options || []).map(o => o.username);
+        if (selectedUsernames.length === 0) selectedUsernames = [...opts];
         if (e.target.checked) {
-          if (!selectedSessions.includes(sid)) selectedSessions.push(sid);
+          if (!selectedUsernames.includes(uname)) selectedUsernames.push(uname);
         } else {
-          selectedSessions = selectedSessions.filter(s => s !== sid);
+          selectedUsernames = selectedUsernames.filter(u => u !== uname);
         }
-        if (selectedSessions.length === opts.length) selectedSessions = [];
+        if (selectedUsernames.length === opts.length) selectedUsernames = [];
         reloadMetricsOnly();
       };
     });
 
     const allBtn = document.querySelector('[data-action="filter-all"]');
-    if (allBtn) allBtn.onclick = () => { selectedSessions = []; reloadMetricsOnly(); };
+    if (allBtn) allBtn.onclick = () => { selectedUsernames = []; reloadMetricsOnly(); };
 
     const noneBtn = document.querySelector('[data-action="filter-none"]');
-    if (noneBtn) noneBtn.onclick = () => { selectedSessions = ['__none_selected__']; reloadMetricsOnly(); };
+    if (noneBtn) noneBtn.onclick = () => { selectedUsernames = ['__none_selected__']; reloadMetricsOnly(); };
 
     // Close panel on outside click
     if (filterPanelOpen) {
