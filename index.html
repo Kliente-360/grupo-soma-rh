@@ -616,40 +616,51 @@
     }
     @keyframes cursor-blink { 50% { opacity: 0; } }
 
-    /* ---------- Feedback (👍 / 👎) ---------- */
+    /* ---------- Feedback (Curti / Pode melhorar) ---------- */
     .feedback {
       display: flex;
-      gap: 4px;
-      margin-top: 8px;
+      gap: 8px;
+      margin-top: 10px;
       margin-left: 40px;
+      align-items: center;
     }
     .fb-btn {
-      background: transparent;
-      border: 1px solid transparent;
-      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--nv-surface);
+      border: 1px solid var(--nv-line);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--nv-coffee-soft);
       cursor: pointer;
-      padding: 4px 10px;
+      padding: 6px 12px 6px 10px;
       border-radius: var(--radius-pill);
-      opacity: 0.4;
+      opacity: 0.85;
       transition: opacity var(--dur-fast) var(--ease-soft),
                   background var(--dur-fast) var(--ease-soft),
                   border-color var(--dur-fast) var(--ease-soft),
+                  color var(--dur-fast) var(--ease-soft),
                   transform var(--dur-fast) var(--ease-spring);
       line-height: 1;
       font-family: var(--font-body);
+      letter-spacing: -0.005em;
     }
+    .fb-btn .fb-emoji { font-size: 14px; line-height: 1; }
     .fb-btn:hover:not(:disabled) {
       opacity: 1;
-      background: var(--nv-surface);
-      border-color: var(--nv-line);
-      transform: scale(1.08);
+      color: var(--nv-coffee);
+      border-color: var(--nv-coffee);
+      transform: translateY(-1px);
     }
     .fb-btn[aria-pressed="true"] {
       opacity: 1;
       background: var(--nv-clay-light);
       border-color: var(--nv-clay);
-      transform: scale(1);
+      color: var(--nv-clay-dark);
+      transform: none;
     }
+    .fb-btn[aria-pressed="true"] .fb-label { font-weight: 600; }
     .fb-btn:disabled { cursor: default; }
 
     /* ---------- Admin gate (PIN) ---------- */
@@ -1207,15 +1218,28 @@
     // Botões de feedback só em respostas reais da Zi (não no welcome, escalações, erros)
     let feedbackHtml = '';
     if (m.isAiAnswer && !isUser) {
-      const up   = m.feedback === 'up';
-      const down = m.feedback === 'down';
-      const disabled = m.feedback ? 'disabled' : '';
-      feedbackHtml = `
-        <div class="feedback">
-          <button class="fb-btn" data-action="feedback" data-rating="up"   data-id="${m.id}" aria-pressed="${up}"   aria-label="Útil"     title="Útil"     ${disabled}>👍</button>
-          <button class="fb-btn" data-action="feedback" data-rating="down" data-id="${m.id}" aria-pressed="${down}" aria-label="Não útil" title="Não útil" ${disabled}>👎</button>
-        </div>
-      `;
+      // Antes do clique: dois botões. Depois do clique: só o escolhido fica visível, com tint terracota.
+      if (!m.feedback) {
+        feedbackHtml = `
+          <div class="feedback">
+            <button class="fb-btn" data-action="feedback" data-rating="up"   data-id="${m.id}" aria-pressed="false" aria-label="Curti">
+              <span class="fb-emoji">👍</span><span class="fb-label">Curti</span>
+            </button>
+            <button class="fb-btn" data-action="feedback" data-rating="down" data-id="${m.id}" aria-pressed="false" aria-label="Pode melhorar">
+              <span class="fb-emoji">👎</span><span class="fb-label">Pode melhorar</span>
+            </button>
+          </div>
+        `;
+      } else {
+        const isUp = m.feedback === 'up';
+        feedbackHtml = `
+          <div class="feedback">
+            <button class="fb-btn" aria-pressed="true" disabled aria-label="${isUp ? 'Curtiu' : 'Pode melhorar'}">
+              <span class="fb-emoji">${isUp ? '👍' : '👎'}</span><span class="fb-label">${isUp ? 'Curti' : 'Pode melhorar'}</span>
+            </button>
+          </div>
+        `;
+      }
     }
 
     return `
