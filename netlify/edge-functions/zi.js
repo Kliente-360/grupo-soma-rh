@@ -28,8 +28,13 @@ const EMBED_DIM   = 768;
 // Credenciais — fricção, não segurança. Substituir por SSO em produção.
 // Refletido no client (CREDENTIALS em index.html). Server é a fonte da verdade.
 const CREDENTIALS = {
-  admin: { password: "adminnv26", role: "admin" },
-  user:  { password: "usernv26",  role: "user"  },
+  admin:             { password: "adminnv26",  role: "admin" },
+  user:              { password: "usernv26",   role: "user"  },
+  "mariana.saran":   { password: "r6xuw5dtrc", role: "admin" },
+  "waleska.jardim":  { password: "hbyxw9l95b", role: "admin" },
+  "nathalie.souza":  { password: "q0qtqphxa1", role: "admin" },
+  "paulo.cardozo":   { password: "5mwkrvnc7c", role: "admin" },
+  "adriana.cerqueira": { password: "swxfzhnhwe", role: "admin" },
 };
 
 // ---------------- Env helper ----------------

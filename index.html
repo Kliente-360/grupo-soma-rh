@@ -1108,6 +1108,33 @@
       z-index: 100;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.soft-alert {
+      background: #fff;
+      color: var(--nv-clay-dark);
+      border: 1px solid var(--nv-clay);
+      box-shadow: 0 8px 24px rgba(217, 138, 108, 0.18), var(--shadow-lg);
+      padding: 12px 18px 12px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .toast.soft-alert::before {
+      content: "✨";
+      font-size: 15px;
+    }
+
+    /* Shake suave quando usuário tenta interagir sem votar */
+    .feedback.feedback-required.shake {
+      animation: fbShake 0.42s var(--ease-soft);
+    }
+    @keyframes fbShake {
+      0%, 100% { transform: translateX(0); }
+      20%      { transform: translateX(-4px); }
+      40%      { transform: translateX(4px); }
+      60%      { transform: translateX(-3px); }
+      80%      { transform: translateX(2px); }
+    }
 
     /* ---------- Streaming cursor ---------- */
     .cursor {
@@ -1169,6 +1196,35 @@
     }
     .fb-btn[aria-pressed="true"] .fb-label { font-weight: 600; }
     .fb-btn:disabled { cursor: default; }
+
+    /* Gate: pede pra avaliar antes de mandar próxima pergunta */
+    .feedback.feedback-required {
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      margin-left: 40px;
+      background: var(--nv-clay-light);
+      border: 1px solid var(--nv-clay);
+      border-radius: var(--radius-md, 12px);
+      animation: fbPulse 2s var(--ease-soft) infinite;
+    }
+    .feedback.feedback-required .feedback-hint {
+      font-size: 13px;
+      color: var(--nv-clay-dark);
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      flex-basis: 100%;
+      margin-bottom: 4px;
+    }
+    .feedback.feedback-required .fb-btn {
+      background: #fff;
+      border-color: var(--nv-clay);
+      color: var(--nv-clay-dark);
+      opacity: 1;
+    }
+    @keyframes fbPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(217, 138, 108, 0.0); }
+      50%      { box-shadow: 0 0 0 6px rgba(217, 138, 108, 0.12); }
+    }
 
     /* ---------- Admin gate (PIN) ---------- */
     .admin-gate {
@@ -1466,8 +1522,13 @@
   // Credenciais de acesso — fricção, não segurança. Validado também no servidor.
   // Pra mudar perfis em produção: mover pra SSO (Google Workspace) ou Supabase Auth.
   const CREDENTIALS = {
-    admin: { password: "adminnv26", role: "admin" },
-    user:  { password: "usernv26",  role: "user"  },
+    admin:             { password: "adminnv26",  role: "admin" },
+    user:              { password: "usernv26",   role: "user"  },
+    "mariana.saran":   { password: "r6xuw5dtrc", role: "admin" },
+    "waleska.jardim":  { password: "hbyxw9l95b", role: "admin" },
+    "nathalie.souza":  { password: "q0qtqphxa1", role: "admin" },
+    "paulo.cardozo":   { password: "5mwkrvnc7c", role: "admin" },
+    "adriana.cerqueira": { password: "swxfzhnhwe", role: "admin" },
   };
   const AUTH_KEY = "zi_auth";
   const SESSION_ID_KEY = "zi_session_id";
@@ -1573,12 +1634,17 @@
     return s;
   }
 
-  function toast(msg) {
+  function toast(msg, opts = {}) {
     const el = document.getElementById('toast');
     el.textContent = msg;
+    el.classList.toggle('soft-alert', !!opts.soft);
     el.classList.add('show');
     clearTimeout(toast._t);
-    toast._t = setTimeout(() => el.classList.remove('show'), 1800);
+    const dur = opts.duration || 1800;
+    toast._t = setTimeout(() => {
+      el.classList.remove('show');
+      el.classList.remove('soft-alert');
+    }, dur);
   }
 
   /* ---------------- State ---------------- */
@@ -1678,7 +1744,35 @@
     const root = document.getElementById('chat-messages');
     root.innerHTML = messages.map(renderMessageHtml).join('');
     bindMessageHandlers();
+    applyFeedbackGate();
     scrollToBottom();
+  }
+
+  /* Gate de feedback: usuário precisa avaliar a última resposta da Zi antes
+     de mandar próxima pergunta. Retorna id da msg pendente, ou null. */
+  function pendingFeedbackId() {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.isAiAnswer && !m.feedback) return m.id;
+      if (m.isAiAnswer && m.feedback) return null; // última AI já avaliada
+    }
+    return null;
+  }
+
+  function applyFeedbackGate() {
+    const gated = !!pendingFeedbackId();
+    const input = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    if (!input || !sendBtn) return;
+    if (gated && !isWaitingReply) {
+      input.disabled = true;
+      input.placeholder = 'Avalie a resposta acima pra continuar…';
+      sendBtn.disabled = true;
+    } else if (!isWaitingReply) {
+      input.disabled = false;
+      input.placeholder = 'Pergunte qualquer coisa pra Zi…';
+      sendBtn.disabled = false;
+    }
   }
 
   function renderMessageHtml(m) {
@@ -1741,10 +1835,14 @@
     if (m.isAiAnswer && !isUser) {
       // Antes do clique: dois botões. Depois do clique: só o escolhido fica visível, com tint terracota.
       if (!m.feedback) {
+        const isGate = m.id === pendingFeedbackId();
+        const gateClass = isGate ? ' feedback-required' : '';
+        const gateHint = isGate ? `<div class="feedback-hint">Avalie a resposta pra continuar a conversa</div>` : '';
         feedbackHtml = `
-          <div class="feedback">
-            <button class="fb-btn" data-action="feedback" data-rating="up"   data-id="${m.id}" aria-pressed="false" aria-label="Curti">
-              <span class="fb-emoji">👍</span><span class="fb-label">Curti</span>
+          <div class="feedback${gateClass}">
+            ${gateHint}
+            <button class="fb-btn" data-action="feedback" data-rating="up"   data-id="${m.id}" aria-pressed="false" aria-label="Gostei">
+              <span class="fb-emoji">👍</span><span class="fb-label">Gostei</span>
             </button>
             <button class="fb-btn" data-action="feedback" data-rating="down" data-id="${m.id}" aria-pressed="false" aria-label="Pode melhorar">
               <span class="fb-emoji">👎</span><span class="fb-label">Pode melhorar</span>
@@ -1755,8 +1853,8 @@
         const isUp = m.feedback === 'up';
         feedbackHtml = `
           <div class="feedback">
-            <button class="fb-btn" aria-pressed="true" disabled aria-label="${isUp ? 'Curtiu' : 'Pode melhorar'}">
-              <span class="fb-emoji">${isUp ? '👍' : '👎'}</span><span class="fb-label">${isUp ? 'Curti' : 'Pode melhorar'}</span>
+            <button class="fb-btn" aria-pressed="true" disabled aria-label="${isUp ? 'Gostou' : 'Pode melhorar'}">
+              <span class="fb-emoji">${isUp ? '👍' : '👎'}</span><span class="fb-label">${isUp ? 'Gostei' : 'Pode melhorar'}</span>
             </button>
           </div>
         `;
@@ -1812,7 +1910,10 @@
 
     try {
       await apiPost('feedback', { interactionId: msg.interactionId, rating: apiRating });
-      toast(rating === 'up' ? 'Valeu pelo feedback! 👍' : 'Anotado, vamos melhorar 👍');
+      toast(rating === 'up' ? 'Valeu pelo feedback! ✨' : 'Anotado, vamos melhorar 🙏');
+      // foca o input pra fluir a próxima pergunta
+      const input = document.getElementById('chat-input');
+      if (input) input.focus();
     } catch (err) {
       console.error('[Zi] feedback falhou:', err);
       messages[i].feedback = null;       // desfaz o otimismo
@@ -1875,6 +1976,20 @@
   async function sendUserMessage(text) {
     text = (text || '').trim();
     if (!text || isWaitingReply) return;
+
+    // Gate: precisa avaliar a última resposta antes de mandar próxima pergunta
+    if (pendingFeedbackId()) {
+      toast('Antes da próxima pergunta, conta pra Zi se a resposta ajudou 👇', { soft: true, duration: 3000 });
+      const el = document.querySelector('.feedback.feedback-required');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.remove('shake'); // reinicia animação se já tava aplicada
+        void el.offsetWidth;           // força reflow pro restart da animation
+        el.classList.add('shake');
+        setTimeout(() => el.classList.remove('shake'), 500);
+      }
+      return;
+    }
 
     pushMessage('user', text);
     renderSuggestions(); // hides chips after first msg
@@ -1948,6 +2063,7 @@
     } finally {
       isWaitingReply = false;
       setSendEnabled(true);
+      applyFeedbackGate(); // pode ter destravado streaming mas ativado o gate de feedback
       document.getElementById('chat-input').focus();
     }
   }
