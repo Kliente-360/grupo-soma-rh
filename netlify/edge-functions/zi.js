@@ -410,6 +410,20 @@ async function handleChat(body) {
   }
   const chunks = merged;
 
+  // Telemetria de tópico: pega a categoria mais frequente nos chunks recuperados
+  // e registra na interaction (PATCH fire-and-forget, não bloqueia a resposta).
+  if (interactionId && chunks.length > 0) {
+    const catCounts = chunks.reduce((acc, c) => {
+      if (c.category) acc[c.category] = (acc[c.category] || 0) + 1;
+      return acc;
+    }, {});
+    const topCategory = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    if (topCategory) {
+      patchInteraction(interactionId, { category: topCategory })
+        .catch(e => console.warn("patch category failed:", e?.message || e));
+    }
+  }
+
   // 3) Monta contents pra Gemini
   const contents = messages.map(m => ({
     role: m.role === "assistant" ? "model" : "user",
@@ -802,6 +816,161 @@ async function handleAdminMetrics(body) {
   });
 }
 
+// ---------------- Admin: Pilot (root admin only) ----------------
+// Métricas por usuário pra avaliação de pilot: retenção, recência, frequência,
+// distribuição por categoria, like ratio. Acesso restrito ao login 'admin'
+// (gestor do pilot) — outros admins (mariana, waleska, etc.) são testers, não
+// devem ver as métricas dos colegas.
+
+function checkRootAdmin(body) {
+  const a = body.auth || {};
+  const username = String(a.username || "").trim().toLowerCase();
+  if (username !== "admin") return err(403, "acesso restrito ao admin master");
+  const cred = CREDENTIALS[username];
+  if (!cred || cred.password !== a.password) return err(401, "credenciais inválidas");
+  return null;
+}
+
+async function handleAdminPilot(body) {
+  const denied = checkRootAdmin(body); if (denied) return denied;
+
+  const periodDays = [30, 15, 7].includes(body.period_days) ? body.period_days : 30;
+
+  const r = await supabaseFetch(
+    "/rest/v1/zi_interactions?select=id,session_id,question,answer,rating,rating_at,rating_comment,escalated,resolved_at,username,category,created_at&order=created_at.desc&limit=10000",
+  );
+  if (!r.ok) return err(500, "list interactions failed", { detail: await r.text() });
+  const allInteractions = await r.json();
+
+  const NAO_TOKEN = "[NAO_ENCONTREI]";
+  const isAnswered  = (i) => i.answer && i.answer.trim() && !i.answer.includes(NAO_TOKEN);
+  const isEscalated = (i) => !!i.escalated;
+
+  const now = new Date();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const startOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+  const today = startOfDay(now);
+  const periodStart = new Date(today.getTime() - (periodDays - 1) * dayMs);
+  const interactions = allInteractions.filter(i => new Date(i.created_at) >= periodStart);
+
+  // ----------- Agrupa por username (só logados, ignora histórico anônimo) -----------
+  const byUser = new Map();
+  for (const i of interactions) {
+    if (!i.username) continue;
+    const key = i.username;
+    if (!byUser.has(key)) {
+      byUser.set(key, {
+        username: key,
+        total: 0,
+        answered: 0,
+        escalated: 0,
+        ups: 0, downs: 0,
+        ratingComments: [],
+        categories: {},
+        days: new Set(),
+        first_at: null,
+        last_at: null,
+      });
+    }
+    const u = byUser.get(key);
+    u.total += 1;
+    if (isAnswered(i))  u.answered  += 1;
+    if (isEscalated(i)) u.escalated += 1;
+    if (i.rating === 1)  u.ups   += 1;
+    if (i.rating === -1) u.downs += 1;
+    if (i.rating_comment) u.ratingComments.push({
+      id: i.id, comment: i.rating_comment, rating: i.rating, at: i.rating_at, question: i.question,
+    });
+    if (i.category) u.categories[i.category] = (u.categories[i.category] || 0) + 1;
+    const dayKey = (i.created_at || "").slice(0, 10);
+    if (dayKey) u.days.add(dayKey);
+    if (!u.first_at || i.created_at < u.first_at) u.first_at = i.created_at;
+    if (!u.last_at  || i.created_at > u.last_at)  u.last_at  = i.created_at;
+  }
+
+  // ----------- Computa métricas por usuário -----------
+  const recencyBucket = (lastAt) => {
+    if (!lastAt) return "inativo";
+    const diffH = (now - new Date(lastAt)) / (60 * 60 * 1000);
+    if (diffH < 24)  return "ativo_24h";
+    if (diffH < 168) return "ativo_7d";  // 7 * 24
+    if (diffH < 720) return "ativo_30d"; // 30 * 24
+    return "inativo";
+  };
+
+  const users = Array.from(byUser.values()).map(u => {
+    const activeDays = u.days.size;
+    const avgPerActiveDay = activeDays > 0 ? +(u.total / activeDays).toFixed(1) : 0;
+    const ratedTotal = u.ups + u.downs;
+    const likeRatio  = ratedTotal > 0 ? +(u.ups / ratedTotal).toFixed(2) : null;
+    const autonomousRate = u.total > 0 ? +(u.answered / u.total).toFixed(2) : 0;
+    const topCategory = Object.entries(u.categories).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    return {
+      username: u.username,
+      total: u.total,
+      answered: u.answered,
+      escalated: u.escalated,
+      ups: u.ups,
+      downs: u.downs,
+      rating_comments: u.ratingComments,
+      categories: u.categories,
+      top_category: topCategory,
+      active_days: activeDays,
+      avg_per_active_day: avgPerActiveDay,
+      first_at: u.first_at,
+      last_at: u.last_at,
+      recency: recencyBucket(u.last_at),
+      like_ratio: likeRatio,
+      autonomous_rate: autonomousRate,
+    };
+  }).sort((a, b) => b.total - a.total);
+
+  // ----------- Sumário global do pilot -----------
+  const activeUsersToday = users.filter(u => u.recency === "ativo_24h").length;
+  const activeUsers7d    = users.filter(u => ["ativo_24h", "ativo_7d"].includes(u.recency)).length;
+  const totalMessages    = users.reduce((s, u) => s + u.total, 0);
+  const totalUps         = users.reduce((s, u) => s + u.ups, 0);
+  const totalDowns       = users.reduce((s, u) => s + u.downs, 0);
+  const allRatingComments = users.flatMap(u => u.rating_comments.map(c => ({ ...c, username: u.username })));
+  const totalActiveDaysAvg = users.length > 0
+    ? +(users.reduce((s, u) => s + u.active_days, 0) / users.length).toFixed(1)
+    : 0;
+
+  // ----------- Distribuição de categorias agregada -----------
+  const catTotals = {};
+  for (const u of users) {
+    for (const [cat, n] of Object.entries(u.categories)) {
+      catTotals[cat] = (catTotals[cat] || 0) + n;
+    }
+  }
+  const categoryDistribution = Object.entries(catTotals)
+    .map(([category, count]) => ({
+      category,
+      count,
+      pct: totalMessages > 0 ? +((count / totalMessages) * 100).toFixed(1) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return json({
+    period_days: periodDays,
+    summary: {
+      total_testers: users.length,
+      active_24h: activeUsersToday,
+      active_7d: activeUsers7d,
+      total_messages: totalMessages,
+      avg_active_days_per_user: totalActiveDaysAvg,
+      total_ups: totalUps,
+      total_downs: totalDowns,
+      overall_like_ratio: (totalUps + totalDowns) > 0
+        ? +(totalUps / (totalUps + totalDowns)).toFixed(2)
+        : null,
+    },
+    users,
+    category_distribution: categoryDistribution,
+    rating_comments: allRatingComments.sort((a, b) => (b.at || "").localeCompare(a.at || "")),
+  });
+}
+
 // ---------------- Main handler ----------------
 export default async (req) => {
   if (req.method === "GET") {
@@ -855,6 +1024,7 @@ export default async (req) => {
       case "admin_delete_pending": return await handleAdminDeletePending(body);
       case "admin_clear_feedback": return await handleAdminClearFeedback(body);
       case "admin_metrics":        return await handleAdminMetrics(body);
+      case "admin_pilot":          return await handleAdminPilot(body);
       default:                     return err(400, `unknown action: ${action}`);
     }
   } catch (e) {

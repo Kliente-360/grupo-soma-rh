@@ -475,6 +475,108 @@
     #send-btn:active:not(:disabled) { transform: scale(0.94); }
     #send-btn:disabled { background: var(--nv-line-strong); cursor: not-allowed; opacity: 0.6; }
 
+    /* ---------- Pilot dashboard ---------- */
+    .pilot-section {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--nv-line);
+    }
+    .pilot-h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--nv-coffee);
+      margin: 0 0 12px 0;
+      letter-spacing: -0.01em;
+    }
+    .pilot-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-md);
+      background: var(--nv-paper);
+    }
+    .pilot-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .pilot-table th {
+      text-align: left;
+      padding: 12px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--nv-coffee-mute);
+      border-bottom: 1px solid var(--nv-line);
+      background: var(--nv-surface);
+      white-space: nowrap;
+    }
+    .pilot-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--nv-line);
+      color: var(--nv-coffee);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .pilot-table tr:last-child td { border-bottom: none; }
+    .pilot-table tr:hover td { background: var(--nv-surface); }
+
+    .pilot-cat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pilot-cat-row {
+      display: grid;
+      grid-template-columns: 160px 1fr 120px;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .pilot-cat-name { font-weight: 500; color: var(--nv-coffee); }
+    .pilot-cat-bar {
+      height: 8px;
+      background: var(--nv-line);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .pilot-cat-bar-fill {
+      height: 100%;
+      background: var(--nv-clay);
+      border-radius: 4px;
+      transition: width var(--dur-base) var(--ease-soft);
+    }
+    .pilot-cat-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .pilot-comments {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pilot-comment-card {
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-left: 3px solid var(--nv-clay);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+    }
+    .pilot-comment-meta {
+      font-size: 12px;
+      color: var(--nv-coffee-mute);
+      margin-bottom: 6px;
+    }
+    .pilot-comment-question {
+      font-size: 13px;
+      color: var(--nv-coffee-soft);
+      font-style: italic;
+      margin-bottom: 8px;
+    }
+    .pilot-comment-text {
+      font-size: 13.5px;
+      color: var(--nv-coffee);
+      line-height: 1.45;
+    }
+
     /* ---------- Admin: sub-tabs ---------- */
     .subtabs {
       display: flex;
@@ -1197,6 +1299,48 @@
     .fb-btn[aria-pressed="true"] .fb-label { font-weight: 600; }
     .fb-btn:disabled { cursor: default; }
 
+    /* Form de comentário pro 👎 — contexto pro que faltou */
+    .fb-comment {
+      margin-top: 10px;
+      margin-left: 40px;
+      padding: 12px 14px;
+      background: var(--nv-surface);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-md, 12px);
+      max-width: 520px;
+    }
+    .fb-comment-label {
+      font-size: 12.5px;
+      color: var(--nv-coffee-mute);
+      margin-bottom: 8px;
+      letter-spacing: -0.005em;
+    }
+    .fb-comment textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: var(--font-body);
+      color: var(--nv-coffee);
+      background: #fff;
+      border: 1px solid var(--nv-line);
+      border-radius: 8px;
+      resize: vertical;
+      box-sizing: border-box;
+      letter-spacing: -0.005em;
+    }
+    .fb-comment textarea:focus {
+      outline: none;
+      border-color: var(--nv-clay);
+    }
+    .fb-comment-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      justify-content: flex-end;
+    }
+    .fb-comment-actions .btn { font-size: 12.5px; padding: 6px 14px; }
+
     /* Gate: pede pra avaliar antes de mandar próxima pergunta */
     .feedback.feedback-required {
       flex-wrap: wrap;
@@ -1851,12 +1995,23 @@
         `;
       } else {
         const isUp = m.feedback === 'up';
+        const showCommentForm = !isUp && !m.commentSubmitted;
         feedbackHtml = `
           <div class="feedback">
             <button class="fb-btn" aria-pressed="true" disabled aria-label="${isUp ? 'Gostou' : 'Pode melhorar'}">
               <span class="fb-emoji">${isUp ? '👍' : '👎'}</span><span class="fb-label">${isUp ? 'Gostei' : 'Pode melhorar'}</span>
             </button>
           </div>
+          ${showCommentForm ? `
+            <div class="fb-comment" data-fb-comment="${m.id}">
+              <div class="fb-comment-label">O que faltou na resposta? <span style="color:var(--nv-coffee-mute);font-weight:400;">(opcional — ajuda muito a Zi a aprender)</span></div>
+              <textarea id="fb-comment-${m.id}" placeholder="Ex: a resposta foi vaga, não cobriu loja, falta o valor exato…"></textarea>
+              <div class="fb-comment-actions">
+                <button class="btn btn-ghost" data-action="skip-fb-comment" data-id="${m.id}">Pular</button>
+                <button class="btn btn-primary" data-action="submit-fb-comment" data-id="${m.id}">Enviar</button>
+              </div>
+            </div>
+          ` : ''}
         `;
       }
     }
@@ -1891,6 +2046,41 @@
     document.querySelectorAll('[data-action="feedback"]').forEach(btn => {
       btn.onclick = () => submitFeedback(btn.dataset.id, btn.dataset.rating);
     });
+    document.querySelectorAll('[data-action="submit-fb-comment"]').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        const ta = document.getElementById(`fb-comment-${id}`);
+        submitFeedbackComment(id, (ta?.value || '').trim());
+      };
+    });
+    document.querySelectorAll('[data-action="skip-fb-comment"]').forEach(btn => {
+      btn.onclick = () => submitFeedbackComment(btn.dataset.id, '');
+    });
+  }
+
+  async function submitFeedbackComment(messageId, comment) {
+    const i = messages.findIndex(m => m.id === messageId);
+    if (i === -1) return;
+    const msg = messages[i];
+    if (!msg.interactionId || msg.feedback !== 'down') return;
+
+    // Marca como enviado antes do request pra esconder o form imediatamente
+    messages[i].commentSubmitted = true;
+    renderMessages();
+
+    if (!comment) return; // skip: nada a salvar no servidor além do rating já enviado
+
+    try {
+      await apiPost('feedback', {
+        interactionId: msg.interactionId,
+        rating: -1,
+        comment,
+      });
+      toast('Valeu! Comentário enviado ✨');
+    } catch (err) {
+      console.error('[Zi] feedback comment falhou:', err);
+      toast('Não rolou registrar o comentário 😬');
+    }
   }
 
   async function submitFeedback(messageId, rating) {
@@ -2157,6 +2347,9 @@
   }
   function isAuthenticated() { return !!getAuth(); }
   function isAdmin() { return getAuth()?.role === 'admin'; }
+  // Root admin = login literal 'admin' (gestor do pilot). Outros admins (mariana,
+  // waleska, etc.) são testers — não veem métricas de pilot dos colegas.
+  function isRootAdmin() { return getAuth()?.username === 'admin'; }
 
   function tryLogin(username, password) {
     const c = CREDENTIALS[(username || '').trim().toLowerCase()];
@@ -2177,9 +2370,10 @@
   let adminTrained = [];
   let adminFeedback = [];
   let metricsData  = null;
+  let pilotData    = null;                      // só populado se isRootAdmin()
   let selectedUsernames = [];   // [] = todos; array com usernames = filtrados
   let filterPanelOpen = false;
-  let adminSubTab = 'pending';                  // 'pending' | 'dashboard' | 'feedback' | 'trained'
+  let adminSubTab = 'pending';                  // 'pending' | 'dashboard' | 'feedback' | 'trained' | 'pilot'
   let dashPeriod = 30;                          // 30 | 15 | 7
   let chartMetric = 'messages';                 // 'messages' | 'unique_users' | 'autonomous' | 'rated'
   let feedbackFilter = 'down';                  // 'down' (default) | 'up' | 'all'
@@ -2204,6 +2398,18 @@
       metricsData   = metrics;
       pendingCount  = adminPending.length;
       updateAdminBadge();
+
+      // Pilot data — só pro root admin (gestor do pilot)
+      if (isRootAdmin()) {
+        try {
+          pilotData = await apiPost('admin_pilot', { auth, period_days: dashPeriod });
+        } catch (e) {
+          console.warn('[admin] pilot load falhou:', e);
+          pilotData = null;
+        }
+      } else {
+        pilotData = null;
+      }
     } catch (e) {
       console.error('[admin] load falhou:', e);
       toast('Erro carregando admin — confere console');
@@ -2238,12 +2444,17 @@
 
     // Painel autenticado com sub-tabs
     const pendingBadge = pendingCount > 0 ? `<span class="subtab-badge">${pendingCount}</span>` : '';
+    // Aba "Pilot" só pro root admin (gestor do pilot, não os testers)
+    const pilotTab = isRootAdmin()
+      ? `<button class="subtab-btn ${adminSubTab === 'pilot' ? 'active' : ''}" data-subtab="pilot">Pilot</button>`
+      : '';
     root.innerHTML = `
       <div class="subtabs" role="tablist">
         <button class="subtab-btn ${adminSubTab === 'pending'   ? 'active' : ''}" data-subtab="pending">Perguntas pendentes${pendingBadge}</button>
         <button class="subtab-btn ${adminSubTab === 'dashboard' ? 'active' : ''}" data-subtab="dashboard">Dashboard</button>
         <button class="subtab-btn ${adminSubTab === 'feedback'  ? 'active' : ''}" data-subtab="feedback">Feedback dos colaboradores</button>
         <button class="subtab-btn ${adminSubTab === 'trained'   ? 'active' : ''}" data-subtab="trained">Respostas treinadas</button>
+        ${pilotTab}
       </div>
       <div id="subtab-content">${renderSubTabContent()}</div>
       <div class="admin-footer">
@@ -2255,6 +2466,7 @@
     bindSubTabHandlers();
     if (adminSubTab === 'dashboard') bindMetricsHandlers();
     if (adminSubTab === 'feedback')  bindFeedbackFilterHandlers();
+    if (adminSubTab === 'pilot')     bindPilotHandlers();
   }
 
   function renderSubTabContent() {
@@ -2285,6 +2497,13 @@
         <h2>Respostas treinadas</h2>
         <p class="section-hint">Respostas validadas pelo RH. A Zi usa essas como referência nas próximas conversas.</p>
         <div id="trained-list">${renderTrainedHtml()}</div>
+      </section>
+    `;
+    if (adminSubTab === 'pilot' && isRootAdmin()) return `
+      <section class="admin-section">
+        <h2>Pilot — análise por usuário</h2>
+        <p class="section-hint">Telemetria detalhada por colaborador testando a Zi: frequência, recência, retenção, tópicos e comentários. Visível só pra você.</p>
+        <div id="pilot-root">${renderPilotHtml()}</div>
       </section>
     `;
     return '';
@@ -2705,6 +2924,178 @@
         </div>
       </div>
     `).join('');
+  }
+
+  /* ---------------- Pilot (root admin only) ---------------- */
+  async function loadPilotData() {
+    const auth = getAuth();
+    if (!auth || !isRootAdmin()) return;
+    try {
+      pilotData = await apiPost('admin_pilot', { auth, period_days: dashPeriod });
+      const root = document.getElementById('pilot-root');
+      if (root) root.innerHTML = renderPilotHtml();
+      bindPilotHandlers();
+    } catch (e) {
+      console.error('[pilot] load falhou:', e);
+      toast('Não rolou carregar Pilot 😬');
+    }
+  }
+
+  function bindPilotHandlers() {
+    document.querySelectorAll('[data-pilot-period]').forEach(btn => {
+      btn.onclick = () => {
+        dashPeriod = parseInt(btn.dataset.pilotPeriod, 10);
+        loadPilotData();
+      };
+    });
+  }
+
+  function recencyLabel(r) {
+    if (r === 'ativo_24h') return '🟢 Ativo (24h)';
+    if (r === 'ativo_7d')  return '🟡 Últimos 7d';
+    if (r === 'ativo_30d') return '🟠 Últimos 30d';
+    return '⚪ Inativo';
+  }
+
+  function renderPilotHtml() {
+    if (!pilotData) return `<div class="empty-state">Carregando dados do pilot…</div>`;
+    const p = pilotData;
+    const s = p.summary;
+
+    if (p.users.length === 0) {
+      return `
+        ${renderPilotPeriodHtml()}
+        <div class="empty-state">Nenhum tester logou ainda no período de ${p.period_days} dias. Aguarde algumas interações.</div>
+      `;
+    }
+
+    // Summary cards
+    const summaryHtml = `
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Testers ativos</div>
+          <div class="kpi-value">${s.total_testers}</div>
+          <div class="kpi-sub">no período de ${p.period_days}d</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ativos 7d</div>
+          <div class="kpi-value">${s.active_7d}</div>
+          <div class="kpi-sub">de ${s.total_testers} testers</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Mensagens totais</div>
+          <div class="kpi-value">${s.total_messages}</div>
+          <div class="kpi-sub">~${(s.total_messages / Math.max(1, s.total_testers)).toFixed(1)}/tester</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Dias ativos médios</div>
+          <div class="kpi-value">${s.avg_active_days_per_user}</div>
+          <div class="kpi-sub">por tester</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Aprovação</div>
+          <div class="kpi-value">${s.overall_like_ratio !== null ? Math.round(s.overall_like_ratio * 100) + '%' : '—'}</div>
+          <div class="kpi-sub">${s.total_ups} 👍 · ${s.total_downs} 👎</div>
+        </div>
+      </div>
+    `;
+
+    // Tabela por usuário
+    const usersTable = `
+      <div class="pilot-section">
+        <h3 class="pilot-h3">Por tester</h3>
+        <div class="pilot-table-wrap">
+          <table class="pilot-table">
+            <thead>
+              <tr>
+                <th>Tester</th>
+                <th>Recência</th>
+                <th>Msgs</th>
+                <th>Dias ativos</th>
+                <th>Msgs/dia</th>
+                <th>Resol. autônoma</th>
+                <th>Aprovação</th>
+                <th>Tópico principal</th>
+                <th>Último acesso</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${p.users.map(u => `
+                <tr>
+                  <td><strong>${escapeHtml(u.username)}</strong></td>
+                  <td>${recencyLabel(u.recency)}</td>
+                  <td>${u.total}</td>
+                  <td>${u.active_days}</td>
+                  <td>${u.avg_per_active_day}</td>
+                  <td>${Math.round(u.autonomous_rate * 100)}%</td>
+                  <td>${u.like_ratio !== null ? Math.round(u.like_ratio * 100) + '%' : '—'} <span style="color:var(--nv-coffee-mute);font-size:12px">(${u.ups}👍/${u.downs}👎)</span></td>
+                  <td>${u.top_category ? escapeHtml(u.top_category) : '—'}</td>
+                  <td>${u.last_at ? escapeHtml(formatDate(u.last_at)) : '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // Distribuição de categorias
+    const catHtml = p.category_distribution.length > 0 ? `
+      <div class="pilot-section">
+        <h3 class="pilot-h3">Tópicos das perguntas</h3>
+        <div class="pilot-cat-list">
+          ${p.category_distribution.map(c => `
+            <div class="pilot-cat-row">
+              <span class="pilot-cat-name">${escapeHtml(c.category)}</span>
+              <div class="pilot-cat-bar"><div class="pilot-cat-bar-fill" style="width:${c.pct}%"></div></div>
+              <span class="pilot-cat-num">${c.count} <span style="color:var(--nv-coffee-mute)">(${c.pct}%)</span></span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    // Comentários nos 👎
+    const commentsHtml = p.rating_comments.length > 0 ? `
+      <div class="pilot-section">
+        <h3 class="pilot-h3">Comentários no feedback negativo</h3>
+        <p class="section-hint">O que os testers disseram que faltou — insumo direto pra calibrar a KB.</p>
+        <div class="pilot-comments">
+          ${p.rating_comments.map(c => `
+            <div class="pilot-comment-card">
+              <div class="pilot-comment-meta">
+                <strong>${escapeHtml(c.username)}</strong> · ${escapeHtml(formatDate(c.at))} · ${c.rating === -1 ? '👎' : '👍'}
+              </div>
+              <div class="pilot-comment-question">"${escapeHtml(c.question)}"</div>
+              <div class="pilot-comment-text">${escapeHtml(c.comment)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : `
+      <div class="pilot-section">
+        <h3 class="pilot-h3">Comentários no feedback negativo</h3>
+        <div class="empty-state">Nenhum comentário ainda. Quando um tester clicar 👎 e descrever o que faltou, aparece aqui.</div>
+      </div>
+    `;
+
+    return `
+      ${renderPilotPeriodHtml()}
+      ${summaryHtml}
+      ${usersTable}
+      ${catHtml}
+      ${commentsHtml}
+    `;
+  }
+
+  function renderPilotPeriodHtml() {
+    return `
+      <div class="period-toggle" style="margin-bottom:18px">
+        <button class="${dashPeriod === 7  ? 'active' : ''}" data-pilot-period="7">7 dias</button>
+        <button class="${dashPeriod === 15 ? 'active' : ''}" data-pilot-period="15">15 dias</button>
+        <button class="${dashPeriod === 30 ? 'active' : ''}" data-pilot-period="30">30 dias</button>
+      </div>
+    `;
   }
 
   function renderTrainedHtml() {

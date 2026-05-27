@@ -124,6 +124,11 @@ alter table zi_interactions add column if not exists resolved_at timestamptz;
 alter table zi_interactions add column if not exists username text;
 create index if not exists zi_interactions_username_idx on zi_interactions (username);
 
+-- Coluna category — tópico dominante dos chunks recuperados na resposta.
+-- Permite agregar "60% das perguntas são de benefícios" no dashboard de pilot.
+alter table zi_interactions add column if not exists category text;
+create index if not exists zi_interactions_category_idx on zi_interactions (category);
+
 create index if not exists zi_interactions_created_idx on zi_interactions (created_at desc);
 create index if not exists zi_interactions_rating_idx on zi_interactions (rating) where rating is not null;
 create index if not exists zi_interactions_escalated_idx on zi_interactions (escalated, resolved_at) where escalated = true;
