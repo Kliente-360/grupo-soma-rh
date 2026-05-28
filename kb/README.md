@@ -15,8 +15,12 @@ Markdown estruturado dos documentos oficiais de RH da NV (Grupo Soma / AZZAS 215
 | [regras_desconto.md](regras_desconto.md) | `beneficios` | Colaborador | 4 | Regras de Desconto NV (50% NV / 30% AZZAS) |
 | [retirada_uniforme.md](retirada_uniforme.md) | `beneficios` | Time Loja | 8 | Regras para Retirada de Uniforme NV |
 | [modelos_trabalho.md](modelos_trabalho.md) | `gestao_pessoas` | Colaborador | 11 | Movimento NV+Flex — Manual e Boas Práticas |
+| [recrutamento_interno_colaborador.md](recrutamento_interno_colaborador.md) | `gestao_pessoas` | Colaborador | 18 | FAQ Movimenta — Programa de Recrutamento Interno (Colaborador) |
+| [recrutamento_interno_gestor.md](recrutamento_interno_gestor.md) | `gestao_pessoas` | Gestor | 22 | FAQ Movimenta — Programa de Recrutamento Interno (Líderes) |
+| [politica_recrutamento_interno.md](politica_recrutamento_interno.md) | `gestao_pessoas` | Colaborador | 14 | Política formal de Recrutamento Interno (Movimenta) |
+| [onboarding_nv.md](onboarding_nv.md) | `admissao` | Colaborador | 37 | Onboarding NV 2026 — Integração de novos colaboradores |
 
-**Total:** 98 chunks (boundaries em H2).
+**Total:** 189 chunks (boundaries em H2).
 
 ## Convenção de Estrutura
 
