@@ -971,6 +971,118 @@ async function handleAdminPilot(body) {
   });
 }
 
+// ---------------- Admin: Reingest KB (root admin only) ----------------
+// Reingere um arquivo MD da KB: fetch do GitHub raw → parse YAML frontmatter +
+// chunks por H2 → embed via Gemini → delete+insert no Supabase.
+// Idempotente por source_file (apaga todos chunks daquele arquivo antes de inserir).
+// Processa 1 arquivo por chamada pra não estourar timeout da edge function.
+
+const KB_FILES = [
+  "admissao_colaborador.md",
+  "admissao_demissao_gestor.md",
+  "assistencia_medica_odontologica.md",
+  "beneficios.md",
+  "saude_bem_estar.md",
+  "seguranca_informacao.md",
+  "regras_desconto.md",
+  "retirada_uniforme.md",
+  "modelos_trabalho.md",
+  "recrutamento_interno_colaborador.md",
+  "recrutamento_interno_gestor.md",
+  "politica_recrutamento_interno.md",
+  "onboarding_nv.md",
+];
+
+const KB_GITHUB_RAW = "https://raw.githubusercontent.com/Kliente-360/grupo-soma-rh/main/kb/";
+
+// Parse YAML frontmatter simples (chave: valor) + split por H2
+function parseKbMarkdown(md) {
+  const frontmatter = {};
+  let body = md;
+  const m = md.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (m) {
+    for (const line of m[1].split("\n")) {
+      const kv = line.match(/^([a-z_]+):\s*(.+)$/i);
+      if (kv) frontmatter[kv[1].trim()] = kv[2].trim();
+    }
+    body = m[2];
+  }
+  // Quebra por H2 — cada seção começa em "## " e vai até o próximo "## " ou fim
+  const chunks = [];
+  const sections = body.split(/^## /m);
+  // [0] é o preâmbulo (antes do 1º H2) — ignora
+  for (let i = 1; i < sections.length; i++) {
+    const lines = sections[i].split("\n");
+    const title = lines[0].trim();
+    const content = `## ${title}\n${lines.slice(1).join("\n")}`.trim();
+    if (title && content) chunks.push({ title, content });
+  }
+  return { frontmatter, chunks };
+}
+
+async function handleAdminReingestKb(body) {
+  const denied = checkRootAdmin(body); if (denied) return denied;
+  const sourceFile = body.source_file;
+
+  // Sem source_file → retorna lista de arquivos disponíveis pro client iterar
+  if (!sourceFile) {
+    return json({ files: KB_FILES, github_raw: KB_GITHUB_RAW });
+  }
+  if (!KB_FILES.includes(sourceFile)) {
+    return err(400, `arquivo desconhecido: ${sourceFile}`);
+  }
+
+  // 1) Fetch MD do GitHub raw (público, sem auth)
+  const r = await fetch(KB_GITHUB_RAW + sourceFile);
+  if (!r.ok) return err(500, `fetch MD falhou: HTTP ${r.status}`, { detail: sourceFile });
+  const md = await r.text();
+
+  // 2) Parse frontmatter + chunks por H2
+  const { frontmatter, chunks } = parseKbMarkdown(md);
+  if (chunks.length === 0) return err(400, "nenhum chunk encontrado", { file: sourceFile });
+  const category = frontmatter.category || "outros";
+  const audience = frontmatter.audience || "colaborador";
+
+  // 3) Embed cada chunk EM PARALELO (Gemini aguenta concorrência tranquila)
+  const embeddings = await Promise.all(chunks.map(c => embed(c.content)));
+
+  // 4) Apaga chunks existentes do arquivo (idempotência)
+  const delResp = await supabaseFetch(
+    `/rest/v1/kb_chunks?source_file=eq.${encodeURIComponent(sourceFile)}`,
+    { method: "DELETE" },
+  );
+  if (!delResp.ok) {
+    return err(500, "delete falhou", { detail: await delResp.text() });
+  }
+
+  // 5) Insere todos os chunks novos numa request
+  const rows = chunks.map((c, i) => ({
+    source_file: sourceFile,
+    category,
+    audience,
+    section_title: c.title,
+    content: c.content,
+    token_count: Math.floor(c.content.length / 4),
+    embedding: embeddings[i],
+    metadata: {},
+  }));
+  const insResp = await supabaseFetch("/rest/v1/kb_chunks", {
+    method: "POST",
+    body: JSON.stringify(rows),
+  });
+  if (!insResp.ok) {
+    return err(500, "insert falhou", { detail: await insResp.text() });
+  }
+
+  return json({
+    source_file: sourceFile,
+    category,
+    audience,
+    chunks_inserted: rows.length,
+    titles: chunks.map(c => c.title),
+  });
+}
+
 // ---------------- Main handler ----------------
 export default async (req) => {
   if (req.method === "GET") {
@@ -1025,6 +1137,7 @@ export default async (req) => {
       case "admin_clear_feedback": return await handleAdminClearFeedback(body);
       case "admin_metrics":        return await handleAdminMetrics(body);
       case "admin_pilot":          return await handleAdminPilot(body);
+      case "admin_reingest_kb":    return await handleAdminReingestKb(body);
       default:                     return err(400, `unknown action: ${action}`);
     }
   } catch (e) {

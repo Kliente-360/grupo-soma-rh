@@ -577,6 +577,71 @@
       line-height: 1.45;
     }
 
+    /* ---------- KB ingest panel ---------- */
+    .kb-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .kb-summary {
+      font-size: 12.5px;
+      color: var(--nv-coffee-mute);
+      margin-left: auto;
+    }
+    .kb-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .kb-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--nv-paper);
+      border: 1px solid var(--nv-line);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+    }
+    .kb-row code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px;
+      color: var(--nv-coffee);
+    }
+    .kb-badge {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      letter-spacing: -0.005em;
+      white-space: nowrap;
+    }
+    .kb-idle    { background: var(--nv-line); color: var(--nv-coffee-mute); }
+    .kb-running { background: var(--nv-clay-light); color: var(--nv-clay-dark); animation: kbPulse 1.4s infinite; }
+    .kb-done    { background: var(--nv-success-soft, #d6e8db); color: #2c5d3f; }
+    .kb-error   { background: var(--nv-danger-soft, #f1d8d2); color: #7a2e1a; }
+    @keyframes kbPulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.55; }
+    }
+    .kb-single { font-size: 12px; padding: 5px 12px; }
+    .kb-log {
+      margin-top: 20px;
+      max-height: 260px;
+      overflow-y: auto;
+      background: #1c1b1b;
+      color: #d4d4d4;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .kb-log-line { white-space: pre-wrap; }
+
     /* ---------- Admin: sub-tabs ---------- */
     .subtabs {
       display: flex;
@@ -2371,6 +2436,7 @@
   let adminFeedback = [];
   let metricsData  = null;
   let pilotData    = null;                      // só populado se isRootAdmin()
+  let kbState      = { files: null, status: {}, running: false, log: [] };
   let selectedUsernames = [];   // [] = todos; array com usernames = filtrados
   let filterPanelOpen = false;
   let adminSubTab = 'pending';                  // 'pending' | 'dashboard' | 'feedback' | 'trained' | 'pilot'
@@ -2444,9 +2510,12 @@
 
     // Painel autenticado com sub-tabs
     const pendingBadge = pendingCount > 0 ? `<span class="subtab-badge">${pendingCount}</span>` : '';
-    // Aba "Pilot" só pro root admin (gestor do pilot, não os testers)
+    // Abas "Pilot" e "KB" só pro root admin (gestor do pilot, não os testers)
     const pilotTab = isRootAdmin()
       ? `<button class="subtab-btn ${adminSubTab === 'pilot' ? 'active' : ''}" data-subtab="pilot">Pilot</button>`
+      : '';
+    const kbTab = isRootAdmin()
+      ? `<button class="subtab-btn ${adminSubTab === 'kb' ? 'active' : ''}" data-subtab="kb">KB</button>`
       : '';
     root.innerHTML = `
       <div class="subtabs" role="tablist">
@@ -2455,6 +2524,7 @@
         <button class="subtab-btn ${adminSubTab === 'feedback'  ? 'active' : ''}" data-subtab="feedback">Feedback dos colaboradores</button>
         <button class="subtab-btn ${adminSubTab === 'trained'   ? 'active' : ''}" data-subtab="trained">Respostas treinadas</button>
         ${pilotTab}
+        ${kbTab}
       </div>
       <div id="subtab-content">${renderSubTabContent()}</div>
       <div class="admin-footer">
@@ -2467,6 +2537,7 @@
     if (adminSubTab === 'dashboard') bindMetricsHandlers();
     if (adminSubTab === 'feedback')  bindFeedbackFilterHandlers();
     if (adminSubTab === 'pilot')     bindPilotHandlers();
+    if (adminSubTab === 'kb')        bindKbHandlers();
   }
 
   function renderSubTabContent() {
@@ -2504,6 +2575,13 @@
         <h2>Pilot — análise por usuário</h2>
         <p class="section-hint">Telemetria detalhada por colaborador testando a Zi: frequência, recência, retenção, tópicos e comentários. Visível só pra você.</p>
         <div id="pilot-root">${renderPilotHtml()}</div>
+      </section>
+    `;
+    if (adminSubTab === 'kb' && isRootAdmin()) return `
+      <section class="admin-section">
+        <h2>Base de conhecimento — Reingestar</h2>
+        <p class="section-hint">Reprocessa os documentos da KB: puxa do GitHub, gera embeddings via Gemini, regrava no Supabase. Use depois de adicionar ou editar arquivos em <code>kb/*.md</code>.</p>
+        <div id="kb-root">${renderKbHtml()}</div>
       </section>
     `;
     return '';
@@ -3096,6 +3174,121 @@
         <button class="${dashPeriod === 30 ? 'active' : ''}" data-pilot-period="30">30 dias</button>
       </div>
     `;
+  }
+
+  /* ---------------- KB ingest (root admin only) ---------------- */
+  function renderKbHtml() {
+    if (!kbState.files) {
+      return `
+        <button class="btn btn-primary" id="kb-load">Carregar lista de arquivos</button>
+      `;
+    }
+    const buttonsDisabled = kbState.running;
+    const fileRows = kbState.files.map(f => {
+      const st = kbState.status[f] || { state: 'idle' };
+      let badge;
+      if (st.state === 'running') badge = `<span class="kb-badge kb-running">processando…</span>`;
+      else if (st.state === 'done') badge = `<span class="kb-badge kb-done">${st.count} chunks ✓</span>`;
+      else if (st.state === 'error') badge = `<span class="kb-badge kb-error">erro: ${escapeHtml(st.error || '')}</span>`;
+      else badge = `<span class="kb-badge kb-idle">aguardando</span>`;
+      return `
+        <div class="kb-row">
+          <code>${escapeHtml(f)}</code>
+          ${badge}
+          <button class="btn btn-ghost kb-single" data-kb-file="${escapeHtml(f)}" ${buttonsDisabled ? 'disabled' : ''}>Só este</button>
+        </div>
+      `;
+    }).join('');
+
+    const logHtml = kbState.log.length === 0 ? '' : `
+      <div class="kb-log">
+        ${kbState.log.map(l => `<div class="kb-log-line">${escapeHtml(l)}</div>`).join('')}
+      </div>
+    `;
+
+    return `
+      <div class="kb-actions">
+        <button class="btn btn-primary" id="kb-reingest-all" ${buttonsDisabled ? 'disabled' : ''}>
+          ${kbState.running ? 'Processando…' : 'Reingestar todos'}
+        </button>
+        <button class="btn btn-ghost" id="kb-reload" ${buttonsDisabled ? 'disabled' : ''}>Recarregar lista</button>
+        <span class="kb-summary">${kbState.files.length} arquivos · ${Object.values(kbState.status).filter(s => s.state === 'done').reduce((a, s) => a + (s.count || 0), 0)} chunks no total</span>
+      </div>
+      <div class="kb-list">${fileRows}</div>
+      ${logHtml}
+    `;
+  }
+
+  async function loadKbFiles() {
+    const auth = getAuth();
+    if (!auth || !isRootAdmin()) return;
+    try {
+      const data = await apiPost('admin_reingest_kb', { auth }); // sem source_file → lista
+      kbState.files = data.files;
+      kbState.status = {};
+      reRenderKb();
+    } catch (e) {
+      toast('Não rolou carregar lista 😬');
+      console.error('[kb] loadFiles falhou:', e);
+    }
+  }
+
+  async function reingestKbFile(file) {
+    const auth = getAuth();
+    kbState.status[file] = { state: 'running' };
+    reRenderKb();
+    kbLog(`▶ ${file}`);
+    try {
+      const t0 = Date.now();
+      const data = await apiPost('admin_reingest_kb', { auth, source_file: file });
+      const dt = ((Date.now() - t0) / 1000).toFixed(1);
+      kbState.status[file] = { state: 'done', count: data.chunks_inserted };
+      kbLog(`✓ ${file} — ${data.chunks_inserted} chunks em ${dt}s`);
+    } catch (e) {
+      kbState.status[file] = { state: 'error', error: String(e.message || e) };
+      kbLog(`✗ ${file} — ${e.message || e}`);
+    }
+    reRenderKb();
+  }
+
+  async function reingestAllKb() {
+    if (!kbState.files || kbState.running) return;
+    kbState.running = true;
+    kbState.log = [];
+    kbLog(`Iniciando reingest de ${kbState.files.length} arquivos…`);
+    reRenderKb();
+    for (const f of kbState.files) {
+      await reingestKbFile(f);
+    }
+    kbState.running = false;
+    const doneCount = Object.values(kbState.status).filter(s => s.state === 'done').reduce((a, s) => a + (s.count || 0), 0);
+    const errCount  = Object.values(kbState.status).filter(s => s.state === 'error').length;
+    kbLog(`Finalizado: ${doneCount} chunks inseridos · ${errCount} erros`);
+    reRenderKb();
+    toast(errCount === 0 ? 'KB reingestada com sucesso ✨' : `Finalizado com ${errCount} erro(s)`);
+  }
+
+  function kbLog(msg) {
+    const ts = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+    kbState.log.push(`[${ts}] ${msg}`);
+  }
+
+  function reRenderKb() {
+    const root = document.getElementById('kb-root');
+    if (root) root.innerHTML = renderKbHtml();
+    bindKbHandlers();
+  }
+
+  function bindKbHandlers() {
+    const loadBtn = document.getElementById('kb-load');
+    if (loadBtn) loadBtn.onclick = loadKbFiles;
+    const reloadBtn = document.getElementById('kb-reload');
+    if (reloadBtn) reloadBtn.onclick = loadKbFiles;
+    const allBtn = document.getElementById('kb-reingest-all');
+    if (allBtn) allBtn.onclick = reingestAllKb;
+    document.querySelectorAll('[data-kb-file]').forEach(btn => {
+      btn.onclick = () => reingestKbFile(btn.dataset.kbFile);
+    });
   }
 
   function renderTrainedHtml() {
