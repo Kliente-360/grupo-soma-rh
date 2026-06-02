@@ -821,6 +821,20 @@ async function handleAdminMetrics(body) {
     avgResolutionMin = Math.round(totalMin / resolvedInPeriod.length);
   }
 
+  // ---------- Distribuição de tópicos (categoria dominante dos chunks recuperados) ----------
+  const catTotals = {};
+  for (const i of inPeriod) {
+    const key = i.category || null;
+    catTotals[key] = (catTotals[key] || 0) + 1;
+  }
+  const categoryDistribution = Object.entries(catTotals)
+    .map(([category, count]) => ({
+      category, // pode ser null (interações sem category logada)
+      count,
+      pct: totalMessages > 0 ? +((count / totalMessages) * 100).toFixed(1) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
   // ---------- Tempo economizado (baseline: 2 dias úteis × 8h = 16h por ticket manual) ----------
   const BUSINESS_DAYS_BASELINE = 2;
   const HOURS_PER_BUSINESS_DAY = 8;
@@ -856,6 +870,7 @@ async function handleAdminMetrics(body) {
       hours_per_business_day: HOURS_PER_BUSINESS_DAY,
       hours_per_ticket: hoursPerTicket,
     },
+    category_distribution: categoryDistribution,
     total_interactions: interactions.length,
   });
 }

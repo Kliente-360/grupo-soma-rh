@@ -2607,6 +2607,7 @@
       ${renderKpisHtml(m)}
       ${renderChartHtml(m)}
       ${renderSplitHtml(m)}
+      ${renderTopicsChartHtml(m)}
       ${renderSlaHtml(m)}
       ${renderEscalationsTableHtml(m)}
     `;
@@ -2822,6 +2823,34 @@
     `;
   }
 
+  function renderTopicsChartHtml(m) {
+    const dist = groupCategoryDistribution(m.category_distribution || []);
+    const periodLabel = m.period_days === 30 ? 'no mês' : (m.period_days === 15 ? 'em 15 dias' : 'em 7 dias');
+    if (dist.length === 0) {
+      return `
+        <div class="chart-card" style="margin-top:18px">
+          <h3>Tópicos das perguntas · ${periodLabel}</h3>
+          <div class="empty-state" style="font-size:13px;">Sem dados ainda. Conforme os testers usarem a Zi, os tópicos das perguntas vão aparecer aqui.</div>
+        </div>
+      `;
+    }
+    return `
+      <div class="chart-card" style="margin-top:18px">
+        <h3>Tópicos das perguntas · ${periodLabel}</h3>
+        <p class="section-hint" style="margin-bottom:14px">Distribuição agregada por tema. Útil pra entender onde concentram as dúvidas — sinal direto pra reforçar a KB ou treinar respostas específicas.</p>
+        <div class="pilot-cat-list">
+          ${dist.map(c => `
+            <div class="pilot-cat-row">
+              <span class="pilot-cat-name">${escapeHtml(c.label)}</span>
+              <div class="pilot-cat-bar"><div class="pilot-cat-bar-fill" style="width:${c.pct}%"></div></div>
+              <span class="pilot-cat-num">${c.count} <span style="color:var(--nv-coffee-mute)">(${c.pct}%)</span></span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   function renderSlaHtml(m) {
     const sla = m.sla;
     const periodLabel = m.period_days === 30 ? 'no mês' : (m.period_days === 15 ? 'em 15 dias' : 'em 7 dias');
@@ -3028,6 +3057,42 @@
     });
   }
 
+  /* ---------------- Categorias de tópicos: labels amigáveis + bucket "Outros" ---------------- */
+  // Categorias raw vêm da KB (frontmatter de cada *.md). O dashboard exibe nomes humanos
+  // e agrupa qualquer categoria desconhecida ou null em "Outros".
+  const CATEGORY_LABELS = {
+    admissao:             'Admissão e Onboarding',
+    beneficios:           'Benefícios',
+    beneficios_saude:     'Plano de Saúde',
+    saude_seguranca:      'Saúde e Bem-Estar',
+    seguranca_informacao: 'Segurança da Informação',
+    gestao_pessoas:       'Gestão de Pessoas',
+  };
+  function categoryLabel(cat) {
+    if (!cat) return 'Outros';
+    return CATEGORY_LABELS[cat] || 'Outros';
+  }
+  // Recebe distribuição raw [{category, count, pct}] e agrupa por label amigável
+  // (mesclando "Outros" e qualquer categoria desconhecida num único bucket).
+  function groupCategoryDistribution(raw) {
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+    const grouped = new Map();
+    let totalCount = 0;
+    for (const item of raw) {
+      const label = categoryLabel(item.category);
+      const cur = grouped.get(label) || { label, count: 0 };
+      cur.count += item.count;
+      grouped.set(label, cur);
+      totalCount += item.count;
+    }
+    return Array.from(grouped.values())
+      .map(g => ({
+        ...g,
+        pct: totalCount > 0 ? +((g.count / totalCount) * 100).toFixed(1) : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+  }
+
   function recencyLabel(r) {
     if (r === 'ativo_24h') return '🟢 Ativo (24h)';
     if (r === 'ativo_7d')  return '🟡 Últimos 7d';
@@ -3107,7 +3172,7 @@
                   <td>${u.avg_per_active_day}</td>
                   <td>${Math.round(u.autonomous_rate * 100)}%</td>
                   <td>${u.like_ratio !== null ? Math.round(u.like_ratio * 100) + '%' : '—'} <span style="color:var(--nv-coffee-mute);font-size:12px">(${u.ups}👍/${u.downs}👎)</span></td>
-                  <td>${u.top_category ? escapeHtml(u.top_category) : '—'}</td>
+                  <td>${escapeHtml(categoryLabel(u.top_category))}</td>
                   <td>${u.last_at ? escapeHtml(formatDate(u.last_at)) : '—'}</td>
                 </tr>
               `).join('')}
@@ -3117,14 +3182,15 @@
       </div>
     `;
 
-    // Distribuição de categorias
-    const catHtml = p.category_distribution.length > 0 ? `
+    // Distribuição de categorias — usa labels amigáveis + bucket "Outros"
+    const groupedDist = groupCategoryDistribution(p.category_distribution || []);
+    const catHtml = groupedDist.length > 0 ? `
       <div class="pilot-section">
         <h3 class="pilot-h3">Tópicos das perguntas</h3>
         <div class="pilot-cat-list">
-          ${p.category_distribution.map(c => `
+          ${groupedDist.map(c => `
             <div class="pilot-cat-row">
-              <span class="pilot-cat-name">${escapeHtml(c.category)}</span>
+              <span class="pilot-cat-name">${escapeHtml(c.label)}</span>
               <div class="pilot-cat-bar"><div class="pilot-cat-bar-fill" style="width:${c.pct}%"></div></div>
               <span class="pilot-cat-num">${c.count} <span style="color:var(--nv-coffee-mute)">(${c.pct}%)</span></span>
             </div>
