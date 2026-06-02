@@ -2848,18 +2848,17 @@
 
   function renderTopicsChartHtml(m) {
     const dist = groupCategoryDistribution(m.category_distribution || []);
-    const periodLabel = m.period_days === 30 ? 'no mês' : (m.period_days === 15 ? 'em 15 dias' : 'em 7 dias');
     if (dist.length === 0) {
       return `
         <div class="chart-card" style="margin-top:18px">
-          <h3>Tópicos das perguntas · ${periodLabel}</h3>
+          <h3>Tópicos das perguntas</h3>
           <div class="empty-state" style="font-size:13px;">Sem dados ainda. Conforme os testers usarem a Zi, os tópicos das perguntas vão aparecer aqui.</div>
         </div>
       `;
     }
     return `
       <div class="chart-card" style="margin-top:18px">
-        <h3>Tópicos das perguntas · ${periodLabel}</h3>
+        <h3>Tópicos das perguntas</h3>
         <p class="section-hint" style="margin-bottom:14px">Distribuição agregada por tema. Útil pra entender onde concentram as dúvidas — sinal direto pra reforçar a KB ou treinar respostas específicas.</p>
         <div class="pilot-cat-list">
           ${dist.map(c => `
@@ -3205,53 +3204,18 @@
       </div>
     `;
 
-    // Distribuição de categorias — usa labels amigáveis + bucket "Outros"
-    const groupedDist = groupCategoryDistribution(p.category_distribution || []);
-    const catHtml = groupedDist.length > 0 ? `
-      <div class="pilot-section">
-        <h3 class="pilot-h3">Tópicos das perguntas</h3>
-        <div class="pilot-cat-list">
-          ${groupedDist.map(c => `
-            <div class="pilot-cat-row">
-              <span class="pilot-cat-name">${escapeHtml(c.label)}</span>
-              <div class="pilot-cat-bar"><div class="pilot-cat-bar-fill" style="width:${c.pct}%"></div></div>
-              <span class="pilot-cat-num">${c.count} <span style="color:var(--nv-coffee-mute)">(${c.pct}%)</span></span>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    ` : '';
+    // "Tópicos das perguntas" foi movido pra aba Dashboard (renderTopicsChartHtml).
+    // Pilot fica focado em KPIs, tabela por tester e comentários.
+    const catHtml = '';
 
-    // Comentários nos 👎
-    const commentsHtml = p.rating_comments.length > 0 ? `
-      <div class="pilot-section">
-        <h3 class="pilot-h3">Comentários no feedback negativo</h3>
-        <p class="section-hint">O que os testers disseram que faltou — insumo direto pra calibrar a KB.</p>
-        <div class="pilot-comments">
-          ${p.rating_comments.map(c => `
-            <div class="pilot-comment-card">
-              <div class="pilot-comment-meta">
-                <strong>${escapeHtml(c.username)}</strong> · ${escapeHtml(formatDate(c.at))} · ${c.rating === -1 ? '👎' : '👍'}
-              </div>
-              <div class="pilot-comment-question">"${escapeHtml(c.question)}"</div>
-              <div class="pilot-comment-text">${escapeHtml(c.comment)}</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    ` : `
-      <div class="pilot-section">
-        <h3 class="pilot-h3">Comentários no feedback negativo</h3>
-        <div class="empty-state">Nenhum comentário ainda. Quando um tester clicar 👎 e descrever o que faltou, aparece aqui.</div>
-      </div>
-    `;
+    // "Comentários no feedback negativo" foi movido pra aba Feedback dos colaboradores
+    // (agora aparece dentro do card de cada interação avaliada com 👎).
+    // Pilot fica focado em KPIs e tabela por tester — visão estratégica.
 
     return `
       ${renderPilotPeriodHtml()}
       ${summaryHtml}
       ${usersTable}
-      ${catHtml}
-      ${commentsHtml}
     `;
   }
 
