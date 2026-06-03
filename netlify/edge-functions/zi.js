@@ -701,7 +701,7 @@ async function handleAdminMetrics(body) {
   const periodDays = [30, 15, 7].includes(body.period_days) ? body.period_days : 30;
 
   const r = await supabaseFetch(
-    "/rest/v1/zi_interactions?select=id,session_id,question,answer,rating,rating_at,escalated,resolved_at,user_name,user_email,username,created_at&order=created_at.desc&limit=5000",
+    "/rest/v1/zi_interactions?select=id,session_id,question,answer,rating,rating_at,escalated,resolved_at,user_name,user_email,username,category,created_at&order=created_at.desc&limit=5000",
   );
   if (!r.ok) return err(500, "list interactions failed", { detail: await r.text() });
   const allInteractions = await r.json();
