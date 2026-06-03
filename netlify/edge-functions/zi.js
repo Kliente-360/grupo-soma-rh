@@ -455,7 +455,10 @@ async function handleChat(body) {
   const chunks = merged;
 
   // Telemetria de tópico: pega a categoria mais frequente nos chunks recuperados
-  // e registra na interaction (PATCH fire-and-forget, não bloqueia a resposta).
+  // e registra na interaction. AWAIT obrigatório — em edge functions Netlify,
+  // promises não-aguardadas podem ser canceladas quando a Response é retornada
+  // (especialmente com streaming). Fire-and-forget aqui resulta em PATCH perdido.
+  // Custo: ~50-80ms a mais antes do stream começar — aceitável.
   if (interactionId && chunks.length > 0) {
     const catCounts = chunks.reduce((acc, c) => {
       if (c.category) acc[c.category] = (acc[c.category] || 0) + 1;
@@ -463,8 +466,11 @@ async function handleChat(body) {
     }, {});
     const topCategory = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
     if (topCategory) {
-      patchInteraction(interactionId, { category: topCategory })
-        .catch(e => console.warn("patch category failed:", e?.message || e));
+      try {
+        await patchInteraction(interactionId, { category: topCategory });
+      } catch (e) {
+        console.warn("patch category failed:", e?.message || e);
+      }
     }
   }
 
