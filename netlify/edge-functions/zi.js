@@ -35,6 +35,7 @@ const CREDENTIALS = {
   "nathalie.souza":  { password: "q0qtqphxa1", role: "admin" },
   "paulo.cardozo":   { password: "5mwkrvnc7c", role: "admin" },
   "adriana.cerqueira": { password: "swxfzhnhwe", role: "admin" },
+  "camila.nsantos":    { password: "zsby536cli", role: "admin" },
 };
 
 // ---------------- Env helper ----------------
