@@ -1036,6 +1036,66 @@ async function handleAdminPilot(body) {
   });
 }
 
+// ---------------- Admin: Backfill categories (root admin only) ----------------
+// Recalcula a `category_new` das interações onde category_new IS NULL.
+// Mesma lógica usada em handleChat (embed → match_kb_chunks → categoria dominante).
+// Processa em batch de 30 por chamada pra caber no timeout da edge function (~50s).
+// Cliente deve loopar até `done: true`.
+
+async function handleAdminBackfillCategories(body) {
+  const denied = checkRootAdmin(body); if (denied) return denied;
+  const batchSize = 30;
+
+  // 1) Pega próximo batch (category_new ainda null)
+  const r = await supabaseFetch(
+    `/rest/v1/zi_interactions?category_new=is.null&select=id,question&order=created_at.asc&limit=${batchSize}`,
+  );
+  if (!r.ok) return err(500, "fetch failed", { detail: await r.text() });
+  const interactions = await r.json();
+
+  // 2) Processa um a um (sequencial pra evitar burst no rate-limit do Gemini)
+  let processed = 0;
+  const errors = [];
+  for (const inter of interactions) {
+    try {
+      const question = String(inter.question || "").trim();
+      if (!question) {
+        // Sem pergunta → marca como "outros" pra não reprocessar
+        await patchInteraction(inter.id, { category_new: "outros" });
+        processed++;
+        continue;
+      }
+      // Mesma lógica de handleChat: embed → match → categoria dominante
+      const emb = await embed(question);
+      const chunks = await matchChunks(emb, 8);
+      const catCounts = chunks.reduce((acc, c) => {
+        if (c.category) acc[c.category] = (acc[c.category] || 0) + 1;
+        return acc;
+      }, {});
+      const topCategory = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "outros";
+      await patchInteraction(inter.id, { category_new: topCategory });
+      processed++;
+    } catch (e) {
+      errors.push({ id: inter.id, error: e?.message || String(e) });
+    }
+  }
+
+  // 3) Conta quantos ainda restam
+  const remR = await supabaseFetch(
+    "/rest/v1/zi_interactions?category_new=is.null&select=id",
+    { method: "HEAD", headers: { "Prefer": "count=exact" } },
+  );
+  const remRange = remR.headers.get("Content-Range") || "*/0";
+  const remaining = parseInt((remRange.split("/")[1] || "0"), 10);
+
+  return json({
+    processed,
+    remaining,
+    done: remaining === 0 && processed === interactions.length,
+    errors,
+  });
+}
+
 // ---------------- Admin: Reingest KB (root admin only) ----------------
 // Reingere um arquivo MD da KB: fetch do GitHub raw → parse YAML frontmatter +
 // chunks por H2 → embed via Gemini → delete+insert no Supabase.
@@ -1203,6 +1263,7 @@ export default async (req) => {
       case "admin_metrics":        return await handleAdminMetrics(body);
       case "admin_pilot":          return await handleAdminPilot(body);
       case "admin_reingest_kb":    return await handleAdminReingestKb(body);
+      case "admin_backfill_categories": return await handleAdminBackfillCategories(body);
       default:                     return err(400, `unknown action: ${action}`);
     }
   } catch (e) {
