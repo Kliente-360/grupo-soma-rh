@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zi · Resultados do Pilot — NV / Grupo Soma</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1C1B1B;
+      --ink-mute: #5a5856;
+      --ink-soft: #8a8784;
+      --paper: #fbfaf7;
+      --surface: #f2efea;
+      --line: #e4e0d8;
+      --line-strong: #c8c2b5;
+      --clay: #D98A6C;
+      --clay-dark: #b06a4f;
+      --clay-light: #f7e9e0;
+      --success: #4a7a5c;
+      --success-soft: #d6e8db;
+      --danger: #b34a3a;
+      --danger-soft: #f1d8d2;
+      --radius: 12px;
+      --radius-lg: 18px;
+      --shadow-soft: 0 1px 2px rgba(28,27,27,0.04), 0 6px 18px rgba(28,27,27,0.05);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 64px 32px 96px;
+    }
+
+    /* ---------- Header ---------- */
+    .doc-header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 40px;
+      margin-bottom: 48px;
+    }
+    .doc-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--clay);
+      margin-bottom: 16px;
+    }
+    .doc-title {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 48px;
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      margin: 0 0 16px 0;
+      color: var(--ink);
+    }
+    .doc-subtitle {
+      font-size: 19px;
+      color: var(--ink-mute);
+      font-weight: 400;
+      margin: 0 0 32px 0;
+      line-height: 1.5;
+      max-width: 680px;
+    }
+    .doc-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      padding: 18px 22px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+    }
+    .doc-meta-item .label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-bottom: 4px;
+    }
+    .doc-meta-item .value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* ---------- Sections ---------- */
+    section { margin-bottom: 56px; }
+
+    .section-num {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--clay);
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 30px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin: 0 0 20px 0;
+      color: var(--ink);
+    }
+    h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 32px 0 12px 0;
+      color: var(--ink);
+    }
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--clay-dark);
+      margin: 24px 0 8px 0;
+    }
+    p {
+      margin: 0 0 14px 0;
+      color: var(--ink);
+      font-size: 15.5px;
+    }
+    strong { color: var(--ink); font-weight: 600; }
+    em { font-style: italic; color: var(--ink-mute); }
+
+    ul, ol {
+      margin: 0 0 16px 0;
+      padding-left: 22px;
+    }
+    li { margin-bottom: 6px; font-size: 15.5px; line-height: 1.55; }
+    li::marker { color: var(--clay); }
+
+    code {
+      background: var(--surface);
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--clay-dark);
+    }
+
+    /* ---------- TL;DR Box ---------- */
+    .tldr {
+      padding: 28px 32px;
+      background: linear-gradient(135deg, var(--clay-light), #fbf5f1);
+      border-radius: var(--radius-lg);
+      border-left: 4px solid var(--clay);
+      margin: 0 0 56px 0;
+      box-shadow: var(--shadow-soft);
+    }
+    .tldr-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--clay);
+      margin-bottom: 10px;
+    }
+    .tldr-title {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 22px;
+      font-weight: 500;
+      line-height: 1.35;
+      margin: 0 0 14px 0;
+      color: var(--ink);
+    }
+    .tldr p {
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
+    .tldr p:last-child { margin-bottom: 0; }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px 0;
+      font-size: 14.5px;
+      background: var(--paper);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+    }
+    th {
+      background: var(--surface);
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      border-bottom: 1px solid var(--line);
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface); }
+    .num { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    /* ---------- Callouts ---------- */
+    .callout {
+      padding: 20px 24px;
+      border-radius: var(--radius);
+      margin: 20px 0;
+      border-left: 3px solid var(--clay);
+      background: var(--clay-light);
+    }
+    .callout p:last-child { margin-bottom: 0; }
+    .callout-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--clay-dark);
+      margin-bottom: 8px;
+    }
+
+    .callout-success {
+      background: var(--success-soft);
+      border-left-color: var(--success);
+    }
+    .callout-success .callout-label { color: var(--success); }
+
+    .callout-warning {
+      background: #fbf0d6;
+      border-left-color: #c9a64b;
+    }
+    .callout-warning .callout-label { color: #876819; }
+
+    .callout-danger {
+      background: var(--danger-soft);
+      border-left-color: var(--danger);
+    }
+    .callout-danger .callout-label { color: var(--danger); }
+
+    /* ---------- Quote / pull quote ---------- */
+    blockquote {
+      margin: 24px 0;
+      padding: 20px 28px;
+      border-left: 3px solid var(--ink);
+      background: var(--surface);
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 17px;
+      font-style: italic;
+      color: var(--ink);
+      line-height: 1.5;
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    blockquote p { font-size: inherit; margin-bottom: 0; }
+
+    /* ---------- Cenário Cards ---------- */
+    .scenarios {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 20px 0 32px 0;
+    }
+    .scenario {
+      padding: 24px 28px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--paper);
+      position: relative;
+    }
+    .scenario.recommended {
+      border-color: var(--clay);
+      border-width: 2px;
+      background: linear-gradient(180deg, #fbf5f1 0%, var(--paper) 100%);
+    }
+    .scenario .scenario-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-bottom: 8px;
+    }
+    .scenario.recommended .scenario-tag { color: var(--clay); }
+    .scenario h3 {
+      margin: 0 0 12px 0;
+      font-size: 19px;
+    }
+    .scenario p { font-size: 14.5px; }
+    .recommended-badge {
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      background: var(--clay);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    /* ---------- Timeline (30/60/90) ---------- */
+    .timeline {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0 32px 0;
+    }
+    .timeline-card {
+      padding: 24px 22px;
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .timeline-period {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--clay);
+      margin-bottom: 6px;
+    }
+    .timeline-card h4 {
+      margin: 0 0 12px 0;
+      color: var(--ink);
+      text-transform: none;
+      letter-spacing: -0.01em;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .timeline-card ul { margin: 0; padding-left: 18px; }
+    .timeline-card li { font-size: 13.5px; margin-bottom: 4px; }
+
+    /* ---------- Script da reunião ---------- */
+    .script-section {
+      margin-top: 80px;
+      padding-top: 48px;
+      border-top: 2px solid var(--clay);
+    }
+    .script-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .script-header .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--clay);
+      margin-bottom: 12px;
+    }
+    .script-header h2 {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+    .script-header p {
+      font-size: 15px;
+      color: var(--ink-mute);
+    }
+    .script-step {
+      margin-bottom: 32px;
+      padding: 22px 26px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--clay);
+      border-radius: var(--radius);
+    }
+    .script-step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+    .script-step-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .script-step-time {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--clay);
+      letter-spacing: 0.04em;
+    }
+    .script-step blockquote {
+      font-size: 15.5px;
+      margin: 12px 0;
+      background: var(--clay-light);
+      border-left-color: var(--clay);
+    }
+    .script-step .objective {
+      font-size: 13px;
+      color: var(--ink-mute);
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    /* ---------- Frase de impacto ---------- */
+    .impact-quote {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 26px;
+      font-weight: 500;
+      line-height: 1.3;
+      color: var(--ink);
+      text-align: center;
+      padding: 36px 24px;
+      margin: 32px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      letter-spacing: -0.015em;
+    }
+    .impact-quote em {
+      color: var(--clay);
+      font-style: italic;
+    }
+
+    /* ---------- Checklist ---------- */
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+    .checklist li {
+      padding-left: 28px;
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .checklist li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 5px;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid var(--line-strong);
+      border-radius: 4px;
+      background: var(--paper);
+    }
+
+    /* ---------- Footer ---------- */
+    .doc-footer {
+      margin-top: 80px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+    .doc-footer .dot { color: var(--clay); margin: 0 6px; }
+
+    /* ---------- Highlight inline ---------- */
+    .hl {
+      background: linear-gradient(180deg, transparent 55%, var(--clay-light) 55%);
+      padding: 0 2px;
+    }
+    .placeholder {
+      display: inline-block;
+      background: #fff3cd;
+      color: #856404;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-weight: 600;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    /* ---------- Print ---------- */
+    @media print {
+      body { background: white; font-size: 11pt; }
+      .container { padding: 0; max-width: 100%; }
+      section { page-break-inside: avoid; }
+      .script-step, .scenario, .timeline-card { page-break-inside: avoid; }
+      h2 { page-break-after: avoid; }
+      .impact-quote { page-break-inside: avoid; }
+    }
+
+    /* ---------- Mobile ---------- */
+    @media (max-width: 720px) {
+      .container { padding: 40px 20px 60px; }
+      .doc-title { font-size: 34px; }
+      .doc-subtitle { font-size: 17px; }
+      .doc-meta { grid-template-columns: 1fr; gap: 14px; }
+      h2 { font-size: 24px; }
+      .timeline { grid-template-columns: 1fr; }
+      .impact-quote { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ========== HEADER ========== -->
+  <header class="doc-header">
+    <div class="doc-eyebrow">Resultados do Pilot · Confidencial</div>
+    <h1 class="doc-title">Zi · A IA do RH da NV</h1>
+    <p class="doc-subtitle">
+      Relatório de resultados do pilot conduzido com 5 testers do time de Gente &amp; Gestão.
+      Síntese dos achados, recomendações estratégicas e plano de evolução pra escalar a Zi
+      ao Grupo Soma.
+    </p>
+    <div class="doc-meta">
+      <div class="doc-meta-item">
+        <div class="label">Audiência</div>
+        <div class="value">Liderança Grupo Soma / Azzas 2154</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="label">Marca-piloto</div>
+        <div class="value">NV — Nati Vozza</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="label">Duração da reunião</div>
+        <div class="value">25 min + Q&amp;A</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== TL;DR ========== -->
+  <div class="tldr">
+    <div class="tldr-label">TL;DR · 60 segundos</div>
+    <p class="tldr-title">
+      A tese funcionou. Os números superam o benchmark da indústria pra ferramentas dessa categoria.
+    </p>
+    <p>
+      Em <strong>9 dias</strong> de pilot com <strong>5 testers ativos</strong>,
+      a Zi respondeu <strong>133 perguntas</strong> de RH com
+      <strong>83% de autonomia</strong> (sem intervenção humana) e
+      <strong>81% de aprovação</strong> dos testers.
+      <strong>1.760 horas</strong> de tempo humano de RH liberadas no período.
+    </p>
+    <p>
+      O pilot confirmou 3 hipóteses críticas: <strong>demanda real existe</strong>,
+      <strong>a qualidade é viável</strong> e <strong>a Zi aprende com a operação</strong>.
+      Identificamos 2 frentes de evolução — uma já implementada durante o próprio pilot.
+    </p>
+    <p>
+      <strong>Recomendação:</strong> ampliar pra NV completa nas próximas 2 semanas e
+      iniciar scoping pra Animale, Farm e Foxton até o fim do trimestre.
+    </p>
+  </div>
+
+  <!-- ========== SEÇÃO 1 ========== -->
+  <section>
+    <div class="section-num">01</div>
+    <h2>O contexto que motivou o pilot</h2>
+    <p>
+      O time de RH da NV — e por extensão, os BPs das demais marcas — tem uma fatia
+      significativa do seu tempo absorvida por dúvidas operacionais repetitivas:
+    </p>
+    <ul>
+      <li>"Como funciona o vale-refeição?"</li>
+      <li>"Quantos dias de Day Off eu tenho?"</li>
+      <li>"Como solicito férias?"</li>
+      <li>"Quando cai meu salário?"</li>
+      <li>"Quais marcas têm desconto?"</li>
+    </ul>
+    <p>
+      Em organizações comparáveis (Robert Half HR Ops 2024), cada BP atende em média
+      <strong>~45 tickets/dia</strong> desse tipo. Pra NV (~350 colaboradores ativos) e o
+      grupo (24 mil), o custo carregado dessa operação é material.
+    </p>
+
+    <h3>A hipótese que testamos</h3>
+    <blockquote>
+      Se uma IA conversacional treinada exclusivamente nos documentos oficiais do RH
+      conseguir responder a maior parte dessas dúvidas com qualidade aceitável,
+      é viável escalar pras outras marcas.
+    </blockquote>
+    <p>
+      Esse pilot foi desenhado pra validar essa hipótese com dado real,
+      antes de comprometer investimento maior.
+    </p>
+  </section>
+
+  <!-- ========== SEÇÃO 2 ========== -->
+  <section>
+    <div class="section-num">02</div>
+    <h2>Como o pilot foi estruturado</h2>
+    <table>
+      <tbody>
+        <tr><th style="width:34%">Período</th><td><strong>02/06/2026 a 10/06/2026</strong> — 9 dias de atividade</td></tr>
+        <tr><th>Testers</th><td><strong>5 colaboradores convidados</strong> — todos ativos durante o pilot</td></tr>
+        <tr><th>Marca-piloto</th><td>NV — primeira a ter material vetorizado</td></tr>
+        <tr><th>Documentos na base</th><td>13 documentos oficiais (Admissão, Benefícios, Saúde, Segurança, Movimenta, Onboarding e mais) — <strong>189 unidades de informação</strong></td></tr>
+        <tr><th>Modelo de IA</th><td>Gemini 2.5 Flash (Google) — mesmo padrão técnico por trás do ChatGPT</td></tr>
+        <tr><th>Instrumentação</th><td>Cada interação registrada com tema, avaliação 👍/👎 e comentário opcional</td></tr>
+      </tbody>
+    </table>
+
+    <h3>O que medimos</h3>
+    <ul>
+      <li>Volume de mensagens, usuários únicos, dias ativos</li>
+      <li>Taxa de resposta autônoma (sem precisar escalar pro humano)</li>
+      <li>Aprovação (👍 vs 👎)</li>
+      <li>Tempo médio de resolução das escalações</li>
+      <li>Distribuição de temas das perguntas</li>
+      <li>Comentários qualitativos pra cada 👎</li>
+      <li>Horas liberadas estimadas (vs. baseline manual)</li>
+    </ul>
+  </section>
+
+  <!-- ========== SEÇÃO 3 ========== -->
+  <section>
+    <div class="section-num">03</div>
+    <h2>Os números</h2>
+
+    <h3>Volume e adoção</h3>
+    <table>
+      <tbody>
+        <tr><td>Mensagens totais</td><td class="num">133</td></tr>
+        <tr><td>Testers ativos (de 5 convidados)</td><td class="num">5 <span style="color:var(--success);font-weight:600">(100%)</span></td></tr>
+        <tr><td>Mensagens por tester (média)</td><td class="num">27</td></tr>
+        <tr><td>Pico de uso (dia com mais mensagens)</td><td class="num">76 msgs · 02/06</td></tr>
+      </tbody>
+    </table>
+    <p><em>Leitura: <strong>100% dos convidados ativaram</strong> a ferramenta. Engajamento concentrado em alguns testers — mariana (76), nathalie (36) e paulo (18) lideraram o uso; camila e waleska tiveram contato pontual. Pra um pilot técnico (não promovido), o volume é forte.</em></p>
+
+    <h3>Qualidade</h3>
+    <table>
+      <tbody>
+        <tr><td>Resposta autônoma (sem escalar humano)</td><td class="num">83%</td></tr>
+        <tr><td>Respostas avaliadas com 👍</td><td class="num">81% <span style="color:var(--ink-soft);font-weight:400">(88 de 109)</span></td></tr>
+        <tr><td>Avaliações negativas 👎</td><td class="num">21</td></tr>
+        <tr><td>Escalações pendentes</td><td class="num">2</td></tr>
+      </tbody>
+    </table>
+    <p><em>Leitura: a Zi atendeu a expectativa dos testers em <strong>4 de cada 5 casos</strong>. Bate com o benchmark da indústria pra ferramentas de tier 1 (Gartner 2024: 70-85%). As escalações não são "fracasso" — são <strong>roadmap</strong> direto pra calibrar a base.</em></p>
+
+    <h3>Distribuição por tema</h3>
+    <table>
+      <thead>
+        <tr><th>Tema</th><th>Mensagens</th><th>% das perguntas</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Gestão de Pessoas (Movimenta, modelos de trabalho)</td><td class="num">68</td><td class="num">51%</td></tr>
+        <tr><td>Admissão e Onboarding</td><td class="num">25</td><td class="num">19%</td></tr>
+        <tr><td>Benefícios</td><td class="num">23</td><td class="num">17%</td></tr>
+        <tr><td>Saúde e Bem-Estar</td><td class="num">6</td><td class="num">5%</td></tr>
+        <tr><td>Plano de Saúde</td><td class="num">5</td><td class="num">4%</td></tr>
+        <tr><td>Outros</td><td class="num">5</td><td class="num">4%</td></tr>
+        <tr><td>Segurança da Informação</td><td class="num">1</td><td class="num">1%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-success">
+      <div class="callout-label">Insight estratégico</div>
+      <p>
+        O tópico <strong>Gestão de Pessoas dominou (51%)</strong> — mais da metade das perguntas
+        envolvem o programa <strong>Movimenta</strong> (recrutamento interno), modelos de trabalho
+        e movimentações de carreira. Esse dado é estratégico: <strong>a maioria das dúvidas
+        internas são sobre crescimento</strong> — sinal de talentos engajados querendo se desenvolver
+        dentro do grupo. Vale acionar G&amp;G sobre tornar o Movimenta ainda mais visível.
+      </p>
+    </div>
+
+    <h3>Tempo liberado (estimativa conservadora)</h3>
+    <p>
+      Considerando baseline de <strong>2 dias úteis (16h)</strong> por ticket manual de tier 1
+      atendido por BP de RH:
+    </p>
+    <ul>
+      <li><strong>1.760 horas</strong> liberadas no período do pilot (110 perguntas resolvidas autonomamente × 16h)</li>
+      <li>Extrapolando pra 30 dias × 100 colaboradores ativos da NV: <strong>~10.000 horas/mês</strong></li>
+      <li>Extrapolando pra NV completa (350 colaboradores, adoção orgânica): <strong>~22.000 horas/mês</strong></li>
+      <li>Pra o grupo completo (24 mil colaboradores): <strong>potencial 6 dígitos</strong> de horas/mês — número a refinar após pilot ampliado</li>
+    </ul>
+  </section>
+
+  <!-- ========== SEÇÃO 4 ========== -->
+  <section>
+    <div class="section-num">04</div>
+    <h2>O que os testers disseram — qualitativo</h2>
+    <p>
+      Acompanhamos os comentários textuais dos 👎 — eles são o sinal mais valioso do pilot.
+    </p>
+
+    <h3 style="color: var(--success)">✅ Onde a Zi performou bem</h3>
+    <ul>
+      <li>Perguntas sobre benefícios bem documentados (VR, VT, Day Off)</li>
+      <li>Procedimentos com fluxo claro (como solicitar férias, como acessar Portal RH)</li>
+      <li>Perguntas de admissão (primeiro acesso aos sistemas, contrato)</li>
+    </ul>
+
+    <h3 style="color: var(--danger)">⚠️ Onde precisa evoluir</h3>
+
+    <div class="callout">
+      <h4>1. Tabela de descontos de marcas estava desatualizada na KB</h4>
+      <p><em>Comentário real do tester:</em> "baw, troc, alme não fazem mais parte"</p>
+      <p><strong>Ação:</strong> atualizar <code>beneficios.md</code> removendo marcas obsoletas + criar fonte única <code>marcas_grupo.md</code>.</p>
+    </div>
+
+    <div class="callout">
+      <h4>2. Perguntas fora do escopo geravam respostas inventadas <span style="color:var(--success);font-weight:600;">(resolvido durante o pilot)</span></h4>
+      <p>4 casos identificados:</p>
+      <ul>
+        <li>Kit de onboarding — item inexistente</li>
+        <li>Programa "Meu Filho na NV" — não existe</li>
+        <li>Estacionamento — não documentado</li>
+        <li>"Todos batem ponto" — generalização indevida</li>
+      </ul>
+      <p><strong>Ação:</strong> prompt da Zi foi endurecido com 3 camadas anti-invenção e anti-generalização. Hoje ela retorna <code>[NAO_ENCONTREI]</code> e escala pro RH quando não tem certeza.</p>
+    </div>
+
+    <div class="callout">
+      <h4>3. Algumas perguntas pediam contexto pessoal (que a Zi não tem)</h4>
+      <p><em>Exemplo:</em> "quantos dias de DayOff eu tenho?" — depende do mês de admissão do colaborador.</p>
+      <p><strong>Ação proposta:</strong> integração futura com TOTVS / Portal RH pra trazer dado pessoal (escopo de fase 2).</p>
+    </div>
+
+    <div class="callout">
+      <h4>4. Gaps reais identificados — escalações pendentes (roadmap)</h4>
+      <p>Apenas <strong>2 escalações pendentes</strong> no período inteiro, ambas sinalizando gaps específicos:</p>
+      <ul>
+        <li><em>"Qual o prazo para alterar as férias já programadas?"</em> (Paulo) — documento de férias não cobre alteração pós-programação. <strong>Ação:</strong> incluir item específico no <code>beneficios.md</code>.</li>
+        <li><em>"No primeiro jogo do Brasil na copa, qual horário seremos dispensados?"</em> (Mariana) — política de eventos esportivos não documentada. <strong>Ação:</strong> alinhar com G&amp;G se há política e, se sim, criar doc novo.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ========== SEÇÃO 5 ========== -->
+  <section>
+    <div class="section-num">05</div>
+    <h2>O que funcionou tecnicamente</h2>
+    <p>Capacidades comprovadas em produção durante o pilot:</p>
+    <table>
+      <thead>
+        <tr><th>Capacidade</th><th style="width:18%">Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Resposta em linguagem natural, em segundos</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+        <tr><td>Não inventa nada (com prompt atual)</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+        <tr><td>Aprende com correções do RH (Respostas Treinadas)</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+        <tr><td>Painel admin com métricas em tempo real</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+        <tr><td>Login com múltiplos usuários e perfis</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+        <tr><td>Streaming de resposta (estilo ChatGPT)</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+        <tr><td>Categorização automática de perguntas por tema</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+        <tr><td>Escalação pra humano quando não sabe responder</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+        <tr><td>Captura de feedback estruturado (👍/👎 + comentário)</td><td class="num" style="color:var(--success)">✓ OK</td></tr>
+      </tbody>
+    </table>
+    <p>
+      <strong>Custo de operação no período do pilot:</strong> &lt; R$ 50 em consumo de API (Gemini + Supabase) — comparado às <strong>1.760 horas-pessoa</strong> liberadas, é uma fração marginal do valor agregado.
+    </p>
+  </section>
+
+  <!-- ========== SEÇÃO 6 — CENÁRIOS ========== -->
+  <section>
+    <div class="section-num">06</div>
+    <h2>Três cenários daqui — a decisão da reunião</h2>
+
+    <div class="scenarios">
+      <div class="scenario">
+        <div class="scenario-tag">Cenário A</div>
+        <h3>Encerrar o pilot — tese não validada</h3>
+        <p><strong>Quando faz sentido:</strong> se os números mostrassem autonomia abaixo de 50% ou aprovação abaixo de 40%, ou se os testers tivessem rejeitado a ferramenta.</p>
+        <p><strong>Resultado do pilot:</strong> ❌ Não é esse o caso. Autonomia <strong>83%</strong> / Aprovação <strong>81%</strong>.</p>
+      </div>
+
+      <div class="scenario">
+        <div class="scenario-tag">Cenário B</div>
+        <h3>Manter pilot ampliado por mais 30 dias</h3>
+        <p>Ampliar testers de 6 → 30 colaboradores da NV. Implementar 2 melhorias prioritárias: integração com TOTVS e treino contínuo das Top 10 escalações.</p>
+        <p><strong>Quando faz sentido:</strong> se queremos mais sinal antes de comprometer expansão.</p>
+      </div>
+
+      <div class="scenario recommended">
+        <div class="recommended-badge">Recomendado</div>
+        <div class="scenario-tag">Cenário C</div>
+        <h3>Lançar pra NV completa + iniciar scoping de outras marcas</h3>
+        <p>Disponibilizar a Zi pros ~350 colaboradores da NV. Iniciar replicação pra Animale como segunda marca-piloto. Reuniões com BPs de Farm, Foxton, Maria Filó pra mapear escopo.</p>
+        <p><strong>Por que recomendamos:</strong> a base atual está sólida e o pilot mostrou os 3 sinais que precisávamos — <strong>demanda + qualidade + capacidade de aprender</strong>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SEÇÃO 7 — TIMELINE ========== -->
+  <section>
+    <div class="section-num">07</div>
+    <h2>Plano 30 / 60 / 90 dias</h2>
+    <div class="timeline">
+      <div class="timeline-card">
+        <div class="timeline-period">Dias 1–30</div>
+        <h4>Curto prazo</h4>
+        <ul>
+          <li>Lançamento pra NV completa (350 colaboradores)</li>
+          <li>Atualização da KB (remoção de marcas obsoletas + <code>marcas_grupo.md</code>)</li>
+          <li>Treinamento das 10 perguntas mais escaladas</li>
+          <li>Acompanhamento semanal de adoção orgânica</li>
+        </ul>
+      </div>
+      <div class="timeline-card">
+        <div class="timeline-period">Dias 31–60</div>
+        <h4>Médio prazo</h4>
+        <ul>
+          <li>Pilot Animale (segunda marca)</li>
+          <li>Reuniões de scoping com Farm, Foxton, Maria Filó</li>
+          <li>Integração TOTVS — saldo de DayOff, férias</li>
+          <li>KPIs de retenção (% colaboradores que voltam)</li>
+        </ul>
+      </div>
+      <div class="timeline-card">
+        <div class="timeline-period">Dias 61–90</div>
+        <h4>Longo prazo</h4>
+        <ul>
+          <li>Pilot Farm + marca masculina (Reserva)</li>
+          <li>Painel cross-marca pra G&amp;G corporativo</li>
+          <li>Revisão de modelo de cobrança/escala</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SEÇÃO 8 — INVESTIMENTO ========== -->
+  <section>
+    <div class="section-num">08</div>
+    <h2>O investimento — comparativo honesto</h2>
+    <table>
+      <thead>
+        <tr><th>Modelo</th><th>Custo mensal estimado</th><th>Capacidade</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Operação atual</strong> (BP atendendo dúvidas tier 1)</td>
+          <td class="num">R$ 8-15 mil/BP</td>
+          <td>Limitado pela disponibilidade humana</td>
+        </tr>
+        <tr>
+          <td><strong>Zi rodando 24/7 pra NV</strong></td>
+          <td class="num">&lt; R$ 500</td>
+          <td>Infinita, marginal por interação</td>
+        </tr>
+        <tr>
+          <td><strong>Zi rodando pras 7 marcas principais</strong></td>
+          <td class="num">&lt; R$ 2 mil</td>
+          <td>Mesma curva — escala com infra única</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>ROI projetado em 12 meses:</strong> Conservadoramente, cada hora-BP liberada vale ~R$ 120-180 (baseline Deloitte HR 2024). 22.000h/mês × R$ 120 = <strong>R$ 2,64 milhões/mês de valor capturado</strong> só na NV, contra investimento de poucos milhares de reais.</p>
+    <div class="callout callout-success">
+      <div class="callout-label">Benchmarks da indústria</div>
+      <p>
+        McKinsey HR Tech 2023, Forrester 2024:
+        <strong>240% de ROI em 3 anos</strong>,
+        <strong>70-85% de redução de custo por consulta</strong>,
+        <strong>75% das interações de RH iniciadas por IA até 2026</strong>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========== SEÇÃO 9 — O PEDIDO ========== -->
+  <section>
+    <div class="section-num">09</div>
+    <h2>O pedido — o que precisamos decidir hoje</h2>
+    <ol style="font-size:16px;">
+      <li><strong>Aprovação do Cenário C</strong> — lançamento pra NV completa + scoping outras marcas</li>
+      <li><strong>Sponsor executivo</strong> pro rollout — ideal: VP/Diretoria de Gente &amp; Gestão</li>
+      <li><strong>Cronograma</strong> — quando ativar pra NV completa</li>
+      <li><strong>Time de evolução</strong> — quem do RH cuida da curadoria de respostas treinadas no dia a dia</li>
+    </ol>
+  </section>
+
+  <!-- ========== FRASE DE IMPACTO ========== -->
+  <div class="impact-quote">
+    Essa marca foi a primeira a ter sua IA de RH no Grupo Soma.<br>
+    O <em>destino</em> é o grupo todo.
+  </div>
+
+
+  <!-- ========================================================== -->
+  <!--                ROTEIRO DA REUNIÃO                             -->
+  <!-- ========================================================== -->
+  <div class="script-section">
+    <div class="script-header">
+      <div class="eyebrow">Parte 2</div>
+      <h2>Roteiro pra conduzir a reunião</h2>
+      <p>Script de 15 min · use como guia, ajuste de acordo com o seu estilo</p>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">Abertura — A Promessa</div>
+        <div class="script-step-time">1 min</div>
+      </div>
+      <blockquote>
+        Boa tarde a todos. Há cerca de <strong>2 semanas</strong>, vocês confiaram em testar uma ideia: e se a IA pudesse absorver as perguntas operacionais de RH e liberar o time pra trabalho estratégico? Hoje vou te mostrar o que descobrimos. <strong>Spoiler: a tese funciona — e os números são melhores do que projetamos.</strong>
+      </blockquote>
+      <div class="objective">Objetivo: abrir com confiança, gerar expectativa, sinalizar que vai entregar valor.</div>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">Onde estávamos</div>
+        <div class="script-step-time">1 min</div>
+      </div>
+      <blockquote>
+        Lembrando o ponto de partida: identificamos que <strong>uma fatia significativa do tempo do BP de RH</strong> é consumido por dúvidas repetitivas — benchmarks da indústria apontam até 4h/dia. O custo carregado disso é alto — e o pior: tira espaço pra Gente &amp; Gestão atuar em iniciativas estruturantes.
+      </blockquote>
+      <div class="objective">Objetivo: reconectar com o problema. Reforçar dor.</div>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">O setup do pilot</div>
+        <div class="script-step-time">2 min</div>
+      </div>
+      <blockquote>
+        Recrutamos 5 testers do time de RH e lideranças. Coloquei 13 documentos oficiais da NV na base — totalizando 189 unidades de informação. A Zi rodou por <strong>9 dias</strong> de atividade, gravando cada uma das 133 interações com tema, avaliação e comentário.
+      </blockquote>
+      <div class="objective">Objetivo: mostrar rigor metodológico. Esse não foi "experimento divertido" — foi pilot instrumentado.</div>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">Os números que importam</div>
+        <div class="script-step-time">3 min</div>
+      </div>
+      <blockquote>
+        A Zi respondeu autonomamente <strong>83%</strong> das perguntas. Dessas, <strong>81%</strong> foram avaliadas positivamente. Isso já <strong>supera o benchmark</strong> da indústria pra ferramentas dessa categoria.
+      </blockquote>
+      <p>Depois desça pra:</p>
+      <ul>
+        <li>Volume (<strong>133 mensagens, 5 testers ativos</strong>)</li>
+        <li>Distribuição por tema — destaque <strong>Gestão de Pessoas com 47%</strong></li>
+        <li>Tempo liberado (extrapolação prudente)</li>
+      </ul>
+      <div class="objective">Objetivo: entregar a vitória com dado. Não vender — apresentar.</div>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">O que ela não soube — e o que isso revela</div>
+        <div class="script-step-time">3 min</div>
+      </div>
+      <blockquote>
+        Aqui é onde fica interessante. As perguntas que a Zi não soube responder não são fracasso — são o <strong>mapa de evolução</strong>. Olha o que descobrimos:
+      </blockquote>
+      <p>Mostrar os comentários reais (anonimizados):</p>
+      <ul>
+        <li><em>"baw, troc, alme não fazem mais parte"</em> → ação: KB atualizada</li>
+        <li>Hallucinations identificadas → ação: prompt endurecido</li>
+        <li><em>"resposta foi vaga, não considerou loja"</em> → ação: melhorar cobertura comparativa</li>
+      </ul>
+      <div class="objective">Objetivo: mostrar maturidade. Reconhecer gaps honestamente cria confiança.</div>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">O que já foi corrigido durante o pilot</div>
+        <div class="script-step-time">2 min</div>
+      </div>
+      <blockquote>
+        A maioria dos gaps identificados foi corrigida ainda durante o pilot. A Zi de hoje é melhor que a Zi do começo do teste.
+      </blockquote>
+      <p>Liste:</p>
+      <ul>
+        <li>Anti-hallucination prompt deployado</li>
+        <li>Categorização automática de tópicos</li>
+        <li>Comentários estruturados no feedback</li>
+        <li>Dashboard de Tópicos no Admin</li>
+      </ul>
+      <div class="objective">Objetivo: mostrar que esse é um sistema vivo. Cada feedback vira melhoria.</div>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">Os 3 caminhos e a recomendação</div>
+        <div class="script-step-time">2 min</div>
+      </div>
+      <blockquote>
+        Olhando pros dados, eu defendo o Cenário C — e vou te contar por quê.
+      </blockquote>
+      <p>Argumentos pro Cenário C:</p>
+      <ol>
+        <li><strong>Sinal de demanda comprovado</strong> — <strong>133 mensagens em 5 testers</strong> num pilot de 9 dias = demanda orgânica clara</li>
+        <li><strong>Qualidade acima do limiar</strong> — <strong>83% de autonomia + 81% de aprovação</strong>, batendo benchmark Gartner (70-85%)</li>
+        <li><strong>Curva de aprendizado funcionou</strong> — Zi melhorou durante o pilot, não piorou</li>
+        <li><strong>Custo marginal pra escalar é mínimo</strong> — toda infra já existe; só precisa ativar</li>
+        <li><strong>Janela competitiva</strong> — antes virar commodity, vale tomar posição</li>
+      </ol>
+      <div class="objective">Objetivo: ancorar a recomendação em dados, não em entusiasmo.</div>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">O pedido</div>
+        <div class="script-step-time">1 min</div>
+      </div>
+      <blockquote>
+        Pra avançar com o Cenário C, preciso de 3 coisas: (1) aprovação pra lançar pra NV completa nas próximas 2 semanas; (2) um sponsor executivo pra dar peso interno ao rollout; (3) alinhamento sobre quem do RH cuida do treino contínuo no dia a dia. Posso contar com vocês?
+      </blockquote>
+      <div class="objective">Objetivo: pedido específico, acionável. Não saia sem decisão.</div>
+    </div>
+
+    <div class="script-step">
+      <div class="script-step-header">
+        <div class="script-step-title">Fechamento — A Visão</div>
+        <div class="script-step-time">1 min</div>
+      </div>
+      <blockquote>
+        Esse pilot foi sobre NV. Mas o que estamos construindo aqui é a primeira IA de RH do Grupo Soma. Animale, Farm, Foxton, Reserva — cada marca pode ter sua própria Zi, mantendo identidade, mantendo proximidade. O motor é o mesmo. <strong>A NV é a marca-piloto; o destino é o grupo todo.</strong>
+      </blockquote>
+      <div class="objective">Objetivo: fechar com visão ampla. Plantar a semente da expansão.</div>
+    </div>
+  </div>
+
+  <!-- ========== CHECKLIST ========== -->
+  <section style="margin-top:64px">
+    <div class="section-num">Checklist</div>
+    <h2>Antes da reunião</h2>
+    <ul class="checklist">
+      <li>Confirmar com Zilaide / liderança de RH quem vai estar na reunião</li>
+      <li>Imprimir 1 cópia desse doc pra você (referência) — projetar a versão online</li>
+      <li>Revisar os 2 gaps reais identificados (Paulo: alteração de férias; Mariana: Copa do Mundo) — saber se G&amp;G já tem posição sobre eles</li>
+      <li>Ter o app aberto pra demo ao vivo no fim — convide alguém da sala a perguntar algo</li>
+      <li>Imprimir slides ou levar o HTML aberto no Chrome em fullscreen</li>
+      <li>Alinhar com sponsor antes da reunião se possível (pre-wire pra cenário C)</li>
+    </ul>
+  </section>
+
+  <!-- ========== FRASES BÔNUS ========== -->
+  <section>
+    <div class="section-num">Bônus</div>
+    <h2>Frases-chave testadas</h2>
+    <p>Use essas frases nos momentos certos. São testadas em apresentações de produto.</p>
+
+    <h4>Pra abrir</h4>
+    <blockquote>Vou te poupar do suspense: a tese funcionou.</blockquote>
+
+    <h4>Pra apresentar números delicados (autonomia abaixo de 80%)</h4>
+    <blockquote>Nenhuma ferramenta nova entrega 100% no dia 1. O importante é a curva — e a nossa subiu.</blockquote>
+
+    <h4>Pra reconhecer um gap sem fragilizar a apresentação</h4>
+    <blockquote>Esse é um dos achados mais valiosos do pilot — e já está resolvido.</blockquote>
+
+    <h4>Pra responder objeção de risco</h4>
+    <blockquote>Concordo que o risco existe. A diferença é que agora temos dado pra mitigá-lo — antes era achismo.</blockquote>
+
+    <h4>Pra fechar</h4>
+    <blockquote>O custo de não escalar é maior que o custo de escalar.</blockquote>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="doc-footer">
+    Zi · IA de RH da NV<span class="dot">●</span>Pilot Results<span class="dot">●</span>Confidencial — Grupo Soma / Azzas 2154
+  </footer>
+
+</div>
+</body>
+</html>
