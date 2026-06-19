@@ -133,9 +133,9 @@
     .cover-meta-item .value { font-size: 15px; color: white; font-weight: 500; }
 
     /* ---------- Logo MGC ---------- */
-    .mgc-logo { display: inline-flex; align-items: center; gap: 0.32em; line-height: 1; vertical-align: middle; }
-    .mgc-logo svg { height: 0.92em; width: auto; display: block; }
-    .mgc-logo .wm { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; letter-spacing: -0.03em; color: currentColor; }
+    .mgc-wm { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; letter-spacing: -0.04em; color: currentColor; line-height: 1; }
+    .mgc-badge { display: inline-flex; align-items: center; justify-content: center; background: #343f5c; border-radius: 7px; padding: 6px 9px 7px; line-height: 1; vertical-align: middle; }
+    .mgc-badge .mgc-wm { color: #fff; }
     .cover-photo {
       width: 100%;
       max-width: 280px;
@@ -688,22 +688,7 @@
           <div class="cover-meta-item">
             <div class="label">Apresentado por</div>
             <div class="value">
-              <span class="mgc-logo" style="font-size:26px;color:#fff;">
-                <svg viewBox="0 0 118 90" xmlns="http://www.w3.org/2000/svg" aria-label="MGC" role="img">
-                  <g stroke="#bccadf" stroke-width="5.5" stroke-linecap="round">
-                    <line x1="88" y1="45" x2="26" y2="23"/>
-                    <line x1="88" y1="45" x2="22" y2="45"/>
-                    <line x1="88" y1="45" x2="26" y2="67"/>
-                  </g>
-                  <circle cx="88" cy="45" r="17" fill="#D9B85C"/>
-                  <g fill="#a7bbd6">
-                    <circle cx="26" cy="23" r="8.5"/>
-                    <circle cx="22" cy="45" r="8.5"/>
-                    <circle cx="26" cy="67" r="8.5"/>
-                  </g>
-                </svg>
-                <span class="wm">mgc</span>
-              </span>
+              <span class="mgc-wm" style="font-size:30px;color:#fff;">mgc</span>
             </div>
           </div>
           <div class="cover-meta-item">
@@ -1237,22 +1222,7 @@
 
   <!-- ========== FOOTER ========== -->
   <footer class="doc-footer">
-    <span class="mgc-logo" style="font-size:16px;color:var(--ink);">
-      <svg viewBox="0 0 118 90" xmlns="http://www.w3.org/2000/svg" aria-label="MGC" role="img">
-        <g stroke="#bccadf" stroke-width="5.5" stroke-linecap="round">
-          <line x1="88" y1="45" x2="26" y2="23"/>
-          <line x1="88" y1="45" x2="22" y2="45"/>
-          <line x1="88" y1="45" x2="26" y2="67"/>
-        </g>
-        <circle cx="88" cy="45" r="17" fill="#D9B85C"/>
-        <g fill="#a7bbd6">
-          <circle cx="26" cy="23" r="8.5"/>
-          <circle cx="22" cy="45" r="8.5"/>
-          <circle cx="26" cy="67" r="8.5"/>
-        </g>
-      </svg>
-      <span class="wm">mgc</span>
-    </span><span class="dot">●</span>Proposta Zi pra Grupo Soma<span class="dot">●</span>rafael@martinsgonzaga.com
+    <span class="mgc-badge"><span class="mgc-wm" style="font-size:15px;">mgc</span></span><span class="dot">●</span>Proposta Zi pra Grupo Soma<span class="dot">●</span>rafael@martinsgonzaga.com
   </footer>
 
 </div>
